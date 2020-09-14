@@ -1,0 +1,29 @@
+cache:
+  paths:
+    - .pip
+
+tests:
+  stage: test
+  script:
+    - pip --cache-dir=.pip install --quiet .
+    - pip --cache-dir=.pip install --quiet -r tests/requirements.txt
+    - pytest --cov nt_config tests/
+  coverage: '/^TOTAL.+?(\d+\%)$/'
+
+format:
+  stage: test
+  script:
+    - pip --cache-dir=.pip install --quiet nt-code-style
+    - format --check
+
+package-upload:
+  stage: deploy
+  needs:
+    - tests
+    - format
+  only:
+    - master
+  script:
+    - pip --cache-dir=.pip install --quiet -r requirements.dev
+    - python setup.py sdist bdist_wheel
+    - twine upload ./dist/*
