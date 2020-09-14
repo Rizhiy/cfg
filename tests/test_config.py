@@ -69,3 +69,13 @@ def test_nested_redefine_fail():
 
     with pytest.raises(TypeError):
         cfg.FOO = 42
+
+
+def test_str():
+    cfg = CfgNode()
+    cfg.FOO = 32
+    cfg.BAR = CfgNode()
+    cfg.BAR.BAZ = "baz"
+
+    expected_str = "BAR:\n  BAZ: baz\nFOO: 32\n"
+    assert str(cfg) == expected_str

@@ -1,4 +1,6 @@
-from typing import Any, Type
+from typing import Any, Dict, Type
+
+import yaml
 
 
 class CfgNode:
@@ -13,8 +15,23 @@ class CfgNode:
             return attr.value
         return attr
 
+    def __str__(self) -> str:
+        attrs = self.to_dict()
+        return yaml.safe_dump(attrs)
+
+    def to_dict(self) -> Dict[str, Any]:
+        attrs = {}
+        for key in dir(self):
+            attr = super().__getattribute__(key)
+            if isinstance(attr, CfgNode):
+                attrs[key] = attr.to_dict()
+            elif isinstance(attr, CfgLeaf):
+                attrs[key] = attr.value
+
+        return attrs
+
     def _set_new_attr(self, key: str, value: Any) -> None:
-        if isinstance(value, CfgLeaf):
+        if isinstance(value, (CfgLeaf, CfgNode)):
             value_to_set = value
         elif isinstance(value, type):
             value_to_set = CfgLeaf(None, value)
