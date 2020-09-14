@@ -43,8 +43,6 @@ class CfgNode:
         cur_attr = super().__getattribute__(key)
         value_type = type(value)
         if isinstance(cur_attr, CfgLeaf):
-            if cur_attr.type_ != value_type:
-                raise TypeError(f"Value of type {cur_attr.type_} expected, but {value_type} found.")
             cur_attr.value = value
         else:
             if not isinstance(cur_attr, value_type):
@@ -56,8 +54,19 @@ class CfgNode:
 
 class CfgLeaf:
     def __init__(self, value: Any, type_: Type, required: bool = False):
-        if value is not None and not isinstance(value, type_):
-            raise TypeError(f"value {value} is not of {type_} type.")
-        self.value = value
         self.type_ = type_
-        self._required = required  # TODO (vemikhaylov): the attribute is not currently used (should be used or removed)
+        self._required = required
+
+        self.value = value
+
+    @property
+    def value(self) -> Any:
+        return self._value
+
+    @value.setter
+    def value(self, val) -> None:
+        if val is not None and not isinstance(val, self.type_):
+            raise TypeError(f"Value of type {self.type_} expected, but {type(self.type_)} found.")
+        if val is None and self._required:
+            raise ValueError("Required config leaf cannot be None")
+        self._value = val

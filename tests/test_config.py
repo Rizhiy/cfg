@@ -79,3 +79,18 @@ def test_str():
 
     expected_str = "BAR:\n  BAZ: baz\nFOO: 32\n"
     assert str(cfg) == expected_str
+
+
+def test_required():
+    cfg = CfgNode()
+
+    with pytest.raises(ValueError):
+        cfg.FOO = CfgLeaf(None, int, required=True)
+
+    cfg.FOO = CfgLeaf(32, int, required=True)
+    assert cfg.FOO == 32
+    with pytest.raises(ValueError):
+        cfg.FOO = None
+
+    cfg.FOO = 42
+    assert cfg.FOO == 42
