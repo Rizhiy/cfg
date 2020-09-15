@@ -13,3 +13,4 @@ cfg.DICT.FOO = "foo"
 cfg.NAME = CL(None, str, required=True)
 cfg.LIST = [1, 2, 3, 4]
 cfg.CLASS = BaseClass()
+cfg.CLASSES = CN(CL(None, BaseClass))

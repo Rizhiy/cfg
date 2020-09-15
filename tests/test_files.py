@@ -31,14 +31,25 @@ def test_subclass():
     assert isinstance(subclass.CLASS, SubClass)
 
 
-def test_badclass():
+def test_bad_class():
     with pytest.raises(TypeError):
-        cfg.load(data_dir / "badclass.py")
+        cfg.load(data_dir / "bad_class.py")
 
 
 def test_list():
     l = cfg.load(data_dir / "list.py")
     assert l.LIST == [3, 2, 1]
+
+
+def test_node():
+    node = cfg.load(data_dir / "node.py")
+    assert len(cfg.CLASSES) == 1
+    assert isinstance(cfg.CLASSES.ONE, BaseClass)
+
+
+def test_bad_node():
+    with pytest.raises(TypeError):
+        cfg.load(data_dir / "bad_node.py")
 
 
 def test_save():
