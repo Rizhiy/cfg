@@ -1,4 +1,4 @@
-from .good import cfg, BaseClass
+from .good import BaseClass, cfg
 
 
 class SubClass(BaseClass):

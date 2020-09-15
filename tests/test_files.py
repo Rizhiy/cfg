@@ -1,7 +1,9 @@
-from tests.data.base_cfg import cfg, BaseClass
-from tests.data.subclass import SubClass
 from pathlib import Path
+
 import pytest
+
+from tests.data.base_cfg import BaseClass, cfg
+from tests.data.subclass import SubClass
 
 data_dir = Path(__file__).parent / "data"
 
@@ -42,7 +44,7 @@ def test_list():
 
 
 def test_node():
-    node = cfg.load(data_dir / "node.py")
+    cfg.load(data_dir / "node.py")
     assert len(cfg.CLASSES) == 1
     assert isinstance(cfg.CLASSES.ONE, BaseClass)
 

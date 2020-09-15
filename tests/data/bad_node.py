@@ -1,4 +1,4 @@
-from .base_cfg import cfg, BaseClass
+from .base_cfg import cfg
 
 
 class BadClass:

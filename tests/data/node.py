@@ -1,3 +1,3 @@
-from .base_cfg import cfg, BaseClass
+from .base_cfg import BaseClass, cfg
 
 cfg.CLASSES.ONE = BaseClass()
