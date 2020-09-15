@@ -1,62 +1,74 @@
+import importlib
 from pathlib import Path
 
 import pytest
 
+# import tests.data.base_cfg
+from ntc import TypeMismatch, ValidationError, SchemaError
 from tests.data.base_cfg import BaseClass, cfg
-from tests.data.subclass import SubClass
+from tests.data.subclass_class import SubClass
 
-data_dir = Path(__file__).parent / "data"
+DATA_DIR = Path(__file__).parent / "data"
+
+
+# @pytest.fixture(autouse=True)
+# def reload_base_cfg():
+#     importlib.reload(tests.data.base_cfg)
+#
+#
+# @pytest.fixture()
+# def cfg():
+#     return tests.data.base_cfg.cfg
+
+def test_missing():
+    with pytest.raises(ValidationError):
+        cfg.load(DATA_DIR / "missing.py")
 
 
 def test_good():
-    good = cfg.load(data_dir / "good.py")
+    good = cfg.load(DATA_DIR / "good.py")
     assert good.NAME == "Name"
 
 
 def test_bad():
-    with pytest.raises(ValueError):
-        cfg.load(data_dir / "bad.py")
-
-
-def test_missing():
-    with pytest.raises(AttributeError):
-        cfg.load(data_dir / "missing.py")
+    with pytest.raises(TypeMismatch):
+        cfg.load(DATA_DIR / "bad.py")
 
 
 def test_bad_attr():
-    with pytest.raises(AttributeError):
-        cfg.load(data_dir / "bad_attr.py")
+    with pytest.raises(SchemaError):
+        cfg.load(DATA_DIR / "bad_attr.py")
 
 
 def test_subclass():
-    subclass = cfg.load(data_dir / "subclass.py")
+    subclass = cfg.load(DATA_DIR / "subclass.py")
     assert isinstance(subclass.CLASS, SubClass)
 
 
 def test_bad_class():
-    with pytest.raises(TypeError):
-        cfg.load(data_dir / "bad_class.py")
+    with pytest.raises(TypeMismatch):
+        cfg.load(DATA_DIR / "bad_class.py")
 
 
 def test_list():
-    l = cfg.load(data_dir / "list.py")
-    assert l.LIST == [3, 2, 1]
+    lst = cfg.load(DATA_DIR / "list.py")
+    assert lst.LIST == [3, 2, 1]
+
+
+def test_bad_node():
+    with pytest.raises(TypeMismatch):
+        cfg.load(DATA_DIR / "bad_node.py")
 
 
 def test_node():
-    node = cfg.load(data_dir / "node.py")
+    node = cfg.load(DATA_DIR / "node.py")
     assert len(node.CLASSES) == 1
     assert isinstance(node.CLASSES.ONE, BaseClass)
 
 
-def test_bad_node():
-    with pytest.raises(TypeError):
-        cfg.load(data_dir / "bad_node.py")
-
-
 def test_save():
-    good = cfg.load(data_dir / "good.py")
-    good.save(data_dir / "good2.py")
+    good = cfg.load(DATA_DIR / "good.py")
+    good.save(DATA_DIR / "good2.py")
 
-    good2 = cfg.load(data_dir / "good2.py")
+    good2 = cfg.load(DATA_DIR / "good2.py")
     assert good == good2

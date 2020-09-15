@@ -1,4 +1,4 @@
-from nt_config import CL, CN
+from ntc import CL, CN
 
 
 class BaseClass:

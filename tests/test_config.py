@@ -1,7 +1,7 @@
 import pytest
 
-from nt_config import CfgLeaf, CfgNode
-from nt_config.config import NodeReassignment
+from ntc import CfgLeaf, CfgNode
+from ntc.config import NodeReassignment
 
 
 def test_define_with_value():

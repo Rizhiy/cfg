@@ -1,9 +1,4 @@
 from .good import cfg
-from .base_cfg import BaseClass
-
-
-class SubClass(BaseClass):
-    pass
-
+from .subclass_class import SubClass
 
 cfg.CLASS = SubClass()
