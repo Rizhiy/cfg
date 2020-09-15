@@ -1,6 +1,16 @@
-from typing import Any, Dict, Type
+from __future__ import annotations
+
+from typing import Any, Dict, List, Tuple, Type, Union
 
 import yaml
+
+
+class BaseError(Exception):
+    pass
+
+
+class NodeReassignment(BaseError):
+    pass
 
 
 class CfgNode:
@@ -19,19 +29,23 @@ class CfgNode:
         attrs = self.to_dict()
         return yaml.safe_dump(attrs)
 
+    def clone(self) -> CfgNode:
+        cloned_node = CfgNode()
+        for key, attr in self._attrs():
+            setattr(cloned_node, key, attr.clone())
+        return cloned_node
+
     def to_dict(self) -> Dict[str, Any]:
         attrs = {}
-        for key in dir(self):
-            attr = super().__getattribute__(key)
+        for key, attr in self._attrs():
             if isinstance(attr, CfgNode):
                 attrs[key] = attr.to_dict()
             elif isinstance(attr, CfgLeaf):
                 attrs[key] = attr.value
-
         return attrs
 
     def _set_new_attr(self, key: str, value: Any) -> None:
-        if isinstance(value, (CfgLeaf, CfgNode)):
+        if isinstance(value, (CfgNode, CfgLeaf)):
             value_to_set = value
         elif isinstance(value, type):
             value_to_set = CfgLeaf(None, value)
@@ -42,14 +56,24 @@ class CfgNode:
     def _set_existing_attr(self, key: str, value: Any) -> None:
         cur_attr = super().__getattribute__(key)
         value_type = type(value)
-        if isinstance(cur_attr, CfgLeaf):
+        if isinstance(cur_attr, CfgNode):
+            raise NodeReassignment(f"Nested CfgNode {key} cannot be reassigned.")
+        elif isinstance(cur_attr, CfgLeaf):
             cur_attr.value = value
         else:
             if not isinstance(cur_attr, value_type):
                 raise TypeError(
-                    f"Current value of attribute {key} is of type {type(cur_attr)}, but new one is {value_type}"
+                    f"Current value of attribute {key} is of type {type(cur_attr)}, but new one is of {value_type}."
                 )
             super().__setattr__(key, value)
+
+    def _attrs(self) -> List[Tuple[str, Union[CfgNode, CfgLeaf]]]:
+        attrs = []
+        for key in dir(self):
+            attr = super().__getattribute__(key)
+            if isinstance(attr, (CfgNode, CfgLeaf)):
+                attrs.append((key, attr))
+        return attrs
 
 
 class CfgLeaf:
@@ -68,5 +92,8 @@ class CfgLeaf:
         if val is not None and not isinstance(val, self.type_):
             raise TypeError(f"Value of type {self.type_} expected, but {type(self.type_)} found.")
         if val is None and self._required:
-            raise ValueError("Required config leaf cannot be None")
+            raise ValueError("Required config leaf cannot be None.")
         self._value = val
+
+    def clone(self) -> CfgLeaf:
+        return CfgLeaf(self.value, self.type_, self._required)

@@ -1,6 +1,7 @@
 import pytest
 
 from nt_config import CfgLeaf, CfgNode
+from nt_config.config import NodeReassignment
 
 
 def test_define_with_value():
@@ -49,26 +50,11 @@ def test_nested():
     assert cfg.FOO.BAR == 42
 
 
-def test_nested_redefine():
+def test_nested_reassign_fail():
     cfg = CfgNode()
     cfg.FOO = CfgNode()
-
-    cfg.FOO.BAR = 32
-    assert cfg.FOO.BAR == 32
-
-    foo_node = CfgNode()
-    foo_node.BAR = 42
-
-    cfg.FOO = foo_node
-    assert cfg.FOO.BAR == 42
-
-
-def test_nested_redefine_fail():
-    cfg = CfgNode()
-    cfg.FOO = CfgNode()
-
-    with pytest.raises(TypeError):
-        cfg.FOO = 42
+    with pytest.raises(NodeReassignment):
+        cfg.FOO = CfgNode()
 
 
 def test_str():
@@ -94,3 +80,17 @@ def test_required():
 
     cfg.FOO = 42
     assert cfg.FOO == 42
+
+
+def test_clone():
+    cfg1 = CfgNode()
+    cfg1.FOO = 32
+    cfg1.BAR = CfgNode()
+    cfg1.BAR.BAZ = "baz1"
+
+    cfg2 = cfg1.clone()
+
+    cfg2.BAR.BAZ = "baz2"
+
+    assert str(cfg1) == "BAR:\n  BAZ: baz1\nFOO: 32\n"
+    assert str(cfg2) == "BAR:\n  BAZ: baz2\nFOO: 32\n"
