@@ -21,6 +21,11 @@ def test_missing():
         cfg.load(data_dir / "missing.py")
 
 
+def test_bad_attr():
+    with pytest.raises(AttributeError):
+        cfg.load(data_dir / "bad_attr.py")
+
+
 def test_subclass():
     subclass = cfg.load(data_dir / "subclass.py")
     assert isinstance(subclass.CLASS, SubClass)
