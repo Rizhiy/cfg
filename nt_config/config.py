@@ -70,3 +70,9 @@ class CfgLeaf:
         if val is None and self._required:
             raise ValueError("Required config leaf cannot be None")
         self._value = val
+
+
+CN = CfgNode
+CL = CfgLeaf
+
+__all__ = ["CN", "CL", "CfgNode", "CfgLeaf"]

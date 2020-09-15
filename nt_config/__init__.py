@@ -1,3 +1,3 @@
-from nt_config.config import CfgLeaf, CfgNode
+from .config import *
 
 __version__ = "0.1.0"
