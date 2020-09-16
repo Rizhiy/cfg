@@ -5,12 +5,19 @@ class BaseClass:
     pass
 
 
-cfg = CN()
+_cfg = CN()
 
-cfg.DICT = CN()
-cfg.DICT.INT = 1
-cfg.DICT.FOO = "foo"
-cfg.NAME = CL(None, str, required=True)
-cfg.LIST = [1, 2, 3, 4]
-cfg.CLASS = BaseClass()
-cfg.CLASSES = CN(CL(None, BaseClass))
+_cfg.DICT = CN()
+_cfg.DICT.INT = 1
+_cfg.DICT.FOO = "foo"
+_cfg.NAME = CL(None, str, required=True)
+_cfg.LIST = [1, 2, 3, 4]
+_cfg.CLASS = BaseClass()
+_cfg.CLASSES = CN(CL(None, BaseClass))
+
+def defaults():
+    return _cfg.clone()
+
+__all__ = ["defaults"]
+
+
