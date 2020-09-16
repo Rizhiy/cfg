@@ -32,10 +32,20 @@ class ValidationError(ConfigError):
     pass
 
 
+class SpecError(ConfigError):
+    pass
+
+
 class CfgNode:
-    def __init__(self, leaf_spec: CfgLeaf = None):
-        pass
-        # self._leaf_spec = None  # TODO: implement
+    def __init__(self, cfg_leaf: CfgLeaf = None):
+        # TODO: make access to attributes prettier
+        super().__setattr__("_schema_frozen", False)
+        super().__setattr__("_frozen", False)
+        if cfg_leaf:
+            leaf_spec = _CfgLeafSpec.from_leaf(cfg_leaf)
+        else:
+            leaf_spec = None
+        super().__setattr__("_leaf_spec", leaf_spec)
 
     def __setattr__(self, key: str, value: Any) -> None:
         if hasattr(self, key):
@@ -50,35 +60,22 @@ class CfgNode:
         return attr
 
     def __str__(self) -> str:
+        # TODO: handle custom class objects dump
         attrs = self.to_dict()
-        return yaml.safe_dump(attrs)
+        return yaml.dump(attrs)
 
     def __len__(self):
         return len(self.attrs())
 
     def load(self, cfg_path: Path) -> CfgNode:
-        module = import_module(cfg_path)
-        if not hasattr(module, "cfg"):
-            raise ModuleError(f"Module {cfg_path} does not contain cfg variable.")
-        print(self, module.cfg)
-        self.merge(module.cfg)
+        super().__setattr__("_schema_frozen", True)
+        import_module(cfg_path)
         self.validate()
         return self
 
     def save(self, path: Path) -> None:
         # TODO: implement
         pass
-
-    def merge(self, cfg_node: CfgNode) -> None:
-        for key, cfg_node_attr in cfg_node.attrs():
-            if not hasattr(self, key):
-                raise SchemaError(f"Key {key} was not expected.")
-            if isinstance(cfg_node_attr, CfgNode):
-                attr = getattr(self, key)
-                # TODO: check whether attr is CfgNode
-                attr.merge(cfg_node_attr)
-            else:
-                setattr(self, key, cfg_node_attr.value)
 
     def clone(self) -> CfgNode:
         cloned_node = CfgNode()
@@ -112,12 +109,25 @@ class CfgNode:
         return attrs_list
 
     def _set_new_attr(self, key: str, value: Any) -> None:
-        if isinstance(value, (CfgNode, CfgLeaf)):
+        if super().__getattribute__("_schema_frozen"):
+            raise SchemaError(f"Trying to add new key {key}, but schema is frozen.")
+        leaf_spec = super().__getattribute__("_leaf_spec")
+        if isinstance(value, CfgNode):
+            if leaf_spec:
+                raise SchemaError(f"Key {key} cannot contain nested nodes as leaf spec is defined for it.")
+            value_to_set = value
+        elif isinstance(value, CfgLeaf):
             value_to_set = value
         elif isinstance(value, type):
             value_to_set = CfgLeaf(None, value)
         else:
             value_to_set = CfgLeaf(value, type(value))
+        if (
+            isinstance(value_to_set, CfgLeaf)
+            and leaf_spec
+            and (leaf_spec.required != value_to_set.required or not issubclass(value_to_set.type_, leaf_spec.type_))
+        ):
+            raise SchemaError(f"Leaf at key {key} mismatches config node's leaf spec.")
         super().__setattr__(key, value_to_set)
 
     def _set_existing_attr(self, key: str, value: Any) -> None:
@@ -156,7 +166,29 @@ class CfgLeaf:
         return CfgLeaf(self.value, self.type_, self.required)
 
 
+class _CfgLeafSpec:
+    def __init__(self, type_: Type, required: bool):
+        self.type_ = type_
+        self.required = required
+
+    @staticmethod
+    def from_leaf(cfg_leaf: CfgLeaf) -> _CfgLeafSpec:
+        if cfg_leaf.value is not None:
+            raise SpecError("Leaf spec cannot contain default value.")
+        return _CfgLeafSpec(type_=cfg_leaf.type_, required=cfg_leaf.required)
+
+
 CN = CfgNode
 CL = CfgLeaf
 
-__all__ = ["CN", "CL", "CfgNode", "CfgLeaf", "TypeMismatch", "NodeReassignment", "ModuleError", "ValidationError", "SchemaError"]
+__all__ = [
+    "CN",
+    "CL",
+    "CfgNode",
+    "CfgLeaf",
+    "TypeMismatch",
+    "NodeReassignment",
+    "ModuleError",
+    "ValidationError",
+    "SchemaError",
+]

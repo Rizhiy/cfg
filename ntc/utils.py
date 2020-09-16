@@ -5,6 +5,7 @@ from types import ModuleType
 
 
 def import_module(module_path: Path) -> ModuleType:
+    # TODO: resolve it generally, not for tests
     spec = importlib.util.spec_from_file_location("tests" + "." + "data", module_path.parent / "__init__.py")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module

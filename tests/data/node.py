@@ -1,4 +1,4 @@
-from .base_cfg import BaseClass, defaults
+from .base_cfg import BaseClass
+from .good import cfg
 
-cfg = defaults()
 cfg.CLASSES.ONE = BaseClass()
