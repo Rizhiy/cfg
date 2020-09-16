@@ -44,9 +44,9 @@ def test_list():
 
 
 def test_node():
-    cfg.load(data_dir / "node.py")
-    assert len(cfg.CLASSES) == 1
-    assert isinstance(cfg.CLASSES.ONE, BaseClass)
+    node = cfg.load(data_dir / "node.py")
+    assert len(node.CLASSES) == 1
+    assert isinstance(node.CLASSES.ONE, BaseClass)
 
 
 def test_bad_node():
