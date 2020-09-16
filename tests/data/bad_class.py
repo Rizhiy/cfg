@@ -1,8 +1,7 @@
-from .good import defaults
+from .good import cfg
 
 
 class BadClass:
     pass
 
-cfg = defaults()
 cfg.CLASS = BadClass()

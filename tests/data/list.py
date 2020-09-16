@@ -1,4 +1,3 @@
-from .good import defaults
+from .good import cfg
 
-cfg = defaults()
 cfg.LIST = [3, 2, 1]
