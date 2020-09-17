@@ -1,3 +1,4 @@
+import inspect
 import importlib.util
 import sys
 from pathlib import Path
@@ -16,3 +17,43 @@ def import_module(module_path: Path) -> ModuleType:
     spec.loader.exec_module(module)
 
     return module
+
+
+def merge_module(module: ModuleType, output_path: Path, clean: bool = True) -> None:
+    if clean:
+        output_path.unlink(missing_ok=True)
+
+    module_path = Path(module.__file__)
+    with module_path.open() as module_file:
+        _append_to_file(output_path, f"# START --- {module_path} ---\n")
+        for line in module_file:
+            if line.startswith("from "):
+                import_members = line.split(" ")
+                imported_module = importlib.import_module(import_members[1], package=module.__package__)
+                # if imported_module.__spec__.loader.is_package(imported_module.__spec__.name):
+                #     pass
+                # else:
+                if not _is_builtin_module(imported_module):
+                    merge_module(imported_module, output_path, clean=False)
+                else:
+                    _append_to_file(output_path, line)
+            # if "import " not in line:
+            else:
+                _append_to_file(output_path, line)
+        _append_to_file(output_path, f"# END --- {module_path} ---\n")
+
+
+def _is_module_package(module: ModuleType) -> bool:
+    return module.__spec__.loader.is_package(module.__spec__.name)
+
+
+def _is_builtin_module(module: ModuleType) -> bool:
+    for path_dir in sys.path[1:]:
+        if module.__file__.startswith(path_dir):
+            return True
+    return False
+
+
+def _append_to_file(output_path: Path, data: str) -> None:
+    with output_path.open("a") as output_file:
+        output_file.write(data)
