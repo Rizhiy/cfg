@@ -77,6 +77,8 @@ class CfgNode:
         return attr
 
     def __eq__(self, other: CfgNode) -> bool:
+        print(self.to_dict())
+        print(other.to_dict())
         return self.to_dict() == other.to_dict()
 
     # def __str__(self) -> str:

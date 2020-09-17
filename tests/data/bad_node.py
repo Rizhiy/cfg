@@ -1,4 +1,4 @@
-from . import base_cfg
+from .base_cfg import cfg
 from ntc import CN
 
 
@@ -6,7 +6,7 @@ class BadClass:
     pass
 
 
-cfg = CN(base_cfg.cfg)
+cfg = CN(cfg)
 
 cfg.NAME = "bad_node"
 

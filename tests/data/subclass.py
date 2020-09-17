@@ -1,6 +1,6 @@
-from . import good
+from .good import cfg
 from .subclass_class import SubClass
 from ntc import CN
 
-cfg = CN(good.cfg)
+cfg = CN(cfg)
 cfg.CLASS = SubClass()

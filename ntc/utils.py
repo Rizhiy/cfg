@@ -1,3 +1,5 @@
+import ast
+import astor
 import inspect
 import importlib.util
 import sys
@@ -24,16 +26,19 @@ def merge_module(module: ModuleType, output_path: Path, clean: bool = True) -> N
         output_path.unlink(missing_ok=True)
 
     module_path = Path(module.__file__)
+    # raise RuntimeError(_merge_source(module))
+
     with module_path.open() as module_file:
         _append_to_file(output_path, f"# START --- {module_path} ---\n")
         for line in module_file:
             if line.startswith("from "):
-                import_members = line.split(" ")
-                imported_module = importlib.import_module(import_members[1], package=module.__package__)
+                import_members = line.strip().split(" ")
+                if import_members[3] == "cfg":
+                    imported_module = importlib.import_module(import_members[1], package=module.__package__)
                 # if imported_module.__spec__.loader.is_package(imported_module.__spec__.name):
                 #     pass
                 # else:
-                if not _is_builtin_module(imported_module):
+                # if not _is_builtin_module(imported_module):
                     merge_module(imported_module, output_path, clean=False)
                 else:
                     _append_to_file(output_path, line)
@@ -41,6 +46,16 @@ def merge_module(module: ModuleType, output_path: Path, clean: bool = True) -> N
             else:
                 _append_to_file(output_path, line)
         _append_to_file(output_path, f"# END --- {module_path} ---\n")
+
+
+def _merge_source(module: ModuleType) -> ast.AST:
+    module_path = Path(module.__file__)
+
+    with module_path.open() as module_file:
+        source = module_file.read()
+        ast_node = ast.parse(source)
+        ast.fix_missing_locations(ast_node)
+        raise RuntimeError(astor.to_source(ast_node))
 
 
 def _is_module_package(module: ModuleType) -> bool:

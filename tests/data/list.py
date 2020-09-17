@@ -1,5 +1,5 @@
-from . import good
+from .good import cfg
 from ntc import CN
 
-cfg = CN(good.cfg)
+cfg = CN(cfg)
 cfg.LIST = [3, 2, 1]
