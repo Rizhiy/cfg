@@ -36,39 +36,52 @@ class SpecError(ConfigError):
     pass
 
 
+class NodeFrozenError(ConfigError):
+    pass
+
+
 class CfgNode:
+    _SCHEMA_FROZEN = "_schema_frozen"
+    _FROZEN = "_frozen"
+    _LEAF_SPEC = "_leaf_spec"
+
     def __init__(self, cfg_leaf: CfgLeaf = None):
         # TODO: make access to attributes prettier
-        super().__setattr__("_schema_frozen", False)
-        super().__setattr__("_frozen", False)
+        super().__setattr__(CfgNode._SCHEMA_FROZEN, False)
+        super().__setattr__(CfgNode._FROZEN, False)
         if cfg_leaf:
             leaf_spec = _CfgLeafSpec.from_leaf(cfg_leaf)
         else:
             leaf_spec = None
-        super().__setattr__("_leaf_spec", leaf_spec)
+        super().__setattr__(CfgNode._LEAF_SPEC, leaf_spec)
 
     def __setattr__(self, key: str, value: Any) -> None:
+        if self.is_frozen():
+            raise NodeFrozenError()
         if hasattr(self, key):
             self._set_existing_attr(key, value)
         else:
             self._set_new_attr(key, value)
 
-    def __getattribute__(self, item) -> Any:
+    def __getattribute__(self, item: str) -> Any:
         attr = super().__getattribute__(item)
         if isinstance(attr, CfgLeaf):
             return attr.value
         return attr
 
-    def __str__(self) -> str:
-        # TODO: handle custom class objects dump
-        attrs = self.to_dict()
-        return yaml.dump(attrs)
+    def __eq__(self, other: CfgNode) -> bool:
+        return self.to_dict() == other.to_dict()
+
+    # def __str__(self) -> str:
+    #     # TODO: handle custom class objects dump
+    #     attrs = self.to_dict()
+    #     return yaml.dump(attrs)
 
     def __len__(self):
         return len(self.attrs())
 
     def load(self, cfg_path: Path) -> CfgNode:
-        super().__setattr__("_schema_frozen", True)
+        self.freeze_schema()
         import_module(cfg_path)
         self.validate()
         return self
@@ -101,6 +114,7 @@ class CfgNode:
         return attrs
 
     def attrs(self) -> List[Tuple[str, Union[CfgNode, CfgLeaf]]]:
+        # TODO: try to make it property
         attrs_list = []
         for key in dir(self):
             attr = super().__getattribute__(key)
@@ -108,10 +122,42 @@ class CfgNode:
                 attrs_list.append((key, attr))
         return attrs_list
 
+    def freeze_schema(self):
+        super().__setattr__(CfgNode._SCHEMA_FROZEN, True)
+        for key, attr in self.attrs():
+            if isinstance(attr, CfgNode):
+                attr.freeze_schema()
+
+    def unfreeze_schema(self):
+        super().__setattr__(CfgNode._SCHEMA_FROZEN, False)
+        for key, attr in self.attrs():
+            if isinstance(attr, CfgNode):
+                attr.unfreeze_schema()
+
+    def freeze(self):
+        super().__setattr__(CfgNode._FROZEN, True)
+        for key, attr in self.attrs():
+            if isinstance(attr, CfgNode):
+                attr.freeze()
+
+    def unfreeze(self):
+        super().__setattr__(CfgNode._FROZEN, False)
+        for key, attr in self.attrs():
+            if isinstance(attr, CfgNode):
+                attr.unfreeze()
+
+    def is_schema_frozen(self):
+        # TODO: try to make it property
+        return super().__getattribute__(CfgNode._SCHEMA_FROZEN)
+
+    def is_frozen(self):
+        # TODO: try to make it property
+        return super().__getattribute__(CfgNode._FROZEN)
+
     def _set_new_attr(self, key: str, value: Any) -> None:
-        if super().__getattribute__("_schema_frozen"):
+        if self.is_schema_frozen():
             raise SchemaError(f"Trying to add new key {key}, but schema is frozen.")
-        leaf_spec = super().__getattribute__("_leaf_spec")
+        leaf_spec = super().__getattribute__(CfgNode._LEAF_SPEC)
         if isinstance(value, CfgNode):
             if leaf_spec:
                 raise SchemaError(f"Key {key} cannot contain nested nodes as leaf spec is defined for it.")
