@@ -5,49 +5,33 @@ from typing import Any, Dict, List, Tuple, Type, Union
 
 import yaml
 
-from ntc.utils import import_module, merge_module
-
-
-class ConfigError(Exception):
-    pass
-
-
-class TypeMismatch(ConfigError):
-    pass
-
-
-class NodeReassignment(ConfigError):
-    pass
-
-
-class ModuleError(ConfigError):
-    pass
-
-
-class SchemaError(ConfigError):
-    pass
-
-
-class ValidationError(ConfigError):
-    pass
-
-
-class SpecError(ConfigError):
-    pass
-
-
-class NodeFrozenError(ConfigError):
-    pass
+from ntc.errors import (
+    NodeFrozenError,
+    NodeReassignment,
+    SaveError,
+    SchemaError,
+    SchemaFrozenError,
+    SpecError,
+    TypeMismatch,
+    ValidationError,
+)
+from ntc.utils import add_yaml_representer, import_module, merge_cfg_module
 
 
 class CfgNode:
     _SCHEMA_FROZEN = "_schema_frozen"
     _FROZEN = "_frozen"
+    _WAS_UNFROZEN = "_was_unfrozen"
     _LEAF_SPEC = "_leaf_spec"
     _MODULE = "_module"
 
-    def __init__(self, base: CfgNode = None, leaf_spec: Union[CfgLeaf, _CfgLeafSpec] = None,
-                 schema_frozen: bool = False, frozen: bool = False):
+    def __init__(
+        self,
+        base: CfgNode = None,
+        leaf_spec: Union[CfgLeaf, _CfgLeafSpec] = None,
+        schema_frozen: bool = False,
+        frozen: bool = False,
+    ):
         # TODO: make access to attributes prettier
         super().__setattr__(CfgNode._SCHEMA_FROZEN, schema_frozen)
         super().__setattr__(CfgNode._FROZEN, frozen)
@@ -55,12 +39,10 @@ class CfgNode:
             leaf_spec = _CfgLeafSpec.from_leaf(leaf_spec)
         super().__setattr__(CfgNode._LEAF_SPEC, leaf_spec)
         super().__setattr__(CfgNode._MODULE, None)
+        super().__setattr__(CfgNode._WAS_UNFROZEN, False)
 
         if base is not None:
-            super().__setattr__(CfgNode._LEAF_SPEC, base.leaf_spec())
-            self._set_attrs(base.attrs())
-            self.freeze_schema()
-            super().__setattr__(CfgNode._FROZEN, base.is_frozen())
+            self._init_with_base(base)
 
     def __setattr__(self, key: str, value: Any) -> None:
         if self.is_frozen():
@@ -77,28 +59,36 @@ class CfgNode:
         return attr
 
     def __eq__(self, other: CfgNode) -> bool:
-        print(self.to_dict())
-        print(other.to_dict())
         return self.to_dict() == other.to_dict()
 
-    # def __str__(self) -> str:
-    #     # TODO: handle custom class objects dump
-    #     attrs = self.to_dict()
-    #     return yaml.dump(attrs)
+    def __str__(self) -> str:
+        add_yaml_representer()
+        attrs = self.to_dict()
+        return yaml.dump(attrs)
 
     def __len__(self):
         return len(self.attrs())
 
-    def load(self, cfg_path: Path) -> CfgNode:
+    @staticmethod
+    def load(cfg_path: Union[Path, str]) -> CfgNode:
         module = import_module(cfg_path)
         cfg = module.cfg
         cfg.validate()
         cfg.set_module(module)
+        cfg.freeze()
+
         return cfg
 
+    @staticmethod
+    def merge_module(module_path: Path, output_path: Path):
+        merge_cfg_module(module_path, output_path)
+
     def save(self, path: Path) -> None:
-        # TODO: implement
-        merge_module(self.get_module(), path)
+        if self.was_unfrozen():
+            raise SaveError("Trying to save config which was unfrozen.")
+        if not self.get_module():
+            raise SaveError("Config was not loaded.")
+        self.merge_module(self.get_module(), path)
 
     def clone(self) -> CfgNode:
         return CfgNode(base=self)
@@ -149,6 +139,7 @@ class CfgNode:
 
     def unfreeze(self):
         super().__setattr__(CfgNode._FROZEN, False)
+        super().__setattr__(CfgNode._WAS_UNFROZEN, True)
         for key, attr in self.attrs():
             if isinstance(attr, CfgNode):
                 attr.unfreeze()
@@ -164,6 +155,10 @@ class CfgNode:
     def leaf_spec(self):
         # TODO: try to make it property
         return super().__getattribute__(CfgNode._LEAF_SPEC)
+
+    def was_unfrozen(self):
+        # TODO: try to make it property
+        return super().__getattribute__(CfgNode._WAS_UNFROZEN)
 
     def set_module(self, module):
         super().__setattr__(CfgNode._MODULE, module)
@@ -181,7 +176,7 @@ class CfgNode:
             if leaf_spec:
                 raise SchemaError(f"Key {key} cannot contain nested nodes as leaf spec is defined for it.")
             if self.is_schema_frozen():
-                raise SchemaError(f"Trying to add node {key}, but schema is frozen.")
+                raise SchemaFrozenError(f"Trying to add node {key}, but schema is frozen.")
             value_to_set = value
         elif isinstance(value, CfgLeaf):
             value_to_set = value
@@ -195,7 +190,7 @@ class CfgNode:
                     raise SchemaError(f"Leaf at key {key} mismatches config node's leaf spec.")
             else:
                 if self.is_schema_frozen():
-                    raise SchemaError(f"Trying to add leaf {key} to frozen node without leaf spec.")
+                    raise SchemaFrozenError(f"Trying to add leaf {key} to frozen node without leaf spec.")
         super().__setattr__(key, value_to_set)
 
     def _set_existing_attr(self, key: str, value: Any) -> None:
@@ -211,6 +206,11 @@ class CfgNode:
                     f"Current value of attribute {key} is of type {type(cur_attr)}, but new one is of {value_type}."
                 )
             super().__setattr__(key, value)
+
+    def _init_with_base(self, base: CfgNode):
+        super().__setattr__(CfgNode._LEAF_SPEC, base.leaf_spec())
+        self._set_attrs(base.attrs())
+        self.freeze_schema()
 
 
 class CfgLeaf:
@@ -254,9 +254,4 @@ __all__ = [
     "CL",
     "CfgNode",
     "CfgLeaf",
-    "TypeMismatch",
-    "NodeReassignment",
-    "ModuleError",
-    "ValidationError",
-    "SchemaError",
 ]

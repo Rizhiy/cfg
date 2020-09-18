@@ -1,7 +1,12 @@
 import pytest
 
 from ntc import CfgLeaf, CfgNode
-from ntc.config import NodeReassignment
+from ntc.config import NodeFrozenError, NodeReassignment, SchemaFrozenError, TypeMismatch, ValidationError
+
+
+class Quux:
+    def __str__(self):
+        return "quux"
 
 
 def test_define_with_value():
@@ -13,7 +18,7 @@ def test_define_with_value():
     cfg.FOO = 42
     assert cfg.FOO == 42
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeMismatch):
         cfg.FOO = "foo"
 
 
@@ -22,7 +27,7 @@ def test_define_with_type():
 
     cfg.FOO = str
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeMismatch):
         cfg.FOO = 42
 
     cfg.FOO = "foo"
@@ -62,24 +67,27 @@ def test_str():
     cfg.FOO = 32
     cfg.BAR = CfgNode()
     cfg.BAR.BAZ = "baz"
+    cfg.QUUX = Quux()
 
-    expected_str = "BAR:\n  BAZ: baz\nFOO: 32\n"
+    expected_str = "BAR:\n  BAZ: baz\nFOO: 32\nQUUX: quux\n"
     assert str(cfg) == expected_str
 
 
 def test_required():
     cfg = CfgNode()
 
-    with pytest.raises(ValueError):
-        cfg.FOO = CfgLeaf(None, int, required=True)
-
-    cfg.FOO = CfgLeaf(32, int, required=True)
-    assert cfg.FOO == 32
-    with pytest.raises(ValueError):
-        cfg.FOO = None
-
+    cfg.FOO = CfgLeaf(None, int, required=True)
     cfg.FOO = 42
     assert cfg.FOO == 42
+    cfg.validate()
+
+
+def test_required_error():
+    cfg = CfgNode()
+
+    cfg.FOO = CfgLeaf(None, int, required=True)
+    with pytest.raises(ValidationError):
+        cfg.validate()
 
 
 def test_clone():
@@ -92,5 +100,36 @@ def test_clone():
 
     cfg2.BAR.BAZ = "baz2"
 
-    assert str(cfg1) == "BAR:\n  BAZ: baz1\nFOO: 32\n"
-    assert str(cfg2) == "BAR:\n  BAZ: baz2\nFOO: 32\n"
+    assert cfg1.to_dict() == {
+        "BAR": {"BAZ": "baz1"},
+        "FOO": 32,
+    }
+    assert cfg2.to_dict() == {
+        "BAR": {"BAZ": "baz2"},
+        "FOO": 32,
+    }
+
+
+def test_freeze_unfreeze_schema():
+    cfg = CfgNode()
+    cfg.FOO = 32
+    cfg.freeze_schema()
+
+    with pytest.raises(SchemaFrozenError):
+        cfg.BAR = "bar"
+    cfg.FOO = 42
+
+    cfg.unfreeze_schema()
+    cfg.BAR = "bar"
+
+
+def test_freeze_unfreeze():
+    cfg = CfgNode()
+    cfg.FOO = 32
+    cfg.freeze()
+
+    with pytest.raises(NodeFrozenError):
+        cfg.FOO = 42
+
+    cfg.unfreeze()
+    cfg.FOO = 42

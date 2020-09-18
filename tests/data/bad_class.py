@@ -1,5 +1,6 @@
-from .good import cfg
 from ntc import CN
+
+from .good import cfg
 
 
 class BadClass:
