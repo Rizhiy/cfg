@@ -3,7 +3,7 @@ import os
 
 from setuptools import find_packages, setup
 
-_module_name = "nt_config"
+_module_name = "ntc"
 
 
 def _read(rel_path):

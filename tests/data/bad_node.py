@@ -1,8 +1,14 @@
-from .base_cfg import defaults
+from ntc import CN
+
+from .base_cfg import cfg
 
 
 class BadClass:
     pass
 
-cfg = defaults()
+
+cfg = CN(cfg)
+
+cfg.NAME = "bad_node"
+
 cfg.CLASSES.ONE = BadClass()

@@ -1,4 +1,7 @@
-from .base_cfg import BaseClass, defaults
+from ntc import CN
 
-cfg = defaults()
+from .base_cfg import BaseClass
+from .good import cfg
+
+cfg = CN(cfg)
 cfg.CLASSES.ONE = BaseClass()
