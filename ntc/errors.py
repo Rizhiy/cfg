@@ -22,10 +22,6 @@ class SchemaFrozenError(SchemaError):
     pass
 
 
-class ValidationError(ConfigError):
-    pass
-
-
 class SpecError(ConfigError):
     pass
 
@@ -35,4 +31,12 @@ class NodeFrozenError(ConfigError):
 
 
 class SaveError(ConfigError):
+    pass
+
+
+class ValidationError(ConfigError):
+    pass
+
+
+class MissingRequired(ValidationError):
     pass

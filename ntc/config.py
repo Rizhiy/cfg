@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Tuple, Type, Union
 import yaml
 
 from ntc.errors import (
+    MissingRequired,
     NodeFrozenError,
     NodeReassignment,
     SaveError,
@@ -13,9 +14,8 @@ from ntc.errors import (
     SchemaFrozenError,
     SpecError,
     TypeMismatch,
-    ValidationError,
 )
-from ntc.utils import add_yaml_representer, import_module, merge_cfg_module
+from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 
 class CfgNode:
@@ -35,11 +35,11 @@ class CfgNode:
         # TODO: make access to attributes prettier
         super().__setattr__(CfgNode._SCHEMA_FROZEN, schema_frozen)
         super().__setattr__(CfgNode._FROZEN, frozen)
+        super().__setattr__(CfgNode._MODULE, None)
+        super().__setattr__(CfgNode._WAS_UNFROZEN, False)
         if leaf_spec and isinstance(leaf_spec, CfgLeaf):
             leaf_spec = _CfgLeafSpec.from_leaf(leaf_spec)
         super().__setattr__(CfgNode._LEAF_SPEC, leaf_spec)
-        super().__setattr__(CfgNode._MODULE, None)
-        super().__setattr__(CfgNode._WAS_UNFROZEN, False)
 
         if base is not None:
             self._init_with_base(base)
@@ -62,11 +62,11 @@ class CfgNode:
         return self.to_dict() == other.to_dict()
 
     def __str__(self) -> str:
-        add_yaml_representer()
+        add_yaml_str_representer()
         attrs = self.to_dict()
         return yaml.dump(attrs)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.attrs())
 
     @staticmethod
@@ -80,7 +80,7 @@ class CfgNode:
         return cfg
 
     @staticmethod
-    def merge_module(module_path: Path, output_path: Path):
+    def merge_module(module_path: Path, output_path: Path) -> None:
         merge_cfg_module(module_path, output_path)
 
     def save(self, path: Path) -> None:
@@ -99,7 +99,7 @@ class CfgNode:
                 attr.validate()
             else:
                 if attr.required and attr.value is None:
-                    raise ValidationError(f"Key {key} is required, but was not provided.")
+                    raise MissingRequired(f"Key {key} is required, but was not provided.")
 
     def to_dict(self) -> Dict[str, Any]:
         attrs = {}
@@ -190,7 +190,9 @@ class CfgNode:
                     raise SchemaError(f"Leaf at key {key} mismatches config node's leaf spec.")
             else:
                 if self.is_schema_frozen():
-                    raise SchemaFrozenError(f"Trying to add leaf {key} to frozen node without leaf spec.")
+                    raise SchemaFrozenError(
+                        f"Trying to add leaf {key} to node with frozen schema, but without leaf spec."
+                    )
         super().__setattr__(key, value_to_set)
 
     def _set_existing_attr(self, key: str, value: Any) -> None:
@@ -207,7 +209,7 @@ class CfgNode:
                 )
             super().__setattr__(key, value)
 
-    def _init_with_base(self, base: CfgNode):
+    def _init_with_base(self, base: CfgNode) -> None:
         super().__setattr__(CfgNode._LEAF_SPEC, base.leaf_spec())
         self._set_attrs(base.attrs())
         self.freeze_schema()

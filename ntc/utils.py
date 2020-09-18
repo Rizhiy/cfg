@@ -59,7 +59,7 @@ def merge_cfg_module(
     imported_modules.add(module_name)
 
 
-def add_yaml_representer():
+def add_yaml_str_representer():
     def obj_representer(dumper, data):
         return dumper.represent_scalar("tag:yaml.org,2002:str", str(data))
 

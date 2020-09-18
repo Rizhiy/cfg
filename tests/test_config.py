@@ -1,7 +1,7 @@
 import pytest
 
 from ntc import CfgLeaf, CfgNode
-from ntc.config import NodeFrozenError, NodeReassignment, SchemaFrozenError, TypeMismatch, ValidationError
+from ntc.config import MissingRequired, NodeFrozenError, NodeReassignment, SchemaFrozenError, TypeMismatch
 
 
 class Quux:
@@ -86,7 +86,7 @@ def test_required_error():
     cfg = CfgNode()
 
     cfg.FOO = CfgLeaf(None, int, required=True)
-    with pytest.raises(ValidationError):
+    with pytest.raises(MissingRequired):
         cfg.validate()
 
 

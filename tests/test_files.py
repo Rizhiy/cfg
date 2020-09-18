@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, NodeFrozenError, SaveError, SchemaError, SchemaFrozenError, TypeMismatch, ValidationError
+from ntc import CN, MissingRequired, NodeFrozenError, SaveError, SchemaError, SchemaFrozenError, TypeMismatch
 from tests.data.base_cfg import BaseClass, cfg
 from tests.data.subclass_class import SubClass
 
@@ -20,7 +20,7 @@ def test_bad():
 
 
 def test_missing():
-    with pytest.raises(ValidationError):
+    with pytest.raises(MissingRequired):
         CN.load(DATA_DIR / "missing.py")
 
 
