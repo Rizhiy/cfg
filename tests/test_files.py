@@ -66,6 +66,7 @@ def test_save():
 def test_save_unfrozen():
     good = CN.load(DATA_DIR / "good.py")
     good.unfreeze()
+    good.freeze()
     with pytest.raises(SaveError):
         good.save(DATA_DIR / "good2.py")
 
