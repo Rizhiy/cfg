@@ -24,6 +24,7 @@ class CfgNode:
     _WAS_UNFROZEN = "_was_unfrozen"
     _LEAF_SPEC = "_leaf_spec"
     _MODULE = "_module"
+    _NEW_ALLOWED = "_new_allowed"
 
     def __init__(
         self,
@@ -31,10 +32,12 @@ class CfgNode:
         leaf_spec: Union[CfgLeaf, _CfgLeafSpec] = None,
         schema_frozen: bool = False,
         frozen: bool = False,
+        new_allowed: bool = False,
     ):
         # TODO: make access to attributes prettier
         super().__setattr__(CfgNode._SCHEMA_FROZEN, schema_frozen)
         super().__setattr__(CfgNode._FROZEN, frozen)
+        super().__setattr__(CfgNode._NEW_ALLOWED, new_allowed)
         super().__setattr__(CfgNode._MODULE, None)
         super().__setattr__(CfgNode._WAS_UNFROZEN, False)
         if leaf_spec and isinstance(leaf_spec, CfgLeaf):
@@ -160,6 +163,10 @@ class CfgNode:
         # TODO: try to make it property
         return super().__getattribute__(CfgNode._WAS_UNFROZEN)
 
+    def new_allowed(self):
+        # TODO: try to make it property
+        return super().__getattribute__(CfgNode._NEW_ALLOWED)
+
     def set_module(self, module):
         super().__setattr__(CfgNode._MODULE, module)
 
@@ -175,7 +182,7 @@ class CfgNode:
         if isinstance(value, CfgNode):
             if leaf_spec:
                 raise SchemaError(f"Key {key} cannot contain nested nodes as leaf spec is defined for it.")
-            if self.is_schema_frozen():
+            if self.is_schema_frozen() and not self.new_allowed():
                 raise SchemaFrozenError(f"Trying to add node {key}, but schema is frozen.")
             value_to_set = value
         elif isinstance(value, CfgLeaf):
@@ -189,7 +196,7 @@ class CfgNode:
                 if leaf_spec.required != value_to_set.required or not issubclass(value_to_set.type_, leaf_spec.type_):
                     raise SchemaError(f"Leaf at key {key} mismatches config node's leaf spec.")
             else:
-                if self.is_schema_frozen():
+                if self.is_schema_frozen() and not self.new_allowed():
                     raise SchemaFrozenError(
                         f"Trying to add leaf {key} to node with frozen schema, but without leaf spec."
                     )

@@ -1,7 +1,7 @@
 import pytest
 
 from ntc import CfgLeaf, CfgNode
-from ntc.config import MissingRequired, NodeFrozenError, NodeReassignment, SchemaFrozenError, TypeMismatch
+from ntc.errors import MissingRequired, NodeFrozenError, NodeReassignment, SchemaFrozenError, TypeMismatch
 
 
 class Quux:
@@ -133,3 +133,14 @@ def test_freeze_unfreeze():
 
     cfg.unfreeze()
     cfg.FOO = 42
+
+
+def test_new_allowed():
+    cfg = CfgNode()
+    cfg.FOO = CfgNode(new_allowed=True)
+    cfg.freeze_schema()
+
+    cfg.FOO.BAR = 42
+    cfg.FOO.QUUX = CfgNode()
+    with pytest.raises(SchemaFrozenError):
+        cfg.BAZ = "baz"
