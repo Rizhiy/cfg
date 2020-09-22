@@ -33,8 +33,8 @@ setup(
     name=_module_name,
     version=_get_version(f"{_module_name}/__init__.py"),
     description="NeuroTrade Config Library",
-    author="Artem Vasenin",
-    author_email="a.vasenin@neurotrade.ru",
+    author="Vladimir Mikhaylov",
+    author_email="v.mikhaylov@neurotrade.ru",
     packages=find_packages(exclude=["tests*"]),
     install_requires=_get_requirements(f"{_module_name}/requirements.txt"),
 )
