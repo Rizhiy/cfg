@@ -13,7 +13,6 @@ from ntc.errors import (
     SaveError,
     SchemaError,
     SchemaFrozenError,
-    SpecError,
     TypeMismatch,
 )
 from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
@@ -33,7 +32,7 @@ class CfgNode(UserDict):
     def __init__(
         self,
         base: dict = None,
-        leaf_spec: Union[CfgLeaf, _CfgLeafSpec] = None,
+        leaf_spec: CfgLeaf = None,
         schema_frozen: bool = False,
         frozen: bool = False,
         new_allowed: bool = False,
@@ -44,8 +43,6 @@ class CfgNode(UserDict):
         setattr(self, CfgNode._NEW_ALLOWED, new_allowed)
         setattr(self, CfgNode._MODULE, None)
         setattr(self, CfgNode._WAS_UNFROZEN, False)
-        if leaf_spec and isinstance(leaf_spec, CfgLeaf):
-            leaf_spec = _CfgLeafSpec.from_leaf(leaf_spec)
         setattr(self, CfgNode._LEAF_SPEC, leaf_spec)
 
         if base is not None:
@@ -211,12 +208,20 @@ class CfgNode(UserDict):
         elif isinstance(value, CfgLeaf):
             value_to_set = value
         elif isinstance(value, type):
-            value_to_set = CfgLeaf(None, value)
+            if leaf_spec and leaf_spec.subclass:
+                value_to_set = CfgLeaf(value, value, subclass=True)
+            else:
+                value_to_set = CfgLeaf(None, value)
         else:
             value_to_set = CfgLeaf(value, type(value))
         if isinstance(value_to_set, CfgLeaf):
             if leaf_spec:
-                if leaf_spec.required != value_to_set.required or not issubclass(value_to_set.type_, leaf_spec.type_):
+                if (
+                    leaf_spec.required != value_to_set.required
+                    or (leaf_spec.subclass and not isinstance(value_to_set.value, type))
+                    or (leaf_spec.subclass and not issubclass(value_to_set.value, leaf_spec.type))
+                    or (not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type))
+                ):
                     raise SchemaError(f"Leaf at key {key} mismatches config node's leaf spec.")
             else:
                 if self.schema_frozen and not self.new_allowed:
@@ -254,11 +259,27 @@ class CfgNode(UserDict):
 
 
 class CfgLeaf:
-    def __init__(self, value: Any, type_: Type, required: bool = False):
-        self.type_ = type_
-        self.required = required
+    def __init__(self, value: Any, type_: Type, required=False, subclass=False):
+        self._type = type_
+        self._required = required
+        self._subclass = subclass
 
-        self.value = value
+        self._value = value
+
+    def __str__(self):
+        return f"CfgLeaf({self.value})"
+
+    @property
+    def type(self) -> Type:
+        return self._type
+
+    @property
+    def required(self) -> bool:
+        return self._required
+
+    @property
+    def subclass(self) -> bool:
+        return self._subclass
 
     @property
     def value(self) -> Any:
@@ -266,24 +287,17 @@ class CfgLeaf:
 
     @value.setter
     def value(self, val) -> None:
-        if val is not None and not isinstance(val, self.type_):
-            raise TypeMismatch(f"Value of type {self.type_} expected, but {type(val)} found.")
+        if self._required and val is None:
+            raise MissingRequired("Can't set required value to None")
+        if val is not None:
+            if self._subclass and not issubclass(val, self._type):
+                raise TypeMismatch(f"Subclass of type {self._type} expected, but {val} found!")
+            if not self._subclass and not isinstance(val, self._type):
+                raise TypeMismatch(f"Instance of type {self._type} expected, but {val} found!")
         self._value = val
 
     def clone(self) -> CfgLeaf:
-        return CfgLeaf(self.value, self.type_, self.required)
-
-
-class _CfgLeafSpec:
-    def __init__(self, type_: Type, required: bool):
-        self.type_ = type_
-        self.required = required
-
-    @staticmethod
-    def from_leaf(cfg_leaf: CfgLeaf) -> _CfgLeafSpec:
-        if cfg_leaf.value is not None:
-            raise SpecError("Leaf spec cannot contain default value.")
-        return _CfgLeafSpec(type_=cfg_leaf.type_, required=cfg_leaf.required)
+        return CfgLeaf(self._value, self._type, self._required, self._subclass)
 
 
 CN = CfgNode

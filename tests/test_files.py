@@ -87,3 +87,18 @@ def test_freeze_loaded():
     with pytest.raises(NodeFrozenError):
         # new attribute
         good.BAR = "bar"
+
+
+def test_node_subclass():
+    node = CN.load(DATA_DIR / "node_subclass.py")
+    assert issubclass(node.SUBCLASSES.ONE, BaseClass)
+
+
+def test_bad_node_subclass():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_node_subclass.py")
+
+
+def test_bad_node_instance():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_node_instance.py")
