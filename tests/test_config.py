@@ -164,3 +164,9 @@ def test_get():
         cfg["BAR"]
     assert cfg.get("BAR") is None
     assert cfg.get("BAR", "foo") == "foo"
+
+
+def test_init_from_dict():
+    cfg = CfgNode({"FOO": "bar", "BAR": {"BAZ": "foo"}})
+    assert cfg.FOO == "bar"
+    assert cfg.BAR.BAZ == "foo"

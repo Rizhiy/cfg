@@ -32,7 +32,7 @@ class CfgNode(UserDict):
 
     def __init__(
         self,
-        base: CfgNode = None,
+        base: dict = None,
         leaf_spec: Union[CfgLeaf, _CfgLeafSpec] = None,
         schema_frozen: bool = False,
         frozen: bool = False,
@@ -239,10 +239,18 @@ class CfgNode(UserDict):
                 )
             super().__setitem__(key, value)
 
-    def _init_with_base(self, base: CfgNode) -> None:
-        setattr(self, CfgNode._LEAF_SPEC, base.leaf_spec)
-        self._set_attrs(base.attrs)
-        self.freeze_schema()
+    def _init_with_base(self, base: dict) -> None:
+        if isinstance(base, CfgNode):
+            setattr(self, CfgNode._LEAF_SPEC, base.leaf_spec)
+            self._set_attrs(base.attrs)
+            self.freeze_schema()
+        elif isinstance(base, dict):
+            for key, value in base.items():
+                if isinstance(value, dict):
+                    value = CfgNode(value)
+                self[key] = value
+        else:
+            raise ValueError(f"Unknown base format {base}")
 
 
 class CfgLeaf:
