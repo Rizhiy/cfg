@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import UserDict
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Type, Union
 
@@ -18,13 +19,16 @@ from ntc.errors import (
 from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 
-class CfgNode:
+class CfgNode(UserDict):
     _SCHEMA_FROZEN = "_schema_frozen"
     _FROZEN = "_frozen"
     _WAS_UNFROZEN = "_was_unfrozen"
     _LEAF_SPEC = "_leaf_spec"
     _MODULE = "_module"
     _NEW_ALLOWED = "_new_allowed"
+
+    _BUILT_IN_ATTRS = [_SCHEMA_FROZEN, _FROZEN, _WAS_UNFROZEN, _LEAF_SPEC, _MODULE, _NEW_ALLOWED]
+    RESERVED_KEYS = [*_BUILT_IN_ATTRS, "data"]
 
     def __init__(
         self,
@@ -34,32 +38,51 @@ class CfgNode:
         frozen: bool = False,
         new_allowed: bool = False,
     ):
-        # TODO: make access to attributes prettier
-        super().__setattr__(CfgNode._SCHEMA_FROZEN, schema_frozen)
-        super().__setattr__(CfgNode._FROZEN, frozen)
-        super().__setattr__(CfgNode._NEW_ALLOWED, new_allowed)
-        super().__setattr__(CfgNode._MODULE, None)
-        super().__setattr__(CfgNode._WAS_UNFROZEN, False)
+        super().__init__()
+        setattr(self, CfgNode._SCHEMA_FROZEN, schema_frozen)
+        setattr(self, CfgNode._FROZEN, frozen)
+        setattr(self, CfgNode._NEW_ALLOWED, new_allowed)
+        setattr(self, CfgNode._MODULE, None)
+        setattr(self, CfgNode._WAS_UNFROZEN, False)
         if leaf_spec and isinstance(leaf_spec, CfgLeaf):
             leaf_spec = _CfgLeafSpec.from_leaf(leaf_spec)
-        super().__setattr__(CfgNode._LEAF_SPEC, leaf_spec)
+        setattr(self, CfgNode._LEAF_SPEC, leaf_spec)
 
         if base is not None:
             self._init_with_base(base)
 
-    def __setattr__(self, key: str, value: Any) -> None:
-        if self.is_frozen():
+    def __setitem__(self, key: str, value: Any) -> None:
+        if self.frozen:
             raise NodeFrozenError()
-        if hasattr(self, key):
-            self._set_existing_attr(key, value)
+        if key in self:
+            self._set_existing(key, value)
         else:
-            self._set_new_attr(key, value)
+            self._set_new(key, value)
 
-    def __getattribute__(self, item: str) -> Any:
-        attr = super().__getattribute__(item)
+    def _get_raw(self, key):
+        if key not in self:
+            raise KeyError(key)
+        return super().__getitem__(key)
+
+    def __getitem__(self, key: str) -> Any:
+        attr = self._get_raw(key)
         if isinstance(attr, CfgLeaf):
             return attr.value
         return attr
+
+    def __getattr__(self, key: str) -> Any:
+        if key in self.RESERVED_KEYS:
+            return super().__getattribute__(key)
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(key)
+
+    def __setattr__(self, key: str, value: Any) -> None:
+        if key in self.RESERVED_KEYS:
+            super().__setattr__(key, value)
+        else:
+            self[key] = value
 
     def __eq__(self, other: CfgNode) -> bool:
         return self.to_dict() == other.to_dict()
@@ -70,7 +93,7 @@ class CfgNode:
         return yaml.dump(attrs)
 
     def __len__(self) -> int:
-        return len(self.attrs())
+        return len(self.attrs)
 
     @staticmethod
     def load(cfg_path: Union[Path, str]) -> CfgNode:
@@ -87,7 +110,7 @@ class CfgNode:
         merge_cfg_module(module_path, output_path)
 
     def save(self, path: Path) -> None:
-        if self.was_unfrozen():
+        if self.was_unfrozen:
             raise SaveError("Trying to save config which was unfrozen.")
         if not self.get_module():
             raise SaveError("Config was not loaded.")
@@ -97,7 +120,7 @@ class CfgNode:
         return CfgNode(base=self)
 
     def validate(self) -> None:
-        for key, attr in self.attrs():
+        for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.validate()
             else:
@@ -106,83 +129,83 @@ class CfgNode:
 
     def to_dict(self) -> Dict[str, Any]:
         attrs = {}
-        for key, attr in self.attrs():
+        for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attrs[key] = attr.to_dict()
             else:
                 attrs[key] = attr.value
         return attrs
 
+    @property
     def attrs(self) -> List[Tuple[str, Union[CfgNode, CfgLeaf]]]:
-        # TODO: try to make it property
         attrs_list = []
-        for key in dir(self):
-            attr = super().__getattribute__(key)
-            if isinstance(attr, (CfgNode, CfgLeaf)):
-                attrs_list.append((key, attr))
+        for key in super().keys():
+            value = self._get_raw(key)
+            if isinstance(value, (CfgNode, CfgLeaf)):
+                attrs_list.append((key, value))
         return attrs_list
 
     def freeze_schema(self):
-        super().__setattr__(CfgNode._SCHEMA_FROZEN, True)
-        for key, attr in self.attrs():
+        setattr(self, CfgNode._SCHEMA_FROZEN, True)
+        for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.freeze_schema()
 
     def unfreeze_schema(self):
-        super().__setattr__(CfgNode._SCHEMA_FROZEN, False)
-        for key, attr in self.attrs():
+        setattr(self, CfgNode._SCHEMA_FROZEN, False)
+        for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.unfreeze_schema()
 
     def freeze(self):
-        super().__setattr__(CfgNode._FROZEN, True)
-        for key, attr in self.attrs():
+        setattr(self, CfgNode._FROZEN, True)
+        for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.freeze()
 
     def unfreeze(self):
-        super().__setattr__(CfgNode._FROZEN, False)
-        super().__setattr__(CfgNode._WAS_UNFROZEN, True)
-        for key, attr in self.attrs():
+        setattr(self, CfgNode._FROZEN, False)
+        setattr(self, CfgNode._WAS_UNFROZEN, True)
+        for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.unfreeze()
 
-    def is_schema_frozen(self):
-        # TODO: try to make it property
-        return super().__getattribute__(CfgNode._SCHEMA_FROZEN)
+    @property
+    def schema_frozen(self):
+        return getattr(self, CfgNode._SCHEMA_FROZEN)
 
-    def is_frozen(self):
-        # TODO: try to make it property
-        return super().__getattribute__(CfgNode._FROZEN)
+    @property
+    def frozen(self):
+        return getattr(self, CfgNode._FROZEN)
 
+    @property
     def leaf_spec(self):
-        # TODO: try to make it property
-        return super().__getattribute__(CfgNode._LEAF_SPEC)
+        return getattr(self, CfgNode._LEAF_SPEC)
 
+    @property
     def was_unfrozen(self):
-        # TODO: try to make it property
-        return super().__getattribute__(CfgNode._WAS_UNFROZEN)
+        return getattr(self, CfgNode._WAS_UNFROZEN)
 
+    @property
     def new_allowed(self):
-        # TODO: try to make it property
-        return super().__getattribute__(CfgNode._NEW_ALLOWED)
-
-    def set_module(self, module):
-        super().__setattr__(CfgNode._MODULE, module)
+        return getattr(self, CfgNode._NEW_ALLOWED)
 
     def get_module(self):
-        return super().__getattribute__(CfgNode._MODULE)
+        return getattr(self, CfgNode._MODULE)
+
+    def set_module(self, module):
+        setattr(self, CfgNode._MODULE, module)
 
     def _set_attrs(self, attrs: List[Tuple[str, Union[CfgNode, CfgLeaf]]]):
         for key, attr in attrs:
             setattr(self, key, attr.clone())
 
-    def _set_new_attr(self, key: str, value: Any) -> None:
-        leaf_spec = self.leaf_spec()
+    def _set_new(self, key: str, value: Any) -> None:
+        leaf_spec = self.leaf_spec
         if isinstance(value, CfgNode):
             if leaf_spec:
                 raise SchemaError(f"Key {key} cannot contain nested nodes as leaf spec is defined for it.")
-            if self.is_schema_frozen() and not self.new_allowed():
+            if self.schema_frozen and not self.new_allowed:
                 raise SchemaFrozenError(f"Trying to add node {key}, but schema is frozen.")
             value_to_set = value
         elif isinstance(value, CfgLeaf):
@@ -196,14 +219,14 @@ class CfgNode:
                 if leaf_spec.required != value_to_set.required or not issubclass(value_to_set.type_, leaf_spec.type_):
                     raise SchemaError(f"Leaf at key {key} mismatches config node's leaf spec.")
             else:
-                if self.is_schema_frozen() and not self.new_allowed():
+                if self.schema_frozen and not self.new_allowed:
                     raise SchemaFrozenError(
                         f"Trying to add leaf {key} to node with frozen schema, but without leaf spec."
                     )
-        super().__setattr__(key, value_to_set)
+        super().__setitem__(key, value_to_set)
 
-    def _set_existing_attr(self, key: str, value: Any) -> None:
-        cur_attr = super().__getattribute__(key)
+    def _set_existing(self, key: str, value: Any) -> None:
+        cur_attr = super().__getitem__(key)
         value_type = type(value)
         if isinstance(cur_attr, CfgNode):
             raise NodeReassignment(f"Nested CfgNode {key} cannot be reassigned.")
@@ -214,11 +237,11 @@ class CfgNode:
                 raise TypeMismatch(
                     f"Current value of attribute {key} is of type {type(cur_attr)}, but new one is of {value_type}."
                 )
-            super().__setattr__(key, value)
+            super().__setitem__(key, value)
 
     def _init_with_base(self, base: CfgNode) -> None:
-        super().__setattr__(CfgNode._LEAF_SPEC, base.leaf_spec())
-        self._set_attrs(base.attrs())
+        setattr(self, CfgNode._LEAF_SPEC, base.leaf_spec)
+        self._set_attrs(base.attrs)
         self.freeze_schema()
 
 

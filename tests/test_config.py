@@ -9,17 +9,21 @@ class Quux:
         return "quux"
 
 
-def test_define_with_value():
+@pytest.fixture
+def basic_cfg():
     cfg = CfgNode()
-
     cfg.FOO = 32
-    assert cfg.FOO == 32
+    return cfg
 
-    cfg.FOO = 42
-    assert cfg.FOO == 42
+
+def test_define_with_value(basic_cfg):
+    assert basic_cfg.FOO == 32
+
+    basic_cfg.FOO = 42
+    assert basic_cfg.FOO == 42
 
     with pytest.raises(TypeMismatch):
-        cfg.FOO = "foo"
+        basic_cfg.FOO = "foo"
 
 
 def test_define_with_type():
@@ -62,9 +66,8 @@ def test_nested_reassign_fail():
         cfg.FOO = CfgNode()
 
 
-def test_str():
-    cfg = CfgNode()
-    cfg.FOO = 32
+def test_str(basic_cfg):
+    cfg = basic_cfg
     cfg.BAR = CfgNode()
     cfg.BAR.BAZ = "baz"
     cfg.QUUX = Quux()
@@ -90,9 +93,8 @@ def test_required_error():
         cfg.validate()
 
 
-def test_clone():
-    cfg1 = CfgNode()
-    cfg1.FOO = 32
+def test_clone(basic_cfg):
+    cfg1 = basic_cfg
     cfg1.BAR = CfgNode()
     cfg1.BAR.BAZ = "baz1"
 
@@ -110,29 +112,25 @@ def test_clone():
     }
 
 
-def test_freeze_unfreeze_schema():
-    cfg = CfgNode()
-    cfg.FOO = 32
-    cfg.freeze_schema()
+def test_freeze_unfreeze_schema(basic_cfg):
+    basic_cfg.freeze_schema()
 
     with pytest.raises(SchemaFrozenError):
-        cfg.BAR = "bar"
-    cfg.FOO = 42
+        basic_cfg.BAR = "bar"
+    basic_cfg.FOO = 42
 
-    cfg.unfreeze_schema()
-    cfg.BAR = "bar"
+    basic_cfg.unfreeze_schema()
+    basic_cfg.BAR = "bar"
 
 
-def test_freeze_unfreeze():
-    cfg = CfgNode()
-    cfg.FOO = 32
-    cfg.freeze()
+def test_freeze_unfreeze(basic_cfg):
+    basic_cfg.freeze()
 
     with pytest.raises(NodeFrozenError):
-        cfg.FOO = 42
+        basic_cfg.FOO = 42
 
-    cfg.unfreeze()
-    cfg.FOO = 42
+    basic_cfg.unfreeze()
+    basic_cfg.FOO = 42
 
 
 def test_new_allowed():
@@ -144,3 +142,25 @@ def test_new_allowed():
     cfg.FOO.QUUX = CfgNode()
     with pytest.raises(SchemaFrozenError):
         cfg.BAZ = "baz"
+
+
+def test_getitem(basic_cfg):
+    assert basic_cfg["FOO"] == 32
+
+
+def test_items():
+    cfg = CfgNode()
+    cfg.FOO = "bar"
+    cfg.BAR = "foo"
+    assert set(cfg.items()) == {("FOO", "bar"), ("BAR", "foo")}
+
+
+def test_get():
+    cfg = CfgNode()
+    cfg.FOO = "bar"
+
+    assert cfg.get("FOO") == "bar"
+    with pytest.raises(KeyError):
+        cfg["BAR"]
+    assert cfg.get("BAR") is None
+    assert cfg.get("BAR", "foo") == "foo"
