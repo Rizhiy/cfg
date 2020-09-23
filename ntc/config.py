@@ -27,7 +27,7 @@ class CfgNode(UserDict):
         "_module",
         "_new_allowed",
         "_validators",
-        "_transformers",
+        "_transforms",
         "_base",
     )
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
@@ -40,7 +40,7 @@ class CfgNode(UserDict):
         frozen: bool = False,
         new_allowed: bool = False,
         validators: List[Callable[[CfgNode], None]] = None,
-        transformers: List[Callable[[CfgNode], None]] = None,
+        transforms: List[Callable[[CfgNode], None]] = None,
     ):
         super().__init__()
         self._schema_frozen = schema_frozen
@@ -49,7 +49,7 @@ class CfgNode(UserDict):
         self._was_unfrozen = False
         self._leaf_spec = leaf_spec
         self._validators = validators or []
-        self._transformers = transformers or []
+        self._transforms = transforms or []
         self._module = None
 
         if base is not None:
@@ -144,7 +144,7 @@ class CfgNode(UserDict):
         """
         Specify additional changes to be made after manual changes
         """
-        for transformer in self._transformers:
+        for transformer in self._transforms:
             transformer(self)
 
     def validate(self) -> None:
@@ -263,7 +263,7 @@ class CfgNode(UserDict):
 
     def _init_with_base(self, base: dict) -> None:
         if isinstance(base, CfgNode):
-            self._transformers = base._transformers + self._transformers
+            self._transforms = base._transforms + self._transforms
             self._validators = base._validators + self._validators
             self._set_attrs(base.attrs)
             self.freeze_schema()

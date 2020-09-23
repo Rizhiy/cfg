@@ -1,6 +1,6 @@
 from ntc import CN
 
-from .transform import cfg as bc
+from .transform import cfg
 
 
 def transform(cfg: CN) -> None:
@@ -8,5 +8,5 @@ def transform(cfg: CN) -> None:
         cfg.DICT.FOO = "baz"
 
 
-cfg = CN(bc, transformers=[transform])
+cfg = CN(cfg, transforms=[transform])
 cfg.NAME = "Name"
