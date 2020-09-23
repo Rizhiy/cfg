@@ -2,20 +2,14 @@ from __future__ import annotations
 
 from collections import UserDict
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import yaml
 
-from ntc.errors import (
-    MissingRequired,
-    NodeFrozenError,
-    NodeReassignment,
-    SaveError,
-    SchemaError,
-    SchemaFrozenError,
-    TypeMismatch,
-)
+from ntc.errors import MissingRequired, NodeFrozenError, NodeReassignment, SaveError, SchemaError, SchemaFrozenError
 from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
+
+from .leaf import CfgLeaf
 
 
 class CfgNode(UserDict):
@@ -28,7 +22,6 @@ class CfgNode(UserDict):
         "_new_allowed",
         "_validators",
         "_transforms",
-        "_base",
     )
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
 
@@ -73,8 +66,6 @@ class CfgNode(UserDict):
         return attr
 
     def __getattr__(self, key: str) -> Any:
-        if key in self.RESERVED_KEYS:
-            return super().__getattribute__(key)
         try:
             return self[key]
         except KeyError:
@@ -107,10 +98,6 @@ class CfgNode(UserDict):
         return cfg
 
     @staticmethod
-    def merge_module(module_path: Path, output_path: Path) -> None:
-        merge_cfg_module(module_path, output_path)
-
-    @staticmethod
     def validate_required(cfg: CfgNode) -> None:
         for key, attr in cfg.attrs:
             if isinstance(attr, CfgNode):
@@ -124,7 +111,7 @@ class CfgNode(UserDict):
             raise SaveError("Trying to save config which was unfrozen.")
         if not self._module:
             raise SaveError("Config was not loaded.")
-        self.merge_module(self._module, path)
+        merge_cfg_module(self._module, path)
 
     def clone(self) -> CfgNode:
         cfg = CfgNode(self, leaf_spec=self.leaf_spec)
@@ -282,54 +269,6 @@ class CfgNode(UserDict):
             raise ValueError(f"Unknown base format {base}")
 
 
-class CfgLeaf:
-    def __init__(self, value: Any, type_: Type, required=False, subclass=False):
-        self._type = type_
-        self._required = required
-        self._subclass = subclass
-
-        self._value = value
-
-    def __str__(self):
-        return f"CfgLeaf({self.value})"
-
-    @property
-    def type(self) -> Type:
-        return self._type
-
-    @property
-    def required(self) -> bool:
-        return self._required
-
-    @property
-    def subclass(self) -> bool:
-        return self._subclass
-
-    @property
-    def value(self) -> Any:
-        return self._value
-
-    @value.setter
-    def value(self, val) -> None:
-        if self._required and val is None:
-            raise MissingRequired("Can't set required value to None")
-        if val is not None:
-            if self._subclass and not issubclass(val, self._type):
-                raise TypeMismatch(f"Subclass of type {self._type} expected, but {val} found!")
-            if not self._subclass and not isinstance(val, self._type):
-                raise TypeMismatch(f"Instance of type {self._type} expected, but {val} found!")
-        self._value = val
-
-    def clone(self) -> CfgLeaf:
-        return CfgLeaf(self._value, self._type, self._required, self._subclass)
-
-
 CN = CfgNode
-CL = CfgLeaf
 
-__all__ = [
-    "CN",
-    "CL",
-    "CfgNode",
-    "CfgLeaf",
-]
+__all__ = ["CfgNode", "CN"]

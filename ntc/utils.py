@@ -24,10 +24,6 @@ def import_module(module_path: Union[Path, str]) -> ModuleType:
 def merge_cfg_module(
     module: Union[ModuleType, Path, str], output_path: Path, clean: bool = True, imported_modules: Set[str] = None
 ) -> None:
-    if isinstance(module, (Path, str)):
-        module = import_module(module)
-    if isinstance(output_path, str):
-        output_path = Path(output_path)
     if imported_modules is None:
         imported_modules = set()
     module_name = module.__spec__.name

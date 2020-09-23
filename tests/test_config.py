@@ -170,3 +170,8 @@ def test_init_from_dict():
     cfg = CfgNode({"FOO": "bar", "BAR": {"BAZ": "foo"}})
     assert cfg.FOO == "bar"
     assert cfg.BAR.BAZ == "foo"
+
+
+def test_properties(basic_cfg):
+    for name in ["schema_frozen", "frozen", "leaf_spec"]:
+        getattr(basic_cfg, name)

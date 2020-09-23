@@ -14,6 +14,11 @@ def test_good():
     assert good.NAME == "Name"
 
 
+def test_import_str():
+    good = CN.load(str(DATA_DIR / "good.py"))
+    assert good.NAME == "Name"
+
+
 def test_bad():
     with pytest.raises(TypeMismatch):
         CN.load(DATA_DIR / "bad.py")
@@ -141,3 +146,28 @@ def test_bad_clone():
 def test_bad_validate():
     with pytest.raises(AssertionError):
         CN.load(DATA_DIR / "bad_validate.py")
+
+
+def test_transform_changes_bad():
+    with pytest.raises(SchemaFrozenError):
+        CN.load(DATA_DIR / "transform_changes_bad.py")
+
+
+def test_validate_changes_bad():
+    with pytest.raises(SchemaFrozenError):
+        CN.load(DATA_DIR / "validate_changes_bad.py")
+
+
+def test_bad_inherit():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_inherit_changes.py")
+
+
+def test_schema_freeze():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_schema.py")
+
+
+def test_bad_init():
+    with pytest.raises(ValueError):
+        CN.load(DATA_DIR / "bad_init.py")
