@@ -30,7 +30,7 @@ class CfgNode(UserDict):
         "_transformers",
         "_base",
     )
-    RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data", "_post_load", "_transform", "validate")
+    RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
 
     def __init__(
         self,
@@ -51,7 +51,6 @@ class CfgNode(UserDict):
         self._validators = validators or []
         self._transformers = transformers or []
         self._module = None
-        self._base = None
 
         if base is not None:
             self._init_with_base(base)
@@ -128,7 +127,9 @@ class CfgNode(UserDict):
         self.merge_module(self._module, path)
 
     def clone(self) -> CfgNode:
-        return CfgNode(self.to_dict(), leaf_spec=self.leaf_spec)
+        cfg = CfgNode(self, leaf_spec=self.leaf_spec)
+        cfg.unfreeze_schema()
+        return cfg
 
     def _post_load(self, cfg_path: Union[Path, str]) -> None:
         """
@@ -136,18 +137,18 @@ class CfgNode(UserDict):
 
         :param cfg_path: File from which config was loaded
         """
-        self._transform()
+        self.transform()
         self.validate()
 
-    def _transform(self) -> None:
+    def transform(self) -> None:
         """
         Specify additional changes to be made after manual changes
         """
-        for transformer in self.transformers:
+        for transformer in self._transformers:
             transformer(self)
 
     def validate(self) -> None:
-        validators = [CfgNode.validate_required] + self.validators
+        validators = [CfgNode.validate_required] + self._validators
         for validator in validators:
             validator(self)
 
@@ -159,20 +160,6 @@ class CfgNode(UserDict):
             else:
                 attrs[key] = attr.value
         return attrs
-
-    @property
-    def transformers(self) -> List[Callable[[CfgNode], None]]:
-        transformers = self._transformers
-        if self._base:
-            transformers = self._base.transformers + transformers
-        return transformers
-
-    @property
-    def validators(self) -> List[Callable[[CfgNode], None]]:
-        validators = self._validators
-        if self._base:
-            validators = self._base.validators + validators
-        return validators
 
     @property
     def attrs(self) -> List[Tuple[str, Union[CfgNode, CfgLeaf]]]:
@@ -218,8 +205,6 @@ class CfgNode(UserDict):
 
     @property
     def leaf_spec(self) -> CfgLeaf:
-        if self._leaf_spec is None and self._base is not None:
-            return self._base.leaf_spec
         return self._leaf_spec
 
     def set_module(self, module) -> None:
@@ -278,7 +263,8 @@ class CfgNode(UserDict):
 
     def _init_with_base(self, base: dict) -> None:
         if isinstance(base, CfgNode):
-            self._base = base
+            self._transformers = base._transformers + self._transformers
+            self._validators = base._validators + self._validators
             self._set_attrs(base.attrs)
             self.freeze_schema()
         elif isinstance(base, dict):

@@ -122,3 +122,20 @@ def test_transform_inheritance():
 def test_validate_inheritance():
     with pytest.raises(AssertionError):
         CN.load(DATA_DIR / "validate_inheritance.py")
+
+
+def test_inheritance_changes():
+    cfg = CN.load(DATA_DIR / "inheritance_changes.py")
+    assert cfg.DICT.BAR == "baz"
+    assert cfg.DICT.INT == 2
+
+
+def test_inheritance_changes_separation():
+    CN.load(DATA_DIR / "inheritance_changes.py")
+    with pytest.raises(AttributeError):
+        cfg.DICT.BAR
+
+
+def test_inheritance_changes_bad():
+    with pytest.raises(MissingRequired):
+        CN.load(DATA_DIR / "inheritance_changes_bad.py")
