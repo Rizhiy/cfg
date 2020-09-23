@@ -27,7 +27,7 @@ class CfgNode(UserDict):
     _NEW_ALLOWED = "_new_allowed"
 
     _BUILT_IN_ATTRS = [_SCHEMA_FROZEN, _FROZEN, _WAS_UNFROZEN, _LEAF_SPEC, _MODULE, _NEW_ALLOWED]
-    RESERVED_KEYS = [*_BUILT_IN_ATTRS, "data"]
+    RESERVED_KEYS = [*_BUILT_IN_ATTRS, "data", "_post_load", "transform", "_validate"]
 
     def __init__(
         self,
@@ -95,8 +95,8 @@ class CfgNode(UserDict):
     @staticmethod
     def load(cfg_path: Union[Path, str]) -> CfgNode:
         module = import_module(cfg_path)
-        cfg = module.cfg
-        cfg.validate()
+        cfg: CfgNode = module.cfg
+        cfg._post_load(cfg_path)
         cfg.set_module(module)
         cfg.freeze()
 
@@ -116,13 +116,33 @@ class CfgNode(UserDict):
     def clone(self) -> CfgNode:
         return CfgNode(base=self)
 
+    def _post_load(self, cfg_path: Union[Path, str]) -> None:
+        """
+        Any actions to be done after loading
+
+        :param cfg_path: File from which config was loaded
+        """
+        self._transform()
+        self.validate()
+
+    def _validate(self) -> None:
+        """
+        Specify additional rules to check
+        """
+
+    def _transform(self) -> None:
+        """
+        Specify additional changes to be made after manual changes
+        """
+
     def validate(self) -> None:
+        self._validate()
         for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.validate()
-            else:
-                if attr.required and attr.value is None:
-                    raise MissingRequired(f"Key {key} is required, but was not provided.")
+                continue
+            if attr.required and attr.value is None:
+                raise MissingRequired(f"Key {key} is required, but was not provided.")
 
     def to_dict(self) -> Dict[str, Any]:
         attrs = {}

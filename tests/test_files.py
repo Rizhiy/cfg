@@ -102,3 +102,13 @@ def test_bad_node_subclass():
 def test_bad_node_instance():
     with pytest.raises(SchemaError):
         CN.load(DATA_DIR / "bad_node_instance.py")
+
+
+def test_transform():
+    transform = CN.load(DATA_DIR / "transform.py")
+    assert transform.DICT.FOO == "bar"
+
+
+def test_validate():
+    with pytest.raises(AssertionError):
+        CN.load(DATA_DIR / "validate.py")
