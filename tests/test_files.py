@@ -169,5 +169,5 @@ def test_schema_freeze():
 
 
 def test_bad_init():
-    with pytest.raises(ValueError):
+    with pytest.raises(SchemaError):
         CN.load(DATA_DIR / "bad_init.py")

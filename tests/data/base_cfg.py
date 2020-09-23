@@ -15,8 +15,8 @@ cfg.DICT.X = "X"
 cfg.NAME = CL(None, str, required=True)
 cfg.LIST = [1, 2, 3, 4]
 cfg.CLASS = BaseClass()
-cfg.CLASSES = CN(leaf_spec=CL(None, BaseClass))
-cfg.SUBCLASSES = CN(leaf_spec=CL(None, BaseClass, subclass=True))
+cfg.CLASSES = CN(BaseClass)
+cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))
 
 
 def transform(cfg: CN):

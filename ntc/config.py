@@ -26,14 +26,16 @@ class CfgNode(UserDict):
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
 
     def __init__(
-        self,
-        base: dict = None,
-        leaf_spec: CfgLeaf = None,
-        schema_frozen: bool = False,
-        frozen: bool = False,
-        new_allowed: bool = False,
+        self, first: Any = None, *, schema_frozen: bool = False, frozen: bool = False, new_allowed: bool = False,
     ):
         super().__init__()
+        if isinstance(first, (dict, CfgNode)):
+            base, leaf_spec = first, None
+        else:
+            base, leaf_spec = None, first
+        if leaf_spec is not None and not isinstance(leaf_spec, CfgLeaf):
+            leaf_spec = CfgLeaf(None, leaf_spec)
+
         self._schema_frozen = schema_frozen
         self._frozen = frozen
         self._new_allowed = new_allowed
@@ -114,7 +116,8 @@ class CfgNode(UserDict):
         merge_cfg_module(self._module, path)
 
     def clone(self) -> CfgNode:
-        cfg = CfgNode(self, leaf_spec=self.leaf_spec)
+        cfg = CfgNode(self)
+        cfg._leaf_spec = self.leaf_spec
         cfg.unfreeze_schema()
         return cfg
 
@@ -254,7 +257,7 @@ class CfgNode(UserDict):
         else:
             raise AssertionError("This should not happen!")
 
-    def _init_with_base(self, base: dict) -> None:
+    def _init_with_base(self, base: Union[dict, CfgNode]) -> None:
         if isinstance(base, CfgNode):
             self._transforms = base._transforms + self._transforms
             self._validators = base._validators + self._validators
@@ -266,7 +269,7 @@ class CfgNode(UserDict):
                     value = CfgNode(value)
                 self[key] = value
         else:
-            raise ValueError(f"Unknown base format {base}")
+            raise ValueError("This should not happen!")
 
 
 CN = CfgNode
