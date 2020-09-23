@@ -4,9 +4,9 @@ from .transform import cfg
 
 
 def transform(cfg: CN) -> None:
-    if cfg.DICT.FOO == "bar":
-        cfg.DICT.FOO = "baz"
+    if cfg.DICT.X == "Y":
+        cfg.DICT.X = "Z"
 
 
-cfg = CN(cfg, transforms=[transform])
-cfg.NAME = "Name"
+cfg = cfg.clone()
+cfg.add_transform(transform)

@@ -4,9 +4,11 @@ from .base_cfg import cfg
 
 
 def transform(cfg: CN) -> None:
-    if cfg.DICT.FOO == "foo":
-        cfg.DICT.FOO = "bar"
+    if cfg.DICT.INT == 1:
+        cfg.DICT.INT = 2
 
 
-cfg = CN(cfg, transforms=[transform])
+cfg = cfg.clone()
 cfg.NAME = "Name"
+
+cfg.add_transform(transform)

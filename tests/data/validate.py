@@ -1,11 +1,13 @@
 from ntc import CN
 
-from .base_cfg import cfg as bc
+from .base_cfg import cfg
 
 
 def validate(cfg: CN) -> None:
     assert cfg.NAME != "Name"
 
 
-cfg = CN(bc, validators=[validate])
+cfg = cfg.clone()
 cfg.NAME = "Name"
+
+cfg.add_validator(validate)

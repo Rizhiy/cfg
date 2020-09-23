@@ -105,27 +105,19 @@ def test_bad_node_instance():
 
 
 def test_transform():
-    transform = CN.load(DATA_DIR / "transform.py")
-    assert transform.DICT.FOO == "bar"
+    transform = CN.load(DATA_DIR / "transform_changes.py")
+    assert transform.DICT.INT == 2
+    assert transform.DICT.X == "Z"
 
 
 def test_validate():
     with pytest.raises(AssertionError):
-        CN.load(DATA_DIR / "validate.py")
-
-
-def test_transform_inheritance():
-    transform = CN.load(DATA_DIR / "transform_inheritance.py")
-    assert transform.DICT.FOO == "baz"
-
-
-def test_validate_inheritance():
-    with pytest.raises(AssertionError):
-        CN.load(DATA_DIR / "validate_inheritance.py")
+        CN.load(DATA_DIR / "validate_changes.py")
 
 
 def test_inheritance_changes():
     cfg = CN.load(DATA_DIR / "inheritance_changes.py")
+    assert cfg.DICT.X == "Y"
     assert cfg.DICT.BAR == "baz"
     assert cfg.DICT.INT == 2
 
@@ -139,3 +131,13 @@ def test_inheritance_changes_separation():
 def test_inheritance_changes_bad():
     with pytest.raises(MissingRequired):
         CN.load(DATA_DIR / "inheritance_changes_bad.py")
+
+
+def test_bad_clone():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_clone.py")
+
+
+def test_bad_validate():
+    with pytest.raises(AssertionError):
+        CN.load(DATA_DIR / "bad_validate.py")

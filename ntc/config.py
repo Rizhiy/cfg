@@ -39,8 +39,6 @@ class CfgNode(UserDict):
         schema_frozen: bool = False,
         frozen: bool = False,
         new_allowed: bool = False,
-        validators: List[Callable[[CfgNode], None]] = None,
-        transforms: List[Callable[[CfgNode], None]] = None,
     ):
         super().__init__()
         self._schema_frozen = schema_frozen
@@ -48,8 +46,8 @@ class CfgNode(UserDict):
         self._new_allowed = new_allowed
         self._was_unfrozen = False
         self._leaf_spec = leaf_spec
-        self._validators = validators or []
-        self._transforms = transforms or []
+        self._validators = []
+        self._transforms = []
         self._module = None
 
         if base is not None:
@@ -100,6 +98,8 @@ class CfgNode(UserDict):
     def load(cfg_path: Union[Path, str]) -> CfgNode:
         module = import_module(cfg_path)
         cfg: CfgNode = module.cfg
+        if not cfg.schema_frozen:
+            raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
         cfg._post_load(cfg_path)
         cfg.set_module(module)
         cfg.freeze()
@@ -151,6 +151,16 @@ class CfgNode(UserDict):
         validators = [CfgNode.validate_required] + self._validators
         for validator in validators:
             validator(self)
+
+    def add_transform(self, transform: Callable[[CfgNode], None]) -> None:
+        if self._schema_frozen:
+            raise SchemaFrozenError("Can't add transform after schema has been frozen")
+        self._transforms.append(transform)
+
+    def add_validator(self, validator: Callable[[CfgNode], None]) -> None:
+        if self._schema_frozen:
+            raise SchemaFrozenError("Can't add validator after schema has been frozen")
+        self._validators.append(validator)
 
     def to_dict(self) -> Dict[str, Any]:
         attrs = {}
