@@ -55,25 +55,25 @@ def test_bad_node():
         CN.load(DATA_DIR / "bad_node.py")
 
 
-def test_save():
+def test_save(tmp_path):
     good = CN.load(DATA_DIR / "good.py")
-    good.save(DATA_DIR / "good2.py")
+    good.save(tmp_path / "good2.py")
 
-    good2 = CN.load(DATA_DIR / "good2.py")
+    good2 = CN.load(tmp_path / "good2.py")
     assert good == good2
 
 
-def test_save_unfrozen():
+def test_save_unfrozen(tmp_path):
     good = CN.load(DATA_DIR / "good.py")
     good.unfreeze()
     good.freeze()
     with pytest.raises(SaveError):
-        good.save(DATA_DIR / "good2.py")
+        good.save(tmp_path / "good2.py")
 
 
-def test_save_base():
+def test_save_base(tmp_path):
     with pytest.raises(SaveError):
-        cfg.save(DATA_DIR / "base_cfg2.py")
+        cfg.save(tmp_path / "base_cfg2.py")
 
 
 def test_freeze_loaded():
@@ -112,3 +112,13 @@ def test_transform():
 def test_validate():
     with pytest.raises(AssertionError):
         CN.load(DATA_DIR / "validate.py")
+
+
+def test_transform_inheritance():
+    transform = CN.load(DATA_DIR / "transform_inheritance.py")
+    assert transform.DICT.FOO == "baz"
+
+
+def test_validate_inheritance():
+    with pytest.raises(AssertionError):
+        CN.load(DATA_DIR / "validate_inheritance.py")

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import UserDict
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Tuple, Type, Union
 
 import yaml
 
@@ -19,15 +19,18 @@ from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 
 class CfgNode(UserDict):
-    _SCHEMA_FROZEN = "_schema_frozen"
-    _FROZEN = "_frozen"
-    _WAS_UNFROZEN = "_was_unfrozen"
-    _LEAF_SPEC = "_leaf_spec"
-    _MODULE = "_module"
-    _NEW_ALLOWED = "_new_allowed"
-
-    _BUILT_IN_ATTRS = [_SCHEMA_FROZEN, _FROZEN, _WAS_UNFROZEN, _LEAF_SPEC, _MODULE, _NEW_ALLOWED]
-    RESERVED_KEYS = [*_BUILT_IN_ATTRS, "data", "_post_load", "transform", "_validate"]
+    _BUILT_IN_ATTRS = (
+        "_schema_frozen",
+        "_frozen",
+        "_was_unfrozen",
+        "_leaf_spec",
+        "_module",
+        "_new_allowed",
+        "_validators",
+        "_transformers",
+        "_base",
+    )
+    RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data", "_post_load", "_transform", "validate")
 
     def __init__(
         self,
@@ -36,14 +39,19 @@ class CfgNode(UserDict):
         schema_frozen: bool = False,
         frozen: bool = False,
         new_allowed: bool = False,
+        validators: List[Callable[[CfgNode], None]] = None,
+        transformers: List[Callable[[CfgNode], None]] = None,
     ):
         super().__init__()
-        setattr(self, CfgNode._SCHEMA_FROZEN, schema_frozen)
-        setattr(self, CfgNode._FROZEN, frozen)
-        setattr(self, CfgNode._NEW_ALLOWED, new_allowed)
-        setattr(self, CfgNode._MODULE, None)
-        setattr(self, CfgNode._WAS_UNFROZEN, False)
-        setattr(self, CfgNode._LEAF_SPEC, leaf_spec)
+        self._schema_frozen = schema_frozen
+        self._frozen = frozen
+        self._new_allowed = new_allowed
+        self._was_unfrozen = False
+        self._leaf_spec = leaf_spec
+        self._validators = validators or []
+        self._transformers = transformers or []
+        self._module = None
+        self._base = None
 
         if base is not None:
             self._init_with_base(base)
@@ -89,9 +97,6 @@ class CfgNode(UserDict):
         attrs = self.to_dict()
         return yaml.dump(attrs)
 
-    def __len__(self) -> int:
-        return len(self.attrs)
-
     @staticmethod
     def load(cfg_path: Union[Path, str]) -> CfgNode:
         module = import_module(cfg_path)
@@ -106,15 +111,24 @@ class CfgNode(UserDict):
     def merge_module(module_path: Path, output_path: Path) -> None:
         merge_cfg_module(module_path, output_path)
 
+    @staticmethod
+    def validate_required(cfg: CfgNode) -> None:
+        for key, attr in cfg.attrs:
+            if isinstance(attr, CfgNode):
+                CfgNode.validate_required(attr)
+                continue
+            if attr.required and attr.value is None:
+                raise MissingRequired(f"Key {key} is required, but was not provided.")
+
     def save(self, path: Path) -> None:
-        if self.was_unfrozen:
+        if self._was_unfrozen:
             raise SaveError("Trying to save config which was unfrozen.")
-        if not self.get_module():
+        if not self._module:
             raise SaveError("Config was not loaded.")
-        self.merge_module(self.get_module(), path)
+        self.merge_module(self._module, path)
 
     def clone(self) -> CfgNode:
-        return CfgNode(base=self)
+        return CfgNode(self.to_dict(), leaf_spec=self.leaf_spec)
 
     def _post_load(self, cfg_path: Union[Path, str]) -> None:
         """
@@ -125,24 +139,17 @@ class CfgNode(UserDict):
         self._transform()
         self.validate()
 
-    def _validate(self) -> None:
-        """
-        Specify additional rules to check
-        """
-
     def _transform(self) -> None:
         """
         Specify additional changes to be made after manual changes
         """
+        for transformer in self.transformers:
+            transformer(self)
 
     def validate(self) -> None:
-        self._validate()
-        for key, attr in self.attrs:
-            if isinstance(attr, CfgNode):
-                attr.validate()
-                continue
-            if attr.required and attr.value is None:
-                raise MissingRequired(f"Key {key} is required, but was not provided.")
+        validators = [CfgNode.validate_required] + self.validators
+        for validator in validators:
+            validator(self)
 
     def to_dict(self) -> Dict[str, Any]:
         attrs = {}
@@ -154,6 +161,20 @@ class CfgNode(UserDict):
         return attrs
 
     @property
+    def transformers(self) -> List[Callable[[CfgNode], None]]:
+        transformers = self._transformers
+        if self._base:
+            transformers = self._base.transformers + transformers
+        return transformers
+
+    @property
+    def validators(self) -> List[Callable[[CfgNode], None]]:
+        validators = self._validators
+        if self._base:
+            validators = self._base.validators + validators
+        return validators
+
+    @property
     def attrs(self) -> List[Tuple[str, Union[CfgNode, CfgLeaf]]]:
         attrs_list = []
         for key in super().keys():
@@ -162,58 +183,49 @@ class CfgNode(UserDict):
                 attrs_list.append((key, value))
         return attrs_list
 
-    def freeze_schema(self):
-        setattr(self, CfgNode._SCHEMA_FROZEN, True)
+    def freeze_schema(self) -> None:
+        self._schema_frozen = True
         for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.freeze_schema()
 
-    def unfreeze_schema(self):
-        setattr(self, CfgNode._SCHEMA_FROZEN, False)
+    def unfreeze_schema(self) -> None:
+        self._schema_frozen = False
         for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.unfreeze_schema()
 
-    def freeze(self):
-        setattr(self, CfgNode._FROZEN, True)
+    def freeze(self) -> None:
+        self._frozen = True
         for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.freeze()
 
-    def unfreeze(self):
-        setattr(self, CfgNode._FROZEN, False)
-        setattr(self, CfgNode._WAS_UNFROZEN, True)
+    def unfreeze(self) -> None:
+        self._frozen = False
+        self._was_unfrozen = True
         for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.unfreeze()
 
     @property
-    def schema_frozen(self):
-        return getattr(self, CfgNode._SCHEMA_FROZEN)
+    def schema_frozen(self) -> bool:
+        return self._schema_frozen
 
     @property
-    def frozen(self):
-        return getattr(self, CfgNode._FROZEN)
+    def frozen(self) -> bool:
+        return self._frozen
 
     @property
-    def leaf_spec(self):
-        return getattr(self, CfgNode._LEAF_SPEC)
+    def leaf_spec(self) -> CfgLeaf:
+        if self._leaf_spec is None and self._base is not None:
+            return self._base.leaf_spec
+        return self._leaf_spec
 
-    @property
-    def was_unfrozen(self):
-        return getattr(self, CfgNode._WAS_UNFROZEN)
+    def set_module(self, module) -> None:
+        self._module = module
 
-    @property
-    def new_allowed(self):
-        return getattr(self, CfgNode._NEW_ALLOWED)
-
-    def get_module(self):
-        return getattr(self, CfgNode._MODULE)
-
-    def set_module(self, module):
-        setattr(self, CfgNode._MODULE, module)
-
-    def _set_attrs(self, attrs: List[Tuple[str, Union[CfgNode, CfgLeaf]]]):
+    def _set_attrs(self, attrs: List[Tuple[str, Union[CfgNode, CfgLeaf]]]) -> None:
         for key, attr in attrs:
             setattr(self, key, attr.clone())
 
@@ -222,7 +234,7 @@ class CfgNode(UserDict):
         if isinstance(value, CfgNode):
             if leaf_spec:
                 raise SchemaError(f"Key {key} cannot contain nested nodes as leaf spec is defined for it.")
-            if self.schema_frozen and not self.new_allowed:
+            if self._schema_frozen and not self._new_allowed:
                 raise SchemaFrozenError(f"Trying to add node {key}, but schema is frozen.")
             value_to_set = value
         elif isinstance(value, CfgLeaf):
@@ -244,7 +256,7 @@ class CfgNode(UserDict):
                 ):
                     raise SchemaError(f"Leaf at key {key} mismatches config node's leaf spec.")
             else:
-                if self.schema_frozen and not self.new_allowed:
+                if self._schema_frozen and not self._new_allowed:
                     raise SchemaFrozenError(
                         f"Trying to add leaf {key} to node with frozen schema, but without leaf spec."
                     )
@@ -266,7 +278,7 @@ class CfgNode(UserDict):
 
     def _init_with_base(self, base: dict) -> None:
         if isinstance(base, CfgNode):
-            setattr(self, CfgNode._LEAF_SPEC, base.leaf_spec)
+            self._base = base
             self._set_attrs(base.attrs)
             self.freeze_schema()
         elif isinstance(base, dict):
