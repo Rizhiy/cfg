@@ -259,17 +259,13 @@ class CfgNode(UserDict):
 
     def _set_existing(self, key: str, value: Any) -> None:
         cur_attr = super().__getitem__(key)
-        value_type = type(value)
+        type(value)
         if isinstance(cur_attr, CfgNode):
             raise NodeReassignment(f"Nested CfgNode {key} cannot be reassigned.")
         elif isinstance(cur_attr, CfgLeaf):
             cur_attr.value = value
         else:
-            if not isinstance(cur_attr, value_type):
-                raise TypeMismatch(
-                    f"Current value of attribute {key} is of type {type(cur_attr)}, but new one is of {value_type}."
-                )
-            super().__setitem__(key, value)
+            raise AssertionError("This should not happen!")
 
     def _init_with_base(self, base: dict) -> None:
         if isinstance(base, CfgNode):

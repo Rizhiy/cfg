@@ -10,3 +10,4 @@ build
 dist
 .DS_Store
 tests/data/good2.py
+.coverage
