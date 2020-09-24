@@ -1,6 +1,6 @@
 from ntc import CN
+from tests.data.base_class import BaseClass
 
-from ..base_cfg import BaseClass
 from ..good.good import cfg
 
 

@@ -1,6 +1,5 @@
 from ntc import CN
-
-from ..base_cfg import cfg
+from tests.data.base_cfg import cfg
 
 cfg = CN(cfg)
-cfg.REQUIRED = "REQUIRED"
+cfg.NAME = "Good"

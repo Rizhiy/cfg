@@ -51,7 +51,7 @@ It should represent all variables that are changed between experiments inside th
 It's allowed to add new config nodes to the overall config schema here. 
 
 ```python
-# project_base_cfg.py
+# project/cfg.py
 from global_base_cfg import cfg
 
 # Use clone() to inherit from the first-level config.
@@ -61,12 +61,12 @@ cfg = cfg.clone()
 cfg.DICT.BAR = "baz"
 ```
 
-3) Set actual values for each leaf in the config
+3) Set actual values for each leaf in the config, **the report has to be absolute**
 ```python
 # my_cfg.py
 from ntc import CN
 
-from .project_base_cfg import cfg
+from project.cfg import cfg # Report has to be absolute
 
 # Pass final schema as an argument to the CN() to inherit from the second-level config.
 cfg = CN(cfg)
@@ -75,6 +75,21 @@ cfg = CN(cfg)
 cfg.NAME = "Hello World!"
 cfg.DICT.INT = 2
 ```
+You can also create another file to inherit from first and add more changes:
+```python
+# my_cfg2.py
+from ntc import CN
+
+from .my_cfg import cfg # This import has to be relative and should only import cfg variable
+
+cfg = CN(cfg)
+cfg.DICT.FOO = "BAR"
+```
+
+There a few restrictions on imports in configs:
+* When you are importing config schema from project that import has to be **absolute**
+* When you inherit config values from another file, that import has to be **relative**
+* Other than config inheritance, all other imports have to be **absolute**
 
 4) Load actual config and use it in the code. 
 ```python

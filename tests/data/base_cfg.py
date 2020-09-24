@@ -1,15 +1,10 @@
 from ntc import CL, CN
 
-
-class BaseClass:
-    def __eq__(self, other):
-        return True
-
+from .base_class import BaseClass
 
 cfg = CN()
 
-cfg.NAME = CL(None, str, required=True)
-cfg.REQUIRED = CL(None, str, required=True)
+cfg.NAME = CL(None, str)
 cfg.DICT = CN()
 cfg.DICT.INT = 1
 cfg.DICT.FOO = "foo"

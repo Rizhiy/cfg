@@ -1,6 +1,4 @@
 from ntc import CN
-
-from .transform_inheritance import cfg
+from tests.data.post_load.transform_inheritance import cfg
 
 cfg = CN(cfg)
-cfg.REQUIRED = "Required"

@@ -3,4 +3,4 @@ from ntc import CN
 from ..good.good import cfg
 
 cfg = CN(cfg)
-cfg.NAME = "Bad"
+cfg.CLASSES.NEW = None

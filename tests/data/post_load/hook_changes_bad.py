@@ -1,6 +1,5 @@
 from ntc import CN
-
-from .hook import cfg
+from tests.data.post_load.hook import cfg
 
 
 def hook(cfg: CN) -> None:
@@ -8,6 +7,4 @@ def hook(cfg: CN) -> None:
 
 
 cfg = CN(cfg)
-cfg.REQUIRED = "Required"
-
 cfg.add_hook(hook)

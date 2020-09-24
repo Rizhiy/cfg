@@ -3,9 +3,11 @@ import logging
 import sys
 from pathlib import Path
 from types import ModuleType
-from typing import Set, Union
+from typing import Set
 
 import yaml
+
+from .errors import ModuleError
 
 logger = logging.getLogger(__name__)
 
@@ -19,38 +21,40 @@ def import_module(module_path: Path) -> ModuleType:
     return _load_module(module_name, module_path)
 
 
-def merge_cfg_module(
-    module: Union[ModuleType, Path, str], output_path: Path, clean: bool = True, imported_modules: Set[str] = None
-) -> None:
+def merge_cfg_module(module: ModuleType, imported_modules: Set[str] = None) -> None:
+    lines = []
     if imported_modules is None:
         imported_modules = set()
     module_name = module.__spec__.name
     if module_name in imported_modules:
         return
-    if clean:
-        output_path.unlink(missing_ok=True)
 
     module_path = Path(module.__file__)
 
     with module_path.open() as module_file:
-        _append_to_file(output_path, f"# START --- {module_path} ---\n")
-        for line in module_file:
+        module_file = list(module_file)
+        if "cfg = CN(cfg)\n" not in module_file:
+            raise ModuleError("Can't find config definition, please import config schema using absolute path")
+        lines.append(f"# START --- {module_path} ---\n")
+        for line_idx, line in enumerate(module_file):
             if line.startswith("from "):
-                import_members = line.strip().split(" ")
-                imported_module = importlib.import_module(import_members[1], package=module.__package__)
+                _, import_path, __, *imports = line.strip().split(" ")
+                imported_module = importlib.import_module(import_path, package=module.__package__)
                 if imported_module.__spec__.name in imported_modules:
                     continue
-                if import_members[3] == "cfg":
-                    merge_cfg_module(imported_module, output_path, clean=False, imported_modules=imported_modules)
-                elif import_members[1].startswith("."):
-                    logger.debug(f"Skipping non cfg relative import {line}")
+                if import_path.startswith("."):
+                    if imports == ["cfg"]:
+                        lines.extend(merge_cfg_module(imported_module, imported_modules=imported_modules))
+                    else:
+                        raise ModuleError(f"Only cfg can be imported relatively:\n{module_path}+{line_idx}:{line}")
                 else:
-                    _append_to_file(output_path, line)
+                    lines.append(line)
             else:
-                _append_to_file(output_path, line)
-        _append_to_file(output_path, f"# END --- {module_path} ---\n")
+                lines.append(line)
+        lines.append(f"# END --- {module_path} ---\n")
 
     imported_modules.add(module_name)
+    return lines
 
 
 def add_yaml_str_representer():
@@ -80,8 +84,3 @@ def _load_package(package_path: Path) -> str:
     _load_module(package_name, init_path)
 
     return package_name
-
-
-def _append_to_file(output_path: Path, data: str) -> None:
-    with output_path.open("a") as output_file:
-        output_file.write(data)

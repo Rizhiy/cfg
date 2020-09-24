@@ -1,4 +1,3 @@
-from ..base_cfg import cfg
+from ..good.good import cfg
 
 cfg = cfg.clone()
-cfg.NAME = "Name"

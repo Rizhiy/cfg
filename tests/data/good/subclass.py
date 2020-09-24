@@ -1,7 +1,7 @@
 from ntc import CN
+from tests.data.base_class import SubClass
 
 from .good import cfg
-from .subclass_class import SubClass
 
 cfg = CN(cfg)
 cfg.CLASS = SubClass()

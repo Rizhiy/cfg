@@ -1,7 +1,5 @@
 from ntc import CN
-
-from .inheritance import cfg
+from tests.data.good.inheritance import cfg
 
 cfg = CN(cfg)
-cfg.REQUIRED = "Required"
-cfg.DICT.INT = 2
+cfg.DICT.BAR = "BAZ"

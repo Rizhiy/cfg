@@ -1,9 +1,7 @@
 from ntc import CN
-
-from .validate import cfg
+from tests.data.post_load.validate import cfg
 
 cfg = CN(cfg)
-cfg.REQUIRED = "Required"
 
 
 def validate(cfg: CN):

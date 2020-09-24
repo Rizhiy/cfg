@@ -2,19 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, MissingRequired, SchemaError, SchemaFrozenError, TypeMismatch
+from ntc import CN, ModuleError, SchemaError, SchemaFrozenError, TypeMismatch
 
 DATA_DIR = Path(__file__).parent / "data" / "bad"
 
 
-def test_bad():
+def test_bad_type():
     with pytest.raises(TypeMismatch):
-        CN.load(DATA_DIR / "bad.py")
-
-
-def test_missing():
-    with pytest.raises(MissingRequired):
-        CN.load(DATA_DIR / "missing.py")
+        CN.load(DATA_DIR / "bad_type.py")
 
 
 def test_bad_attr():
@@ -43,7 +38,7 @@ def test_bad_node_instance():
 
 
 def test_inheritance_changes_bad():
-    with pytest.raises(MissingRequired):
+    with pytest.raises(TypeMismatch):
         CN.load(DATA_DIR / "inheritance_changes_bad.py")
 
 
@@ -65,3 +60,13 @@ def test_schema_freeze():
 def test_bad_init():
     with pytest.raises(SchemaError):
         CN.load(DATA_DIR / "bad_init.py")
+
+
+def test_bad_cfg_import():
+    with pytest.raises(ModuleError):
+        CN.load(DATA_DIR / "bad_cfg_import.py")
+
+
+def test_bad_import():
+    with pytest.raises(ModuleError):
+        CN.load(DATA_DIR / "bad_import.py")

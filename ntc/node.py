@@ -98,7 +98,7 @@ class CfgNode(UserDict):
             raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
         if hasattr(cfg, "NAME"):
             cfg.NAME = cfg.NAME or cfg_path.stem
-        cfg.set_module(module)
+        cfg.set_module(merge_cfg_module(module))
         cfg.transform()
         cfg.freeze()
         cfg.validate()
@@ -108,6 +108,8 @@ class CfgNode(UserDict):
 
     @staticmethod
     def validate_required(cfg: CfgNode) -> None:
+        if cfg.leaf_spec is not None and cfg.leaf_spec.required and len(cfg) == 0:
+            raise MissingRequired(f"Missing required members for {cfg.leaf_spec}")
         for key, attr in cfg.attrs:
             if isinstance(attr, CfgNode):
                 CfgNode.validate_required(attr)
@@ -120,7 +122,8 @@ class CfgNode(UserDict):
             raise SaveError("Trying to save config which was unfrozen.")
         if not self._module:
             raise SaveError("Config was not loaded.")
-        merge_cfg_module(self._module, path)
+        with path.open("w") as f:
+            f.writelines(self._module)
 
     def clone(self) -> CfgNode:
         cfg = CfgNode(self)
@@ -247,9 +250,10 @@ class CfgNode(UserDict):
             value_to_set = CfgLeaf(value, type(value))
         if isinstance(value_to_set, CfgLeaf):
             if leaf_spec:
-                if (
-                    leaf_spec.required != value_to_set.required
-                    or (leaf_spec.subclass and not isinstance(value_to_set.value, type))
+                if not leaf_spec.required and value_to_set.value is None:
+                    pass
+                elif (
+                    (leaf_spec.subclass and not isinstance(value_to_set.value, type))
                     or (leaf_spec.subclass and not issubclass(value_to_set.value, leaf_spec.type))
                     or (not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type))
                 ):
