@@ -100,8 +100,8 @@ class CfgNode(UserDict):
             cfg.NAME = cfg.NAME or cfg_path.stem
         cfg.set_module(module)
         cfg.transform()
-        cfg.validate()
         cfg.freeze()
+        cfg.validate()
         cfg.run_hooks()
 
         return cfg
