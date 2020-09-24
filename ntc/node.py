@@ -246,6 +246,8 @@ class CfgNode(UserDict):
                 value_to_set = CfgLeaf(value, value, subclass=True)
             else:
                 value_to_set = CfgLeaf(None, value)
+        elif leaf_spec:
+            value_to_set = CfgLeaf(value, type(value), required=leaf_spec.required)
         else:
             value_to_set = CfgLeaf(value, type(value))
         if isinstance(value_to_set, CfgLeaf):
@@ -253,7 +255,8 @@ class CfgNode(UserDict):
                 if not leaf_spec.required and value_to_set.value is None:
                     pass
                 elif (
-                    (leaf_spec.subclass and not isinstance(value_to_set.value, type))
+                    (leaf_spec.required and not value_to_set.required)
+                    or (leaf_spec.subclass and not isinstance(value_to_set.value, type))
                     or (leaf_spec.subclass and not issubclass(value_to_set.value, leaf_spec.type))
                     or (not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type))
                 ):

@@ -8,6 +8,5 @@ def hook(cfg: CN) -> None:
 
 
 cfg = cfg.clone()
-cfg.REQUIRED = "Required"
 
 cfg.add_hook(hook)
