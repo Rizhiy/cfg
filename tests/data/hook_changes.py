@@ -1,7 +1,6 @@
 from ntc import CN
 
-from .good import cfg
+from .hook_inheritance import cfg
 
 cfg = CN(cfg)
 cfg.REQUIRED = "Required"
-cfg.NAME = "Bad"

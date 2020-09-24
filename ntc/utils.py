@@ -10,9 +10,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
-def import_module(module_path: Union[Path, str]) -> ModuleType:
-    if isinstance(module_path, str):
-        module_path = Path(module_path)
+def import_module(module_path: Path) -> ModuleType:
     package = _load_package(module_path.parent)
     module_name = module_path.stem
     if package:

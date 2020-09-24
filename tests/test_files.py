@@ -11,12 +11,12 @@ DATA_DIR = Path(__file__).parent / "data"
 
 def test_good():
     good = CN.load(DATA_DIR / "good.py")
-    assert good.NAME == "Name"
+    assert good.NAME == "good"
 
 
 def test_import_str():
     good = CN.load(str(DATA_DIR / "good.py"))
-    assert good.NAME == "Name"
+    assert good.NAME == "good"
 
 
 def test_bad():
@@ -62,9 +62,9 @@ def test_bad_node():
 
 def test_save(tmp_path):
     good = CN.load(DATA_DIR / "good.py")
-    good.save(tmp_path / "good2.py")
+    good.save(tmp_path / "good.py")
 
-    good2 = CN.load(tmp_path / "good2.py")
+    good2 = CN.load(tmp_path / "good.py")
     assert good == good2
 
 
@@ -171,3 +171,14 @@ def test_schema_freeze():
 def test_bad_init():
     with pytest.raises(SchemaError):
         CN.load(DATA_DIR / "bad_init.py")
+
+
+def test_hook_changes(capsys):
+    CN.load(DATA_DIR / "hook_changes.py")
+    out = capsys.readouterr().out
+    assert out == "Hook 1\nHook 2\n"
+
+
+def test_hook_changes_bad():
+    with pytest.raises(SchemaFrozenError):
+        CN.load(DATA_DIR / "hook_changes_bad.py")

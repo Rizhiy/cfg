@@ -20,8 +20,9 @@ class CfgNode(UserDict):
         "_leaf_spec",
         "_module",
         "_new_allowed",
-        "_validators",
         "_transforms",
+        "_validators",
+        "_hooks",
     )
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
 
@@ -43,6 +44,7 @@ class CfgNode(UserDict):
         self._leaf_spec = leaf_spec
         self._validators = []
         self._transforms = []
+        self._hooks = []
         self._module = None
 
         if base is not None:
@@ -89,13 +91,18 @@ class CfgNode(UserDict):
 
     @staticmethod
     def load(cfg_path: Union[Path, str]) -> CfgNode:
+        cfg_path = Path(cfg_path)
         module = import_module(cfg_path)
         cfg: CfgNode = module.cfg
         if not cfg.schema_frozen:
             raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
-        cfg._post_load(cfg_path)
+        if hasattr(cfg, "NAME"):
+            cfg.NAME = cfg.NAME or cfg_path.stem
         cfg.set_module(module)
+        cfg.transform()
+        cfg.validate()
         cfg.freeze()
+        cfg.run_hooks()
 
         return cfg
 
@@ -121,26 +128,28 @@ class CfgNode(UserDict):
         cfg.unfreeze_schema()
         return cfg
 
-    def _post_load(self, cfg_path: Union[Path, str]) -> None:
-        """
-        Any actions to be done after loading
-
-        :param cfg_path: File from which config was loaded
-        """
-        self.transform()
-        self.validate()
-
     def transform(self) -> None:
         """
-        Specify additional changes to be made after manual changes
+        Specify additional changes to be made after manual changes, run during loading from file
         """
         for transformer in self._transforms:
             transformer(self)
 
     def validate(self) -> None:
+        """
+        Check additional rules for config, run during loading after transform
+        """
         validators = [CfgNode.validate_required] + self._validators
         for validator in validators:
             validator(self)
+
+    def run_hooks(self) -> None:
+        """
+        Perform actions based on config, run during loading after validation
+        Hooks should NOT modify the config
+        """
+        for hook in self._hooks:
+            hook(self)
 
     def add_transform(self, transform: Callable[[CfgNode], None]) -> None:
         if self._schema_frozen:
@@ -151,6 +160,11 @@ class CfgNode(UserDict):
         if self._schema_frozen:
             raise SchemaFrozenError("Can't add validator after schema has been frozen")
         self._validators.append(validator)
+
+    def add_hook(self, hook: Callable[[CfgNode], None]) -> None:
+        if self._schema_frozen:
+            raise SchemaFrozenError("Can't add hook after schema has been frozen")
+        self._hooks.append(hook)
 
     def to_dict(self) -> Dict[str, Any]:
         attrs = {}
@@ -261,6 +275,7 @@ class CfgNode(UserDict):
         if isinstance(base, CfgNode):
             self._transforms = base._transforms + self._transforms
             self._validators = base._validators + self._validators
+            self._hooks = base._hooks + self._hooks
             self._set_attrs(base.attrs)
             self.freeze_schema()
         elif isinstance(base, dict):

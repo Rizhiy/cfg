@@ -8,11 +8,12 @@ class BaseClass:
 
 cfg = CN()
 
+cfg.NAME = CL(None, str, required=True)
+cfg.REQUIRED = CL(None, str, required=True)
 cfg.DICT = CN()
 cfg.DICT.INT = 1
 cfg.DICT.FOO = "foo"
 cfg.DICT.X = "X"
-cfg.NAME = CL(None, str, required=True)
 cfg.LIST = [1, 2, 3, 4]
 cfg.CLASS = BaseClass()
 cfg.CLASSES = CN(BaseClass)
@@ -24,7 +25,7 @@ def transform(cfg: CN):
 
 
 def validate(cfg: CN):
-    assert len(cfg.NAME) > 0
+    assert cfg.NAME != "Bad"
 
 
 cfg.add_transform(transform)
