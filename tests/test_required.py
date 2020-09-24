@@ -38,3 +38,9 @@ def test_spec():
     cfg = CN.load(DATA_DIR / "spec.py")
     assert len(cfg.REQUIRED_CLASSES) > 0
     assert isinstance(cfg.REQUIRED_CLASSES.ONE, BaseClass)
+
+
+def test_subclass():
+    cfg = CN.load(DATA_DIR / "subclass.py")
+    assert len(cfg.REQUIRED_SUBCLASSES) > 0
+    assert issubclass(cfg.REQUIRED_SUBCLASSES.ONE, BaseClass)
