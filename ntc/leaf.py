@@ -37,6 +37,8 @@ class CfgLeaf:
         if self._required and val is None:
             raise MissingRequired("Can't set required value to None")
         if val is not None:
+            if self._subclass and not isinstance(val, type):
+                raise TypeMismatch(f"Subclass of type {self._type} expected, but {val} found!")
             if self._subclass and not issubclass(val, self._type):
                 raise TypeMismatch(f"Subclass of type {self._type} expected, but {val} found!")
             if not self._subclass and not isinstance(val, self._type):

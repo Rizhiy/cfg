@@ -247,25 +247,26 @@ class CfgNode(UserDict):
             else:
                 value_to_set = CfgLeaf(None, value)
         elif leaf_spec:
-            value_to_set = CfgLeaf(value, type(value), required=leaf_spec.required)
+            value_to_set = leaf_spec.clone()
+            value_to_set.value = value
         else:
             value_to_set = CfgLeaf(value, type(value))
         if isinstance(value_to_set, CfgLeaf):
             if leaf_spec:
+                if leaf_spec.required and not value_to_set.required:
+                    raise SchemaError(f"Leaf at {key} must have required == True")
+                if leaf_spec.subclass != value_to_set.subclass:
+                    raise SchemaError(f"Leaf at {key} must have subclass == True")
+                if not issubclass(value_to_set.type, leaf_spec.type):
+                    raise SchemaError(f"Required type for leaf at {key} must be subclass of {leaf_spec.type}")
                 if not leaf_spec.required and value_to_set.value is None:
                     pass
-                elif (
-                    (leaf_spec.required and not value_to_set.required)
-                    or (leaf_spec.subclass and not isinstance(value_to_set.value, type))
-                    or (leaf_spec.subclass and not issubclass(value_to_set.value, leaf_spec.type))
-                    or (not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type))
-                ):
-                    raise SchemaError(f"Leaf at key {key} mismatches config node's leaf spec.")
-            else:
-                if self._schema_frozen and not self._new_allowed:
-                    raise SchemaFrozenError(
-                        f"Trying to add leaf {key} to node with frozen schema, but without leaf spec."
-                    )
+                elif leaf_spec.subclass and not isinstance(value_to_set.value, type):
+                    raise SchemaError(f"Leaf value at {key} must be a type")
+                elif not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type):
+                    raise SchemaError(f"Value at {key} must be instance of {leaf_spec.type}")
+            elif self._schema_frozen and not self._new_allowed:
+                raise SchemaFrozenError(f"Trying to add leaf {key} to node with frozen schema, but without leaf spec.")
         super().__setitem__(key, value_to_set)
 
     def _set_existing(self, key: str, value: Any) -> None:

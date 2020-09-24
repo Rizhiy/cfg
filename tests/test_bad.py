@@ -23,7 +23,7 @@ def test_bad_class():
 
 
 def test_bad_node():
-    with pytest.raises(SchemaError):
+    with pytest.raises((TypeMismatch, SchemaError)):
         CN.load(DATA_DIR / "bad_node.py")
 
 
@@ -33,7 +33,7 @@ def test_bad_node_subclass():
 
 
 def test_bad_node_instance():
-    with pytest.raises(SchemaError):
+    with pytest.raises((TypeMismatch, SchemaError)):
         CN.load(DATA_DIR / "bad_node_instance.py")
 
 
@@ -50,6 +50,21 @@ def test_bad_clone():
 def test_bad_inherit():
     with pytest.raises(SchemaError):
         CN.load(DATA_DIR / "bad_inherit_changes.py")
+
+
+def test_bad_inherit_subclass():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_inherit_subclass_changes.py")
+
+
+def test_bad_inherit_instance():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_inherit_instance_changes.py")
+
+
+def test_bad_inherit_subclass_instance():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_inherit_subclass_instance_changes.py")
 
 
 def test_schema_freeze():
