@@ -1,4 +1,4 @@
-from .base_cfg import cfg
+from ..base_cfg import cfg
 
 cfg = cfg.clone()
 

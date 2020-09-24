@@ -1,6 +1,6 @@
 from ntc import CN
 
-from .base_cfg import cfg
+from ..base_cfg import cfg
 
 
 def hook(cfg: CN) -> None:
