@@ -1,4 +1,4 @@
-from .base_cfg import BaseClass
+from ..base_cfg import BaseClass
 
 
 class SubClass(BaseClass):

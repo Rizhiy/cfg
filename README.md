@@ -1,3 +1,8 @@
+# NeuroTrade Config
+[![pipeline status](http://192.168.135.11/utilities/config/badges/master/pipeline.svg)](http://192.168.135.11/utilities/config/commits/master)
+[![coverage report](http://192.168.135.11/utilities/config/badges/master/coverage.svg)](http://192.168.135.11/utilities/config/commits/master)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 ## Description
 
 Library to define configs for model run.
@@ -42,7 +47,7 @@ cfg.add_hook(hook)
 ```
 
 2) Define second-level base config, inherited from the first-level one.
-It should represent all variables that are changes between experiments inside the project.
+It should represent all variables that are changed between experiments inside the project.
 It's allowed to add new config nodes to the overall config schema here. 
 
 ```python

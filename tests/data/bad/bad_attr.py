@@ -1,6 +1,6 @@
 from ntc import CN
 
-from .good import cfg
+from ..good.good import cfg
 
 cfg = CN(cfg)
 cfg.NEW = "bar"

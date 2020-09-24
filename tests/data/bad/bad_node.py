@@ -1,6 +1,6 @@
 from ntc import CN
 
-from .good import cfg
+from ..good.good import cfg
 
 
 class BadClass:
@@ -8,5 +8,4 @@ class BadClass:
 
 
 cfg = CN(cfg)
-
-cfg.CLASS = BadClass()
+cfg.CLASSES.ONE = BadClass()
