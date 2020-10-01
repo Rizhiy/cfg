@@ -13,8 +13,8 @@ tests:
 format:
   stage: test
   script:
-    - pip --cache-dir=.pip install --quiet nt-code-style
-    - format --check
+    - pip --cache-dir=.pip install --quiet ntu
+    - check --check-only
 
 package-upload:
   stage: deploy
