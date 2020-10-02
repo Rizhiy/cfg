@@ -44,3 +44,13 @@ def test_subclass():
     cfg = CN.load(DATA_DIR / "subclass.py")
     assert len(cfg.REQUIRED_SUBCLASSES) > 0
     assert issubclass(cfg.REQUIRED_SUBCLASSES.ONE, BaseClass)
+
+
+def test_plain_value():
+    cfg = CN.load(DATA_DIR / "plain_value.py")
+    assert cfg.REQUIRED == 12
+
+
+def test_bad_plain_value():
+    with pytest.raises(MissingRequired):
+        CN.load(DATA_DIR / "bad_plain_value.py")

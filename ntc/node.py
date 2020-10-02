@@ -255,7 +255,7 @@ class CfgNode(UserDict):
             value_to_set = leaf_spec.clone()
             value_to_set.value = value
         else:
-            value_to_set = CfgLeaf(value, type(value))
+            value_to_set = CfgLeaf(value, type(value), required=True)
 
         if isinstance(value_to_set, CfgLeaf):
             if leaf_spec:
