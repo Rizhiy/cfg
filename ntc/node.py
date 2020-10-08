@@ -240,7 +240,7 @@ class CfgNode(UserDict):
     @full_key.setter
     def full_key(self, value: str):
         if self._full_key and value != self._full_key:
-            raise ValueError(f"full_key cannot be reassigned for node at {self._full_key}")
+            raise ValueError(f"full_key cannot be reassigned for node assigned to {self._full_key}")
         self._full_key = value
 
     def set_module(self, module) -> None:
