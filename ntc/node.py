@@ -23,11 +23,19 @@ class CfgNode(UserDict):
         "_transforms",
         "_validators",
         "_hooks",
+        "_full_key",
+        "full_key",
     )
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
 
     def __init__(
-        self, first: Any = None, *, schema_frozen: bool = False, frozen: bool = False, new_allowed: bool = False,
+        self,
+        first: Any = None,
+        *,
+        schema_frozen: bool = False,
+        frozen: bool = False,
+        new_allowed: bool = False,
+        full_key: str = "",
     ):
         super().__init__()
         if isinstance(first, (dict, CfgNode)):
@@ -36,6 +44,8 @@ class CfgNode(UserDict):
             base, leaf_spec = None, first
         if leaf_spec is not None and not isinstance(leaf_spec, CfgLeaf):
             leaf_spec = CfgLeaf(None, leaf_spec)
+
+        self._full_key = full_key
 
         self._schema_frozen = schema_frozen
         self._frozen = frozen
@@ -107,18 +117,14 @@ class CfgNode(UserDict):
         return cfg
 
     @staticmethod
-    def validate_required(cfg: CfgNode, key_path: List[str] = None) -> None:
+    def validate_required(cfg: CfgNode) -> None:
         if cfg.leaf_spec is not None and cfg.leaf_spec.required and len(cfg) == 0:
-            raise MissingRequired(f"Missing required members for {cfg.leaf_spec}")
-        key_path = key_path or []
+            raise MissingRequired(f"Missing required members for {cfg.leaf_spec} at key {cfg.full_key}")
         for key, attr in cfg.attrs:
-            key_path.append(key)
             if isinstance(attr, CfgNode):
-                CfgNode.validate_required(attr, key_path=key_path)
+                CfgNode.validate_required(attr)
             elif attr.required and attr.value is None:
-                full_key = ".".join(key_path)
-                raise MissingRequired(f"Key {full_key} is required, but was not provided.")
-            key_path.pop()
+                raise MissingRequired(f"Key {attr.full_key} is required, but was not provided.")
 
     def save(self, path: Path) -> None:
         if self._was_unfrozen:
@@ -227,6 +233,16 @@ class CfgNode(UserDict):
     def leaf_spec(self) -> CfgLeaf:
         return self._leaf_spec
 
+    @property
+    def full_key(self):
+        return self._full_key
+
+    @full_key.setter
+    def full_key(self, value: str):
+        if self._full_key and value != self._full_key:
+            raise ValueError(f"full_key cannot be reassigned for node at {self._full_key}")
+        self._full_key = value
+
     def set_module(self, module) -> None:
         self._module = module
 
@@ -235,15 +251,18 @@ class CfgNode(UserDict):
             setattr(self, key, attr.clone())
 
     def _set_new(self, key: str, value: Any) -> None:
+        full_new_key = self._build_child_key(key)
         leaf_spec = self.leaf_spec
         if isinstance(value, CfgNode):
             if leaf_spec:
-                raise SchemaError(f"Key {key} cannot contain nested nodes as leaf spec is defined for it.")
+                raise SchemaError(f"Key {full_new_key} cannot contain nested nodes as leaf spec is defined for it.")
             if self._schema_frozen and not self._new_allowed:
-                raise SchemaFrozenError(f"Trying to add node {key}, but schema is frozen.")
+                raise SchemaFrozenError(f"Trying to add node {full_new_key}, but schema is frozen.")
+            value.full_key = full_new_key
             value_to_set = value
         elif isinstance(value, CfgLeaf):
             value_to_set = value
+            value_to_set.full_key = full_new_key
         elif isinstance(value, type):
             if leaf_spec:
                 required = leaf_spec.required
@@ -254,36 +273,40 @@ class CfgNode(UserDict):
                 value,  # Need to pass value here instead of copying from spec, in case new value is more restrictive
                 subclass=True,
                 required=required,
+                full_key=full_new_key,
             )
         elif leaf_spec:
             value_to_set = leaf_spec.clone()
             value_to_set.value = value
+            value_to_set.full_key = full_new_key
         else:
-            value_to_set = CfgLeaf(value, type(value), required=True)
+            value_to_set = CfgLeaf(value, type(value), required=True, full_key=full_new_key)
 
         if isinstance(value_to_set, CfgLeaf):
             if leaf_spec:
                 if leaf_spec.required and not value_to_set.required:
-                    raise SchemaError(f"Leaf at {key} must have required == True")
+                    raise SchemaError(f"Leaf at {full_new_key} must have required == True")
                 if leaf_spec.subclass != value_to_set.subclass:
-                    raise SchemaError(f"Leaf at {key} must have subclass == True")
+                    raise SchemaError(f"Leaf at {full_new_key} must have subclass == True")
                 if not issubclass(value_to_set.type, leaf_spec.type):
-                    raise SchemaError(f"Required type for leaf at {key} must be subclass of {leaf_spec.type}")
+                    raise SchemaError(f"Required type for leaf at {full_new_key} must be subclass of {leaf_spec.type}")
                 if not leaf_spec.required and value_to_set.value is None:
                     pass
                 elif leaf_spec.subclass and not isinstance(value_to_set.value, type):
-                    raise SchemaError(f"Leaf value at {key} must be a type")
+                    raise SchemaError(f"Leaf value at {full_new_key} must be a type")
                 elif not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type):
-                    raise SchemaError(f"Value at {key} must be instance of {leaf_spec.type}")
+                    raise SchemaError(f"Value at {full_new_key} must be instance of {leaf_spec.type}")
             elif self._schema_frozen and not self._new_allowed:
-                raise SchemaFrozenError(f"Trying to add leaf {key} to node with frozen schema, but without leaf spec.")
+                raise SchemaFrozenError(
+                    f"Trying to add leaf {full_new_key} to node with frozen schema, but without leaf spec."
+                )
         super().__setitem__(key, value_to_set)
 
     def _set_existing(self, key: str, value: Any) -> None:
         cur_attr = super().__getitem__(key)
         type(value)
         if isinstance(cur_attr, CfgNode):
-            raise NodeReassignment(f"Nested CfgNode {key} cannot be reassigned.")
+            raise NodeReassignment(f"Nested CfgNode {self._build_child_key(key)} cannot be reassigned.")
         elif isinstance(cur_attr, CfgLeaf):
             cur_attr.value = value
         else:
@@ -291,6 +314,7 @@ class CfgNode(UserDict):
 
     def _init_with_base(self, base: Union[dict, CfgNode]) -> None:
         if isinstance(base, CfgNode):
+            self.full_key = base.full_key
             self._transforms = base._transforms + self._transforms
             self._validators = base._validators + self._validators
             self._hooks = base._hooks + self._hooks
@@ -299,10 +323,13 @@ class CfgNode(UserDict):
         elif isinstance(base, dict):
             for key, value in base.items():
                 if isinstance(value, dict):
-                    value = CfgNode(value)
+                    value = CfgNode(value, full_key=self._build_child_key(key))
                 self[key] = value
         else:
             raise ValueError("This should not happen!")
+
+    def _build_child_key(self, key: str):
+        return ".".join((self.full_key, key))
 
 
 CN = CfgNode
