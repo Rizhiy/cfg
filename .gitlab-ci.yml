@@ -14,7 +14,7 @@ format:
   stage: test
   script:
     - pip --cache-dir=.pip install --quiet ntu
-    - check --check-only
+    - format --check
 
 package-upload:
   stage: deploy
