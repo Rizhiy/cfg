@@ -12,6 +12,7 @@ cfg.DICT.X = "X"
 cfg.LIST = [1, 2, 3, 4]
 cfg.CLASS = BaseClass()
 cfg.CLASSES = CN(BaseClass)
+cfg.SUBCLASS = BaseClass
 cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))
 
 

@@ -71,6 +71,11 @@ def test_freeze_loaded():
 
 def test_node_subclass():
     cfg = CN.load(DATA_DIR / "node_subclass.py")
+    assert issubclass(cfg.SUBCLASS, SubClass)
+
+
+def test_node_nested_subclass():
+    cfg = CN.load(DATA_DIR / "node_nested_subclass.py")
     assert issubclass(cfg.SUBCLASSES.ONE, SubClass)
 
 

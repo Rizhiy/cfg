@@ -9,6 +9,14 @@ class Quux:
         return "quux"
 
 
+class Foo:
+    pass
+
+
+class FooSubclass(Foo):
+    pass
+
+
 @pytest.fixture
 def basic_cfg():
     cfg = CfgNode()
@@ -29,13 +37,24 @@ def test_define_with_value(basic_cfg):
 def test_define_with_type():
     cfg = CfgNode()
 
-    cfg.FOO = str
+    cfg.FOO = Foo
 
     with pytest.raises(TypeMismatch):
-        cfg.FOO = 42
+        cfg.FOO = Quux
 
-    cfg.FOO = "foo"
-    assert cfg.FOO == "foo"
+    cfg.FOO = FooSubclass
+    assert cfg.FOO == FooSubclass
+
+
+def test_define_with_type_and_leaf():
+    cfg = CfgNode(CfgLeaf(Foo, Foo, subclass=True))
+
+    cfg.FOO = FooSubclass
+
+    with pytest.raises(TypeMismatch):
+        cfg.FOO = Foo
+
+    assert cfg.FOO == FooSubclass
 
 
 def test_define_with_leaf():

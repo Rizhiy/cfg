@@ -8,4 +8,4 @@ class BadSubClass:
 
 
 cfg = CN(cfg)
-cfg.SUBCLASS = BadSubClass
+cfg.SUBCLASSES.ONE = BadSubClass

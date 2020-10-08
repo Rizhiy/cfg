@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, ModuleError, SchemaError, SchemaFrozenError, TypeMismatch
+from ntc import CN, MissingRequired, ModuleError, SchemaError, SchemaFrozenError, TypeMismatch
 
 DATA_DIR = Path(__file__).parent / "data" / "bad"
 
@@ -28,8 +28,18 @@ def test_bad_node():
 
 
 def test_bad_node_subclass():
-    with pytest.raises(SchemaError):
+    with pytest.raises(TypeMismatch):
         CN.load(DATA_DIR / "bad_node_subclass.py")
+
+
+def test_bad_node_required_subclass():
+    with pytest.raises(MissingRequired):
+        CN.load(DATA_DIR / "bad_node_required_subclass.py")
+
+
+def test_bad_node_nested_subclass():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_node_nested_subclass.py")
 
 
 def test_bad_node_instance():

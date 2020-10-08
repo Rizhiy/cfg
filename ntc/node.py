@@ -243,14 +243,15 @@ class CfgNode(UserDict):
             value_to_set = value
         elif isinstance(value, type):
             if leaf_spec:
-                value_to_set = CfgLeaf(
-                    value if leaf_spec.subclass else None,
-                    value,  # Need to pass value here instead of copying, in case new value is more restrictive
-                    subclass=leaf_spec.subclass,
-                    required=leaf_spec.required,
-                )
+                required = leaf_spec.required
             else:
-                value_to_set = CfgLeaf(None, value)
+                required = True
+            value_to_set = CfgLeaf(
+                value,
+                value,  # Need to pass value here instead of copying from spec, in case new value is more restrictive
+                subclass=True,
+                required=required,
+            )
         elif leaf_spec:
             value_to_set = leaf_spec.clone()
             value_to_set.value = value

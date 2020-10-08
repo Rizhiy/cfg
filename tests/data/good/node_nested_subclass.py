@@ -4,4 +4,4 @@ from tests.data.base_class import SubClass
 from .good import cfg
 
 cfg = CN(cfg)
-cfg.SUBCLASS = SubClass
+cfg.SUBCLASSES.ONE = SubClass
