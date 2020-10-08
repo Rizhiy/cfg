@@ -107,15 +107,18 @@ class CfgNode(UserDict):
         return cfg
 
     @staticmethod
-    def validate_required(cfg: CfgNode) -> None:
+    def validate_required(cfg: CfgNode, key_path: List[str] = None) -> None:
         if cfg.leaf_spec is not None and cfg.leaf_spec.required and len(cfg) == 0:
             raise MissingRequired(f"Missing required members for {cfg.leaf_spec}")
+        key_path = key_path or []
         for key, attr in cfg.attrs:
+            key_path.append(key)
             if isinstance(attr, CfgNode):
-                CfgNode.validate_required(attr)
-                continue
-            if attr.required and attr.value is None:
-                raise MissingRequired(f"Key {key} is required, but was not provided.")
+                CfgNode.validate_required(attr, key_path=key_path)
+            elif attr.required and attr.value is None:
+                full_key = ".".join(key_path)
+                raise MissingRequired(f"Key {full_key} is required, but was not provided.")
+            key_path.pop()
 
     def save(self, path: Path) -> None:
         if self._was_unfrozen:
