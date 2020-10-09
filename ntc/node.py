@@ -330,7 +330,7 @@ class CfgNode(UserDict):
         else:
             raise ValueError("This should not happen!")
 
-    def _build_child_key(self, key: str):
+    def _build_child_key(self, key: str) -> str:
         return f"{self.full_key}.{key}"
 
 
