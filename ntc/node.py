@@ -251,18 +251,18 @@ class CfgNode(UserDict):
             setattr(self, key, attr.clone())
 
     def _set_new(self, key: str, value: Any) -> None:
-        full_new_key = self._build_child_key(key)
+        child_full_key = self._build_child_key(key)
         leaf_spec = self.leaf_spec
         if isinstance(value, CfgNode):
             if leaf_spec:
-                raise SchemaError(f"Key {full_new_key} cannot contain nested nodes as leaf spec is defined for it.")
+                raise SchemaError(f"Key {child_full_key} cannot contain nested nodes as leaf spec is defined for it.")
             if self._schema_frozen and not self._new_allowed:
-                raise SchemaFrozenError(f"Trying to add node {full_new_key}, but schema is frozen.")
-            value.full_key = full_new_key
+                raise SchemaFrozenError(f"Trying to add node {child_full_key}, but schema is frozen.")
+            value.full_key = child_full_key
             value_to_set = value
         elif isinstance(value, CfgLeaf):
             value_to_set = value
-            value_to_set.full_key = full_new_key
+            value_to_set.full_key = child_full_key
         elif isinstance(value, type):
             if leaf_spec:
                 required = leaf_spec.required
@@ -273,32 +273,34 @@ class CfgNode(UserDict):
                 value,  # Need to pass value here instead of copying from spec, in case new value is more restrictive
                 subclass=True,
                 required=required,
-                full_key=full_new_key,
+                full_key=child_full_key,
             )
         elif leaf_spec:
             value_to_set = leaf_spec.clone()
             value_to_set.value = value
-            value_to_set.full_key = full_new_key
+            value_to_set.full_key = child_full_key
         else:
-            value_to_set = CfgLeaf(value, type(value), required=True, full_key=full_new_key)
+            value_to_set = CfgLeaf(value, type(value), required=True, full_key=child_full_key)
 
         if isinstance(value_to_set, CfgLeaf):
             if leaf_spec:
                 if leaf_spec.required and not value_to_set.required:
-                    raise SchemaError(f"Leaf at {full_new_key} must have required == True")
+                    raise SchemaError(f"Leaf at {child_full_key} must have required == True")
                 if leaf_spec.subclass != value_to_set.subclass:
-                    raise SchemaError(f"Leaf at {full_new_key} must have subclass == True")
+                    raise SchemaError(f"Leaf at {child_full_key} must have subclass == True")
                 if not issubclass(value_to_set.type, leaf_spec.type):
-                    raise SchemaError(f"Required type for leaf at {full_new_key} must be subclass of {leaf_spec.type}")
+                    raise SchemaError(
+                        f"Required type for leaf at {child_full_key} must be subclass of {leaf_spec.type}"
+                    )
                 if not leaf_spec.required and value_to_set.value is None:
                     pass
                 elif leaf_spec.subclass and not isinstance(value_to_set.value, type):
-                    raise SchemaError(f"Leaf value at {full_new_key} must be a type")
+                    raise SchemaError(f"Leaf value at {child_full_key} must be a type")
                 elif not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type):
-                    raise SchemaError(f"Value at {full_new_key} must be instance of {leaf_spec.type}")
+                    raise SchemaError(f"Value at {child_full_key} must be instance of {leaf_spec.type}")
             elif self._schema_frozen and not self._new_allowed:
                 raise SchemaFrozenError(
-                    f"Trying to add leaf {full_new_key} to node with frozen schema, but without leaf spec."
+                    f"Trying to add leaf {child_full_key} to node with frozen schema, but without leaf spec."
                 )
         super().__setitem__(key, value_to_set)
 
@@ -329,7 +331,7 @@ class CfgNode(UserDict):
             raise ValueError("This should not happen!")
 
     def _build_child_key(self, key: str):
-        return ".".join((self.full_key, key))
+        return f"{self.full_key}.{key}"
 
 
 CN = CfgNode
