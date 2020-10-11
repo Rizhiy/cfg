@@ -1,12 +1,28 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any, Type
 
-from ntc.errors import MissingRequired, TypeMismatch
+from ntc.errors import MissingRequired, SchemaError, TypeMismatch
 
 
 class CfgLeaf:
-    def __init__(self, value: Any, type_: Type, required=False, subclass=False):
+    def __init__(self, first: Any = None, second: Any = None, *, required=False, subclass=False):
+        if first is None and second is None:
+            raise SchemaError("Must provide either type or default value for config leaf")
+        if second is None:
+            if isinstance(first, type):
+                value = None
+                type_ = first
+            else:
+                if subclass:
+                    raise SchemaError("Can't use subclass with instance value")
+                value = first
+                type_ = type(first)
+        else:
+            value = first
+            type_ = second
+
         self._type = type_
         self._required = required
         self._subclass = subclass
@@ -46,7 +62,7 @@ class CfgLeaf:
         self._value = val
 
     def clone(self) -> CfgLeaf:
-        return CfgLeaf(self._value, self._type, self._required, self._subclass)
+        return CfgLeaf(deepcopy(self._value), self._type, required=self._required, subclass=self._subclass)
 
 
 CL = CfgLeaf
