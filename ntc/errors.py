@@ -3,39 +3,57 @@ class ConfigError(Exception):
 
 
 class TypeMismatch(ConfigError):
-    pass
+    """
+    Wrong type is used
+    """
 
 
 class NodeReassignment(ConfigError):
-    pass
+    """
+    Assigning value to node item
+    """
 
 
 class ModuleError(ConfigError):
-    pass
+    """
+    Incorrectly specified config, can't import
+    """
 
 
 class SchemaError(ConfigError):
-    pass
+    """
+    Incorrectly specified schema
+    """
 
 
 class SchemaFrozenError(SchemaError):
-    pass
+    """
+    Trying to add new items after schema has been frozen
+    """
 
 
 class SpecError(ConfigError):
-    pass
+    """
+    Value which is assigned does not match leaf_spec
+    """
 
 
 class NodeFrozenError(ConfigError):
-    pass
+    """
+    Trying to assign to a frozen node
+    """
 
 
 class SaveError(ConfigError):
-    pass
+    """
+    Can't save
+    """
 
 
 class ValidationError(ConfigError):
-    pass
+    """
+    Config restrictions are not respected
+    """
 
 
 class MissingRequired(ValidationError):
