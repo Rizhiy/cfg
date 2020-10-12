@@ -35,7 +35,7 @@ class CfgNode(UserDict):
         schema_frozen: bool = False,
         frozen: bool = False,
         new_allowed: bool = False,
-        full_key: str = "",
+        full_key: str = None,
     ):
         super().__init__()
         if isinstance(first, (dict, CfgNode)):
@@ -235,7 +235,7 @@ class CfgNode(UserDict):
 
     @property
     def full_key(self):
-        return self._full_key
+        return self._full_key or "cfg"
 
     @full_key.setter
     def full_key(self, value: str):

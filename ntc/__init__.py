@@ -2,4 +2,4 @@ from .errors import *
 from .leaf import *
 from .node import *
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
