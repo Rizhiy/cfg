@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from ntc import CN, SchemaFrozenError
+from ntc.errors import ValidationError
 
 DATA_DIR = Path(__file__).parent / "data" / "post_load"
 
@@ -14,12 +15,12 @@ def test_transform():
 
 
 def test_validate():
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValidationError):
         CN.load(DATA_DIR / "validate_changes.py")
 
 
 def test_bad_validate():
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValidationError):
         CN.load(DATA_DIR / "bad_validate.py")
 
 
