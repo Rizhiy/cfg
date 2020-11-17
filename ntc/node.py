@@ -6,7 +6,15 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 
 import yaml
 
-from ntc.errors import MissingRequired, NodeFrozenError, NodeReassignment, SaveError, SchemaError, SchemaFrozenError
+from ntc.errors import (
+    MissingRequired,
+    NodeFrozenError,
+    NodeReassignment,
+    SaveError,
+    SchemaError,
+    SchemaFrozenError,
+    ValidationError,
+)
 from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 from .leaf import CfgLeaf
@@ -153,7 +161,10 @@ class CfgNode(UserDict):
         """
         validators = [CfgNode.validate_required] + self._validators
         for validator in validators:
-            validator(self)
+            try:
+                validator(self)
+            except AssertionError as exc:
+                raise ValidationError from exc
 
     def run_hooks(self) -> None:
         """
