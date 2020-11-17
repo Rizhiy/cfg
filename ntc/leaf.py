@@ -30,6 +30,9 @@ class CfgLeaf:
         self._value = value
         self._full_key = full_key
 
+    def __repr__(self):
+        return f"CfgLeaf({repr(self.value)})"
+
     def __str__(self):
         return f"CfgLeaf({self.value})"
 
@@ -80,6 +83,12 @@ class CfgLeaf:
 
     def clone(self) -> CfgLeaf:
         return CfgLeaf(deepcopy(self._value), self._type, required=self._required, subclass=self._subclass)
+
+    def __eq__(self, other: CfgLeaf):
+        for attr_name in ["_type", "_required", "_subclass", "_value"]:
+            if getattr(self, attr_name) != getattr(other, attr_name):
+                return False
+        return True
 
 
 CL = CfgLeaf

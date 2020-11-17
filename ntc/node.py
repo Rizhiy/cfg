@@ -333,6 +333,14 @@ class CfgNode(UserDict):
     def _build_child_key(self, key: str) -> str:
         return f"{self.full_key}.{key}"
 
+    def __reduce__(self):
+        if not self.frozen or not self.schema_frozen:
+            raise ValueError("Can't pickle unfrozen CfgNode")
+        state = {}
+        for attr_name in self._BUILT_IN_ATTRS:
+            state[attr_name] = getattr(self, attr_name)
+        return self.__class__, (self.to_dict(),), state
+
 
 CN = CfgNode
 
