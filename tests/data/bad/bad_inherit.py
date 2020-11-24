@@ -2,6 +2,6 @@ from ntc import CN
 
 from ..base_cfg import cfg
 
-cfg = cfg.clone()
+cfg = cfg.inherit()
 
 cfg.CLASSES.ANOTHER = CN()

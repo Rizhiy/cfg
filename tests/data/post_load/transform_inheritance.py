@@ -8,5 +8,5 @@ def transform(cfg: CN) -> None:
         cfg.DICT.X = "Z"
 
 
-cfg = cfg.clone()
+cfg = cfg.inherit()
 cfg.add_transform(transform)

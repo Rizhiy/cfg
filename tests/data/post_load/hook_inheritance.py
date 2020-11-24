@@ -7,7 +7,7 @@ def hook(cfg: CN) -> None:
     print("Hook 2")
 
 
-cfg = cfg.clone()
+cfg = cfg.inherit()
 cfg.NAME = "Name"
 
 cfg.add_hook(hook)

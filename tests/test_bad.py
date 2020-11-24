@@ -52,11 +52,6 @@ def test_inheritance_changes_bad():
         CN.load(DATA_DIR / "inheritance_changes_bad.py")
 
 
-def test_bad_clone():
-    with pytest.raises(SchemaError):
-        CN.load(DATA_DIR / "bad_clone.py")
-
-
 def test_bad_inherit():
     with pytest.raises(SchemaError):
         CN.load(DATA_DIR / "bad_inherit_changes.py")
@@ -85,6 +80,8 @@ def test_schema_freeze():
 def test_bad_init():
     with pytest.raises(SchemaError):
         CN.load(DATA_DIR / "bad_init.py")
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_init_2.py")
 
 
 def test_bad_cfg_import():

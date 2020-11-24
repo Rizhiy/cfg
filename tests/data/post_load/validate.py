@@ -7,7 +7,7 @@ def validate(cfg: CN) -> None:
     assert cfg.NAME != "Name"
 
 
-cfg = cfg.clone()
+cfg = cfg.inherit()
 cfg.NAME = "Name"
 
 cfg.add_validator(validate)

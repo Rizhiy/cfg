@@ -145,6 +145,10 @@ class CfgNode(UserDict):
     def clone(self) -> CfgNode:
         cfg = CfgNode(self)
         cfg._leaf_spec = self.leaf_spec
+        return cfg
+
+    def inherit(self) -> CfgNode:
+        cfg = self.clone()
         cfg.unfreeze_schema()
         return cfg
 

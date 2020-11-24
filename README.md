@@ -54,8 +54,8 @@ It's allowed to add new config nodes to the overall config schema here.
 # project/cfg.py
 from global_base_cfg import cfg
 
-# Use clone() to inherit from the first-level config.
-cfg = cfg.clone()
+# Use inherit() to inherit from the first-level config.
+cfg = cfg.inherit()
 
 # Schema changes are allowed here.
 cfg.DICT.BAR = "baz"

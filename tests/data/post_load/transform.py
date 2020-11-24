@@ -8,7 +8,7 @@ def transform(cfg: CN) -> None:
         cfg.DICT.INT = 2
 
 
-cfg = cfg.clone()
+cfg = cfg.inherit()
 cfg.NAME = "Name"
 
 cfg.add_transform(transform)
