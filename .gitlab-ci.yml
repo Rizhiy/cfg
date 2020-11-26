@@ -1,9 +1,16 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+
 cache:
   paths:
     - .pip
 
 tests:
   stage: test
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "master"'
+    - if: '$CI_COMMIT_TITLE =~ /^\d+.\d+.\d+$/'
   script:
     - pip --cache-dir=.pip install --quiet .
     - pip --cache-dir=.pip install --quiet -r tests/requirements.txt
@@ -12,18 +19,45 @@ tests:
 
 format:
   stage: test
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "master"'
+    - if: '$CI_COMMIT_TITLE =~ /^\d+.\d+.\d+$/'
   script:
     - pip --cache-dir=.pip install --quiet ntu
     - format --check
 
-package-upload:
-  stage: deploy
-  needs:
-    - tests
-    - format
-  only:
-    - master
+check_commits:
+  stage: test
   script:
-    - pip --cache-dir=.pip install --quiet -r requirements.dev
-    - python setup.py sdist bdist_wheel
-    - twine upload ./dist/*
+    - pip --cache-dir=.pip install --quiet ntu
+    - check-commits
+
+bump_version:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "master"'
+      when: never
+    - if: '$CI_COMMIT_TITLE !~ /^\d+.\d+.\d+$/'
+  before_script:
+    # Add ssh key for private repos
+    - which ssh-agent || ( apt-get update -y > /dev/null && apt-get install openssh-client -y > /dev/null)
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    # Add server to known hosts
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - pip --cache-dir=.pip install --quiet ntu
+    - bump-version
+
+upload_package:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "master"'
+      when: never
+    - if: '$CI_COMMIT_TITLE =~ /^\d+.\d+.\d+$/'
+  script:
+    - pip --cache-dir=.pip install --quiet ntu
+    - nt-deploy
