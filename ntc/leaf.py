@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import partial
 from typing import Any, Type
 
 from ntc.errors import MissingRequired, SchemaError, TypeMismatch
@@ -57,17 +58,18 @@ class CfgLeaf:
         if self._required and val is None:
             raise MissingRequired(f"Can't set required value to None for key {self.full_key}")
         if val is not None:
-            if self._subclass and not isinstance(val, type):
+            check_val = val.func if isinstance(val, partial) else val
+            if self._subclass and not isinstance(check_val, type):
                 raise TypeMismatch(
-                    f"Subclass of type {self._type} expected, but {val!r} found for key {self.full_key}!"
+                    f"Subclass of type {self._type} expected, but {check_val!r} found for key {self.full_key}!"
                 )
-            if self._subclass and not issubclass(val, self._type):
+            if self._subclass and not issubclass(check_val, self._type):
                 raise TypeMismatch(
-                    f"Subclass of type {self._type} expected, but {val!r} found for key {self.full_key}!"
+                    f"Subclass of type {self._type} expected, but {check_val!r} found for key {self.full_key}!"
                 )
-            if not self._subclass and not isinstance(val, self._type):
+            if not self._subclass and not isinstance(check_val, self._type):
                 raise TypeMismatch(
-                    f"Instance of type {self._type} expected, but {val!r} found for key {self.full_key}!"
+                    f"Instance of type {self._type} expected, but {check_val!r} found for key {self.full_key}!"
                 )
         self._value = val
 

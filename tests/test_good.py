@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -77,6 +78,12 @@ def test_node_subclass():
 def test_node_nested_subclass():
     cfg = CN.load(DATA_DIR / "node_nested_subclass.py")
     assert issubclass(cfg.SUBCLASSES.ONE, SubClass)
+
+
+def test_node_partial_subclass():
+    cfg = CN.load(DATA_DIR / "node_partial_subclass.py")
+    assert isinstance(cfg.SUBCLASS, partial)
+    assert issubclass(cfg.SUBCLASS.func, SubClass)
 
 
 def test_inheritance_changes():
