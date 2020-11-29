@@ -86,6 +86,12 @@ def test_node_partial_subclass():
     assert issubclass(cfg.SUBCLASS.func, SubClass)
 
 
+def test_node_nested_partial_subclass():
+    cfg = CN.load(DATA_DIR / "node_nested_partial_subclass.py")
+    assert isinstance(cfg.SUBCLASSES.ONE, partial)
+    assert issubclass(cfg.SUBCLASSES.ONE.func, SubClass)
+
+
 def test_inheritance_changes():
     cfg = CN.load(DATA_DIR / "inheritance_changes.py")
     assert cfg.DICT.X == "Y"

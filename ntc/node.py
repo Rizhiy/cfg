@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import UserDict
+from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple, Union
 
@@ -309,8 +310,11 @@ class CfgNode(UserDict):
                     )
                 if not leaf_spec.required and value_to_set.value is None:
                     pass
-                elif leaf_spec.subclass and not isinstance(value_to_set.value, type):
-                    raise SchemaError(f"Leaf value at {child_full_key} must be a type")
+                elif leaf_spec.subclass:
+                    check_value = value_to_set.value
+                    check_value = check_value.func if isinstance(check_value, partial) else check_value
+                    if not isinstance(check_value, type):
+                        raise SchemaError(f"Leaf value at {child_full_key} must be a type")
                 elif not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type):
                     raise SchemaError(f"Value at {child_full_key} must be instance of {leaf_spec.type}")
             elif self._schema_frozen and not self._new_allowed:
