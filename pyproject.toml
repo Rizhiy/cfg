@@ -1,5 +1,2 @@
 [build-system]
 requires = ["setuptools", "wheel", "ntu"]
-
-[tool.semantic_release]
-version_variable = "ntc/__init__.py:__version__"
