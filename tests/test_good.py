@@ -102,3 +102,11 @@ def test_inheritance_changes_separation():
     CN.load(DATA_DIR / "inheritance_changes.py")
     with pytest.raises(AttributeError):
         cfg.DICT.BAR
+
+
+def test_inheritance_changes_multiple_loads():
+    cfg1 = CN.load(DATA_DIR / "inheritance_changes.py")
+    cfg2 = CN.load(DATA_DIR / "inheritance_changes_2.py")
+
+    assert cfg1.DICT.BAR == "BAZ"
+    assert cfg2.DICT.BAR == "QUUX"
