@@ -14,7 +14,6 @@ cfg.CLASS = BaseClass()
 cfg.CLASSES = CN(BaseClass)
 cfg.SUBCLASS = BaseClass
 cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))
-cfg.DESCRIBED = CL("described", desc="Described leaf")
 
 
 def transform(cfg: CN):

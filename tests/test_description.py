@@ -16,7 +16,7 @@ def test_description():
 
 
 def test_description_inheritance():
-    cfg = CN.load(DATA_DIR / "description_inheritance.py")
+    cfg = CN.load(DATA_DIR / "description_overriding.py")
 
     assert cfg.describe() == "Root config node"
     assert cfg.DESCRIBED == "overrided"
