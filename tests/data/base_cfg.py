@@ -2,7 +2,7 @@ from ntc import CL, CN
 
 from .base_class import BaseClass
 
-cfg = CN()
+cfg = CN(desc="Root config node")
 
 cfg.NAME = CL(None, str)
 cfg.DICT = CN()
@@ -14,6 +14,7 @@ cfg.CLASS = BaseClass()
 cfg.CLASSES = CN(BaseClass)
 cfg.SUBCLASS = BaseClass
 cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))
+cfg.DESCRIBED = CL("described", desc="Described leaf")
 
 
 def transform(cfg: CN):
