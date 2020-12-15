@@ -42,8 +42,7 @@ class CfgLeaf:
         self._desc = desc
 
     def __repr__(self):
-        result = f"CfgLeaf({repr(self.value)})"
-        return result
+        return f"CfgLeaf({repr(self.value)})"
 
     def __str__(self):
         result = f"CfgLeaf({self.value})"
@@ -96,6 +95,10 @@ class CfgLeaf:
     @property
     def desc(self):
         return self._desc
+
+    @desc.setter
+    def desc(self, value):
+        self._desc = value
 
     def clone(self) -> CfgLeaf:
         return CfgLeaf(

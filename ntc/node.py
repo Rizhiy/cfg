@@ -265,13 +265,16 @@ class CfgNode(UserDict):
     def describe(self, key: str = None) -> str:
         if key is None:
             return self._desc
-        if key in self:
-            attr = super().__getitem__(key)
-            if isinstance(attr, CfgNode):
-                return attr.describe()
-            elif isinstance(attr, CfgLeaf):
-                return attr.desc
-        raise ValueError(f"{key!r} key does not exist")
+        if key not in self:
+            raise ValueError(f"{key!r} key does not exist")
+
+        attr = super().__getitem__(key)
+        if isinstance(attr, CfgNode):
+            return attr.describe()
+        elif isinstance(attr, CfgLeaf):
+            return attr.desc
+        else:
+            raise AssertionError("This should not happen!")
 
     def set_module(self, module) -> None:
         self._module = module
@@ -331,6 +334,8 @@ class CfgNode(UserDict):
                         raise SchemaError(f"Leaf value {value_to_set} must be a type")
                 elif not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type):
                     raise SchemaError(f"Value {value_to_set} must be instance of {leaf_spec.type}")
+                if value_to_set.desc is None:
+                    value_to_set.desc = leaf_spec.desc
             elif self._schema_frozen and not self._new_allowed:
                 raise SchemaFrozenError(
                     f"Trying to add leaf {child_full_key} to node with frozen schema, but without leaf spec."

@@ -14,13 +14,23 @@ def test_description():
     assert cfg.DESCRIBED == "described"
     assert cfg.describe("DESCRIBED") == "Described leaf"
 
+    with pytest.raises(ValueError):
+        cfg.describe("NONEXISTENT")
 
-def test_description_inheritance():
-    cfg = CN.load(DATA_DIR / "description_overriding.py")
+
+def test_description_value_overriding():
+    cfg = CN.load(DATA_DIR / "description_value_overriding.py")
 
     assert cfg.describe() == "Root config node"
     assert cfg.DESCRIBED == "overrided"
     assert cfg.describe("DESCRIBED") == "Described leaf"
+
+
+def test_description_inherited():
+    cfg = CN.load(DATA_DIR / "description_inherited.py")
+
+    assert cfg.DESCRIBED_NESTING.describe("FOO") == "Described nesting"
+    assert cfg.DESCRIBED_NESTING.describe("BAR") == "Overrided description"
 
 
 def test_description_bad():
