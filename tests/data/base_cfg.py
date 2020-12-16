@@ -2,7 +2,7 @@ from ntc import CL, CN
 
 from .base_class import BaseClass
 
-cfg = CN()
+cfg = CN(desc="Root config node")
 
 cfg.NAME = CL(None, str)
 cfg.DICT = CN()
