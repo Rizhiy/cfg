@@ -72,6 +72,11 @@ def test_bad_inherit_subclass_instance():
         CN.load(DATA_DIR / "bad_inherit_subclass_instance_changes.py")
 
 
+def test_bad_inherit_subclass_class():
+    with pytest.raises(SchemaError):
+        CN.load(DATA_DIR / "bad_inherit_subclass_class_changes.py")
+
+
 def test_schema_freeze():
     with pytest.raises(SchemaError):
         CN.load(DATA_DIR / "bad_schema.py")
