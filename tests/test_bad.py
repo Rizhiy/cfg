@@ -58,8 +58,9 @@ def test_bad_inherit():
 
 
 def test_bad_inherit_subclass():
-    with pytest.raises(SchemaError):
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_inherit_subclass_changes.py")
+    assert str(excinfo.value) == "Leaf must be an instance of <class 'tests.data.base_class.BaseClass'>"
 
 
 def test_bad_inherit_instance():
@@ -73,8 +74,9 @@ def test_bad_inherit_subclass_instance():
 
 
 def test_bad_inherit_subclass_class():
-    with pytest.raises(SchemaError):
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_inherit_subclass_class_changes.py")
+    assert str(excinfo.value) == "Leaf must be an instance of <class 'tests.data.base_class.BaseClass'>"
 
 
 def test_schema_freeze():
