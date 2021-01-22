@@ -322,7 +322,7 @@ class CfgNode(UserDict):
                 if leaf_spec.required and not value_to_set.required:
                     raise SchemaError(f"Leaf {value_to_set} must have required == True")
                 if leaf_spec.subclass != value_to_set.subclass:
-                    raise SchemaError(f"Leaf must be an instance of {leaf_spec.type}")
+                    raise SchemaError(f"Leaf {value_to_set} must be an instance of {leaf_spec.type}")
                 if not issubclass(value_to_set.type, leaf_spec.type):
                     raise SchemaError(f"Required type for leaf {value_to_set} must be subclass of {leaf_spec.type}")
                 if not leaf_spec.required and value_to_set.value is None:
