@@ -14,6 +14,7 @@ cfg.CLASS = BaseClass()
 cfg.CLASSES = CN(BaseClass)
 cfg.SUBCLASS = BaseClass
 cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))
+cfg.NEW = CN(new_allowed=True)
 
 
 def transform(cfg: CN):

@@ -362,6 +362,7 @@ class CfgNode(UserDict):
             self._hooks = base._hooks + self._hooks
             self._set_attrs(base.attrs)
             self._desc = base._desc
+            self._new_allowed = base._new_allowed
             self.freeze_schema()
         elif isinstance(base, dict):
             for key, value in base.items():

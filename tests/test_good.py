@@ -110,3 +110,8 @@ def test_inheritance_changes_multiple_loads():
 
     assert cfg1.DICT.BAR == "BAZ"
     assert cfg2.DICT.BAR == "QUUX"
+
+
+def test_new_allowed():
+    cfg = CN.load(DATA_DIR / "new_allowed.py")
+    assert cfg.NEW.one == "one"
