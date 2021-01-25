@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import pytest
@@ -8,98 +9,146 @@ DATA_DIR = Path(__file__).parent / "data" / "bad"
 
 
 def test_bad_type():
-    with pytest.raises(TypeMismatch):
+    with pytest.raises(TypeMismatch) as excinfo:
         CN.load(DATA_DIR / "bad_type.py")
+    assert str(excinfo.value) == "Instance of type <class 'str'> expected, but 1 found for CfgLeaf(Good) at cfg.NAME!"
 
 
 def test_bad_attr():
-    with pytest.raises(SchemaFrozenError):
+    with pytest.raises(SchemaFrozenError) as excinfo:
         CN.load(DATA_DIR / "bad_attr.py")
+    assert str(excinfo.value) == "Trying to add leaf cfg.NEW to node with frozen schema, but without leaf spec."
 
 
 def test_bad_class():
-    with pytest.raises(TypeMismatch):
+    with pytest.raises(TypeMismatch) as excinfo:
         CN.load(DATA_DIR / "bad_class.py")
+    assert re.match(
+        r"^Instance of type <class 'tests.data.base_class.BaseClass'> expected, "
+        r"but <tests.data.bad.bad_class.BadClass object at 0x[0-9a-f]+> found "
+        r"for CfgLeaf\(<tests.data.base_class.BaseClass object at 0x[0-9a-f]+>\) at cfg.CLASS!$",
+        str(excinfo.value),
+    )
 
 
 def test_bad_node():
-    with pytest.raises((TypeMismatch, SchemaError)):
+    with pytest.raises((TypeMismatch, SchemaError)) as excinfo:
         CN.load(DATA_DIR / "bad_node.py")
+    assert re.match(
+        r"^Instance of type <class 'tests.data.base_class.BaseClass'> expected, but "
+        r"<tests.data.bad.bad_node.BadClass object at 0x[0-9a-f]+> found for CfgLeaf\(None\) at cfg.CLASSES.ONE!$",
+        str(excinfo.value),
+    )
 
 
 def test_bad_node_subclass():
-    with pytest.raises(TypeMismatch):
+    with pytest.raises(TypeMismatch) as excinfo:
         CN.load(DATA_DIR / "bad_node_subclass.py")
+    assert str(excinfo.value) == (
+        "Subclass of type <class 'tests.data.base_class.BaseClass'> expected, but "
+        "<class 'tests.data.bad.bad_node_subclass.BadSubClass'> found "
+        "for CfgLeaf(<class 'tests.data.base_class.BaseClass'>) at cfg.SUBCLASS!"
+    )
 
 
 def test_bad_node_required_subclass():
-    with pytest.raises(MissingRequired):
+    with pytest.raises(MissingRequired) as excinfo:
         CN.load(DATA_DIR / "bad_node_required_subclass.py")
+    assert str(excinfo.value) == (
+        "Can't set required value to None for CfgLeaf(<class 'tests.data.base_class.BaseClass'>) at cfg.SUBCLASS"
+    )
 
 
 def test_bad_node_nested_subclass():
-    with pytest.raises(SchemaError):
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_node_nested_subclass.py")
+    assert str(excinfo.value) == (
+        "Required type for CfgLeaf(<class 'tests.data.bad.bad_node_nested_subclass.BadSubClass'>) "
+        "at cfg.SUBCLASSES.ONE must be subclass of <class 'tests.data.base_class.BaseClass'>"
+    )
 
 
 def test_bad_node_instance():
-    with pytest.raises((TypeMismatch, SchemaError)):
+    with pytest.raises((TypeMismatch, SchemaError)) as excinfo:
         CN.load(DATA_DIR / "bad_node_instance.py")
+    assert re.match(
+        r"^Subclass of type <class 'tests.data.base_class.BaseClass'> expected, "
+        r"but <tests.data.bad.bad_node_instance.SubClass object at 0x[0-9a-f]+> found for "
+        r"CfgLeaf\(None\) at cfg.SUBCLASSES.ONE!$",
+        str(excinfo.value),
+    )
 
 
 def test_inheritance_changes_bad():
-    with pytest.raises(TypeMismatch):
+    with pytest.raises(TypeMismatch) as excinfo:
         CN.load(DATA_DIR / "inheritance_changes_bad.py")
+    assert str(excinfo.value) == (
+        "Instance of type <class 'str'> expected, but 2 found for CfgLeaf(BAR) at cfg.DICT.BAR!"
+    )
 
 
 def test_bad_inherit():
-    with pytest.raises(SchemaError):
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_inherit_changes.py")
+    assert str(excinfo.value) == "Key cfg.CLASSES.ANOTHER cannot contain nested nodes as leaf spec is defined for it."
 
 
 def test_bad_inherit_subclass():
     with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_inherit_subclass_changes.py")
-    assert (
-        str(excinfo.value)
-        == "Leaf CfgLeaf(None) at cfg.CLASSES.ANOTHER must be an instance of <class 'tests.data.base_class.BaseClass'>"
+    assert str(excinfo.value) == (
+        "Value of CfgLeaf(None) at cfg.CLASSES.ANOTHER must be an instance of <class 'tests.data.base_class.BaseClass'>"
     )
 
 
 def test_bad_inherit_instance():
-    with pytest.raises(SchemaError):
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_inherit_instance_changes.py")
+    assert re.match(
+        r"^Value of CfgLeaf\(<tests.data.bad.bad_inherit_instance.BadClass object at 0x[0-9a-f]+>\) "
+        r"at cfg.CLASSES.ANOTHER must be an instance of <class 'tests.data.base_class.BaseClass'>$",
+        str(excinfo.value),
+    )
 
 
 def test_bad_inherit_subclass_instance():
-    with pytest.raises(SchemaError):
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_inherit_subclass_instance_changes.py")
+    assert re.match(
+        r"^Value of CfgLeaf\(<tests.data.base_class.BaseClass object at 0x[0-9a-f]+>\) "
+        r"at cfg.SUBCLASSES.ANOTHER must be a type$",
+        str(excinfo.value),
+    )
 
 
 def test_bad_inherit_subclass_class():
     with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_inherit_subclass_class_changes.py")
-    assert (
-        str(excinfo.value)
-        == "Leaf CfgLeaf(None) at cfg.CLASSES.ANOTHER must be an instance of <class 'tests.data.base_class.BaseClass'>"
+    assert str(excinfo.value) == (
+        "Value of CfgLeaf(None) at cfg.CLASSES.ANOTHER must be an instance of <class 'tests.data.base_class.BaseClass'>"
     )
 
 
 def test_schema_freeze():
-    with pytest.raises(SchemaError):
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_schema.py")
+    assert str(excinfo.value) == "Trying to add node cfg.DICT.Y, but schema is frozen."
 
 
 def test_bad_init():
-    with pytest.raises(SchemaError):
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_init.py")
-    with pytest.raises(SchemaError):
+    assert str(excinfo.value) == "Changes to config must be started with `cfg = CN(cfg)`"
+
+    with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_init_2.py")
+    assert str(excinfo.value) == "Changes to config must be started with `cfg = CN(cfg)`"
 
 
 def test_bad_cfg_import():
-    with pytest.raises(ModuleError):
+    with pytest.raises(ModuleError) as excinfo:
         CN.load(DATA_DIR / "bad_cfg_import.py")
+    assert str(excinfo.value) == "Can't find config definition, please import config schema using absolute path"
 
 
 def test_bad_import():

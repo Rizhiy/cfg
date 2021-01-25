@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import UserDict
-from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple, Union
 
@@ -288,52 +287,17 @@ class CfgNode(UserDict):
         leaf_spec = self.leaf_spec
 
         if isinstance(value, CfgNode):
-            if leaf_spec:
-                raise SchemaError(f"Key {child_full_key} cannot contain nested nodes as leaf spec is defined for it.")
-            if self._schema_frozen and not self._new_allowed:
-                raise SchemaFrozenError(f"Trying to add node {child_full_key}, but schema is frozen.")
-            value.full_key = child_full_key
-            value_to_set = value
+            value_to_set = self._value_to_set_from_node(child_full_key, value)
         elif isinstance(value, CfgLeaf):
-            value_to_set = value
-            value_to_set.full_key = child_full_key
+            value_to_set = self._value_to_set_from_leaf(child_full_key, value)
         elif isinstance(value, type):
-            if leaf_spec:
-                required, desc = leaf_spec.required, leaf_spec.desc
-            else:
-                required, desc = True, None
-            value_to_set = CfgLeaf(
-                value,
-                value,  # Need to pass value here instead of copying from spec, in case new value is more restrictive
-                subclass=True,
-                required=required,
-                full_key=child_full_key,
-                desc=desc,
-            )
-        elif leaf_spec:
-            value_to_set = leaf_spec.clone()
-            value_to_set.value = value
-            value_to_set.full_key = child_full_key
+            value_to_set = self._value_to_set_from_type(child_full_key, value)
         else:
-            value_to_set = CfgLeaf(value, type(value), required=True, full_key=child_full_key)
+            value_to_set = self._value_to_set_from_value(child_full_key, value)
 
         if isinstance(value_to_set, CfgLeaf):
             if leaf_spec:
-                if leaf_spec.required and not value_to_set.required:
-                    raise SchemaError(f"Leaf {value_to_set} must have required == True")
-                if leaf_spec.subclass != value_to_set.subclass:
-                    raise SchemaError(f"Leaf {value_to_set} must be an instance of {leaf_spec.type}")
-                if not issubclass(value_to_set.type, leaf_spec.type):
-                    raise SchemaError(f"Required type for leaf {value_to_set} must be subclass of {leaf_spec.type}")
-                if not leaf_spec.required and value_to_set.value is None:
-                    pass
-                elif leaf_spec.subclass:
-                    check_value = value_to_set.value
-                    check_value = check_value.func if isinstance(check_value, partial) else check_value
-                    if not isinstance(check_value, type):
-                        raise SchemaError(f"Leaf value {value_to_set} must be a type")
-                elif not leaf_spec.subclass and not isinstance(value_to_set.value, leaf_spec.type):
-                    raise SchemaError(f"Value {value_to_set} must be instance of {leaf_spec.type}")
+                value_to_set.check(self.leaf_spec)
                 if value_to_set.desc is None:
                     value_to_set.desc = leaf_spec.desc
             elif self._schema_frozen and not self._new_allowed:
@@ -378,6 +342,40 @@ class CfgNode(UserDict):
         for attr_name in self._BUILT_IN_ATTRS:
             state[attr_name] = getattr(self, attr_name)
         return self.__class__, (self.to_dict(),), state
+
+    def _value_to_set_from_node(self, full_key: str, node: CfgNode) -> CfgNode:
+        if self.leaf_spec:
+            raise SchemaError(f"Key {full_key} cannot contain nested nodes as leaf spec is defined for it.")
+        if self._schema_frozen and not self._new_allowed:
+            raise SchemaFrozenError(f"Trying to add node {full_key}, but schema is frozen.")
+        node.full_key = full_key
+        return node
+
+    def _value_to_set_from_leaf(self, full_key: str, leaf: CfgLeaf) -> CfgLeaf:
+        leaf.full_key = full_key
+        return leaf
+
+    def _value_to_set_from_type(self, full_key: str, type_: type) -> CfgLeaf:
+        if self.leaf_spec:
+            required, desc = self.leaf_spec.required, self.leaf_spec.desc
+        else:
+            required, desc = True, None
+        return CfgLeaf(
+            type_,
+            type_,  # Need to pass value here instead of copying from spec, in case new value is more restrictive
+            subclass=True,
+            required=required,
+            full_key=full_key,
+            desc=desc,
+        )
+
+    def _value_to_set_from_value(self, full_key: str, value: Any) -> CfgLeaf:
+        if self.leaf_spec:
+            leaf = self.leaf_spec.clone()
+            leaf.full_key = full_key
+            leaf.value = value
+            return leaf
+        return CfgLeaf(value, type(value), required=True, full_key=full_key)
 
 
 CN = CfgNode

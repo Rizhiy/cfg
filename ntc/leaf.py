@@ -37,8 +37,8 @@ class CfgLeaf:
         self._required = required
         self._subclass = subclass
 
-        self._value = value
         self._full_key = full_key
+        self._value = value
         self._desc = desc
 
     def __repr__(self):
@@ -71,15 +71,15 @@ class CfgLeaf:
     @value.setter
     def value(self, val) -> None:
         if self._required and val is None:
-            raise MissingRequired(f"Can't set required value to None for key {self}")
+            raise MissingRequired(f"Can't set required value to None for {self}")
         if val is not None:
             check_val = val.func if isinstance(val, partial) else val
             if self._subclass and not isinstance(check_val, type):
-                raise TypeMismatch(f"Subclass of type {self._type} expected, but {check_val!r} found for key {self}!")
+                raise TypeMismatch(f"Subclass of type {self._type} expected, but {check_val!r} found for {self}!")
             if self._subclass and not issubclass(check_val, self._type):
-                raise TypeMismatch(f"Subclass of type {self._type} expected, but {check_val!r} found for key {self}!")
+                raise TypeMismatch(f"Subclass of type {self._type} expected, but {check_val!r} found for {self}!")
             if not self._subclass and not isinstance(check_val, self._type):
-                raise TypeMismatch(f"Instance of type {self._type} expected, but {check_val!r} found for key {self}!")
+                raise TypeMismatch(f"Instance of type {self._type} expected, but {check_val!r} found for {self}!")
         self._value = val
 
     @property
@@ -104,6 +104,26 @@ class CfgLeaf:
         return CfgLeaf(
             deepcopy(self._value), self._type, required=self._required, subclass=self._subclass, desc=self._desc,
         )
+
+    def check(self, leaf_spec: CfgLeaf) -> None:
+        if leaf_spec.required and not self.required:
+            raise SchemaError(f"{self} must have required == True")
+        if leaf_spec.subclass != self.subclass:
+            if leaf_spec.subclass:
+                raise SchemaError(f"{self} cannot have subclass == False")
+            else:
+                raise SchemaError(f"Value of {self} must be an instance of {leaf_spec.type}")
+        if not issubclass(self.type, leaf_spec.type):
+            raise SchemaError(f"Required type for {self} must be subclass of {leaf_spec.type}")
+        if not leaf_spec.required and self.value is None:
+            pass
+        elif leaf_spec.subclass:
+            check_value = self.value
+            check_value = check_value.func if isinstance(check_value, partial) else check_value
+            if not isinstance(check_value, type):
+                raise SchemaError(f"Value of {self} must be a type")
+        elif not leaf_spec.subclass and not isinstance(self.value, leaf_spec.type):
+            raise SchemaError(f"Value of {self} must be an instance of {leaf_spec.type}")
 
     def __eq__(self, other: CfgLeaf):
         for attr_name in ["_type", "_required", "_subclass", "_value", "_desc"]:
