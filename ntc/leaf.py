@@ -6,6 +6,8 @@ from typing import Any, Type
 
 from ntc.errors import MissingRequired, SchemaError, TypeMismatch
 
+from .utils import full_type_name
+
 
 class CfgLeaf:
     def __init__(
@@ -74,12 +76,11 @@ class CfgLeaf:
             raise MissingRequired(f"Can't set required value to None for {self}")
         if val is not None:
             check_val = val.func if isinstance(val, partial) else val
-            if self._subclass and not isinstance(check_val, type):
-                raise TypeMismatch(f"Subclass of type {self._type} expected, but {check_val!r} found for {self}!")
-            if self._subclass and not issubclass(check_val, self._type):
-                raise TypeMismatch(f"Subclass of type {self._type} expected, but {check_val!r} found for {self}!")
+            expected_type = full_type_name(self._type)
+            if self._subclass and (not isinstance(check_val, type) or not issubclass(check_val, self._type)):
+                raise TypeMismatch(f"Subclass of type <{expected_type}> expected, but {check_val!r} found for {self}!")
             if not self._subclass and not isinstance(check_val, self._type):
-                raise TypeMismatch(f"Instance of type {self._type} expected, but {check_val!r} found for {self}!")
+                raise TypeMismatch(f"Instance of type <{expected_type}> expected, but {check_val!r} found for {self}!")
         self._value = val
 
     @property

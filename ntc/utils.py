@@ -84,3 +84,16 @@ def _load_package(package_path: Path) -> str:
     _load_module(package_name, init_path)
 
     return package_name
+
+
+def full_type_name(_type) -> str:
+    module = _type.__module__
+    class_name = _type.__name__
+    if module is None or module == str.__class__.__module__:
+        return class_name  # Avoid reporting __builtin__
+    else:
+        return f"{module}.{class_name}"
+
+
+def full_class_name(obj) -> str:
+    return full_type_name(obj.__class__)
