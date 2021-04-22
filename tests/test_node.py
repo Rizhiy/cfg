@@ -194,3 +194,27 @@ def test_init_from_dict():
 def test_properties(basic_cfg):
     for name in ["schema_frozen", "frozen", "leaf_spec"]:
         getattr(basic_cfg, name)
+
+
+def test_clear_happy_path():
+    cfg = CfgNode(new_allowed=True)
+    cfg.freeze_schema()
+    cfg.test = "test"
+
+    cfg.clear()
+    assert not cfg.keys()
+
+
+def test_clear_schema_frozen_new_not_allowed(basic_cfg):
+    basic_cfg.freeze_schema()
+    with pytest.raises(AttributeError):
+        basic_cfg.clear()
+
+
+def test_clear_frozen():
+    cfg = CfgNode(new_allowed=True)
+    cfg.freeze_schema()
+    cfg.test = "test"
+    cfg.freeze()
+    with pytest.raises(AttributeError):
+        cfg.clear()

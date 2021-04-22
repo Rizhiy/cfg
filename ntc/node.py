@@ -378,6 +378,16 @@ class CfgNode(UserDict):
             return leaf
         return CfgLeaf(value, type(value), required=True, full_key=full_key)
 
+    def clear(self) -> None:
+        if self._frozen:
+            raise AttributeError(f"Can't clear a frozen CfgNode: {self.full_key}")
+        if self._schema_frozen and not self._new_allowed:
+            raise AttributeError(
+                f"Can only clear CfgNode when _new_allowed == True if schema is frozen: {self.full_key}"
+            )
+        for key in list(self.keys()):
+            del self[key]
+
 
 CN = CfgNode
 
