@@ -68,6 +68,9 @@ class CfgNode(UserDict):
         self._hooks = []
         self._module = None
 
+        if self._leaf_spec is not None:
+            self._new_allowed = True
+
         if base is not None:
             self._init_with_base(base)
 
@@ -283,8 +286,9 @@ class CfgNode(UserDict):
             setattr(self, key, attr.clone())
 
     def _set_new(self, key: str, value: Any) -> None:
+        if self._schema_frozen and not self._new_allowed:
+            raise SchemaFrozenError(f"Trying to add leaf to node {self.full_key} with frozen schema.")
         child_full_key = self._build_child_key(key)
-        leaf_spec = self.leaf_spec
 
         if isinstance(value, CfgNode):
             value_to_set = self._value_to_set_from_node(child_full_key, value)
@@ -295,15 +299,11 @@ class CfgNode(UserDict):
         else:
             value_to_set = self._value_to_set_from_value(child_full_key, value)
 
-        if isinstance(value_to_set, CfgLeaf):
-            if leaf_spec:
-                value_to_set.check(self.leaf_spec)
-                if value_to_set.desc is None:
-                    value_to_set.desc = leaf_spec.desc
-            elif self._schema_frozen and not self._new_allowed:
-                raise SchemaFrozenError(
-                    f"Trying to add leaf {child_full_key} to node with frozen schema, but without leaf spec."
-                )
+        if isinstance(value_to_set, CfgLeaf) and self.leaf_spec:
+            value_to_set.check(self.leaf_spec)
+            if value_to_set.desc is None:
+                value_to_set.desc = self.leaf_spec.desc
+
         super().__setitem__(key, value_to_set)
 
     def _set_existing(self, key: str, value: Any) -> None:
@@ -347,8 +347,6 @@ class CfgNode(UserDict):
     def _value_to_set_from_node(self, full_key: str, node: CfgNode) -> CfgNode:
         if self.leaf_spec:
             raise SchemaError(f"Key {full_key} cannot contain nested nodes as leaf spec is defined for it.")
-        if self._schema_frozen and not self._new_allowed:
-            raise SchemaFrozenError(f"Trying to add node {full_key}, but schema is frozen.")
         node.full_key = full_key
         return node
 

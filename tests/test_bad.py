@@ -17,7 +17,7 @@ def test_bad_type():
 def test_bad_attr():
     with pytest.raises(SchemaFrozenError) as excinfo:
         CN.load(DATA_DIR / "bad_attr.py")
-    assert str(excinfo.value) == "Trying to add leaf cfg.BAR to node with frozen schema, but without leaf spec."
+    assert str(excinfo.value) == "Trying to add leaf to node cfg with frozen schema."
 
 
 def test_bad_class():
@@ -130,7 +130,7 @@ def test_bad_inherit_subclass_class():
 def test_schema_freeze():
     with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_schema.py")
-    assert str(excinfo.value) == "Trying to add node cfg.DICT.Y, but schema is frozen."
+    assert str(excinfo.value) == "Trying to add leaf to node cfg.DICT with frozen schema."
 
 
 def test_bad_init():
