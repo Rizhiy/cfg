@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Union
+
 import yaml
+
 from .node import CN
 
 
@@ -13,4 +15,3 @@ def load_from_file(filepath: Union[str, Path]):
             cfg.update(yaml.load(f))
 
     return _merge
-
