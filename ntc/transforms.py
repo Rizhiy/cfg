@@ -11,6 +11,8 @@ def load_from_file(filepath: Union[str, Path]):
         filepath = Path(filepath)
 
     def _merge(cfg: CN) -> None:
+        if not filepath.exists():
+            return
         with filepath.open() as f:
             cfg.update(yaml.load(f))
 
