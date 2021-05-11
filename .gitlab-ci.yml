@@ -4,6 +4,8 @@ include:
 
 tests:
   stage: test
+  rules:
+    - if: '$CI_COMMIT_TITLE !~ /^\d+.\d+.\d+$/'
   script:
     - pip --cache-dir=.pip install --quiet .
     - pip --cache-dir=.pip install --quiet -r tests/requirements.txt
