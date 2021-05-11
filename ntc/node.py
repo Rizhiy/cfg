@@ -386,6 +386,13 @@ class CfgNode(UserDict):
         for key in list(self.keys()):
             del self[key]
 
+    def update(self, new_dict: dict) -> None:
+        for key, value in new_dict.items():
+            if key in self and isinstance(self[key], (UserDict, dict)):
+                self[key].update(value)
+            else:
+                self[key] = value
+
 
 CN = CfgNode
 
