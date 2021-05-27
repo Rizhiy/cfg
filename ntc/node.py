@@ -338,7 +338,7 @@ class CfgNode(UserDict):
 
     def __reduce__(self):
         if not self.frozen or not self.schema_frozen:
-            raise ValueError("Can't pickle unfrozen CfgNode")
+            raise ValueError(f"Can't pickle unfrozen CfgNode: {self.full_key}")
         state = {}
         for attr_name in self._BUILT_IN_ATTRS:
             state[attr_name] = getattr(self, attr_name)
