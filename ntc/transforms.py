@@ -14,6 +14,6 @@ def load_from_file(filepath: Union[str, Path]):
         if not filepath.exists():
             return
         with filepath.open() as f:
-            cfg.update(yaml.load(f))
+            cfg.update(yaml.load(f, Loader=yaml.Loader))
 
     return _merge
