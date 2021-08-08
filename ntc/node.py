@@ -133,7 +133,8 @@ class CfgNode(UserDict):
             elif attr.required and attr.value is None:
                 raise MissingRequired(f"Key {attr} is required, but was not provided.")
 
-    def save(self, path: Path) -> None:
+    def save(self, path: Union[Path, str]) -> None:
+        path = Path(path)
         if not self._safe_save:
             raise SaveError("Config was updated in such a way that it can no longer be saved!")
         if not self._module:
@@ -383,6 +384,7 @@ class CfgNode(UserDict):
                     continue
                 lines = [f"# {info.filename}:{info.lineno} {info.code_context[0]}", f"{full_key} = {value!r}\n"]
                 self._module.extend(lines)
+                break
         else:
             logger.warning(f"Config was modified with unsavable value: {value!r}")
             self._safe_save = False
