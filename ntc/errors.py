@@ -38,12 +38,6 @@ class SpecError(ConfigError):
     """
 
 
-class NodeFrozenError(ConfigError):
-    """
-    Trying to assign to a frozen node
-    """
-
-
 class SaveError(ConfigError):
     """
     Can't save

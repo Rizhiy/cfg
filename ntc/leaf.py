@@ -43,6 +43,8 @@ class CfgLeaf:
         self._value = value
         self._desc = desc
 
+        self._parent = None
+
     def __repr__(self):
         return f"CfgLeaf({repr(self.value)})"
 
@@ -82,6 +84,9 @@ class CfgLeaf:
             if not self._subclass and not isinstance(check_val, self._type):
                 raise TypeMismatch(f"Instance of type <{expected_type}> expected, but {check_val!r} found for {self}!")
         self._value = val
+
+        if self._parent:
+            self._parent._update_module(self._full_key, val)
 
     @property
     def full_key(self):

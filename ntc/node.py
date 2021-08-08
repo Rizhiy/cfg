@@ -1,39 +1,35 @@
 from __future__ import annotations
 
+import inspect
+import logging
 from collections import UserDict
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import yaml
 
-from ntc.errors import (
-    MissingRequired,
-    NodeFrozenError,
-    NodeReassignment,
-    SaveError,
-    SchemaError,
-    SchemaFrozenError,
-    ValidationError,
-)
+from ntc.errors import MissingRequired, NodeReassignment, SaveError, SchemaError, SchemaFrozenError, ValidationError
 from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 from .leaf import CfgLeaf
 
+logger = logging.getLogger(__name__)
+
 
 class CfgNode(UserDict):
     _BUILT_IN_ATTRS = (
-        "_schema_frozen",
-        "_frozen",
-        "_was_unfrozen",
-        "_leaf_spec",
-        "_module",
-        "_new_allowed",
-        "_transforms",
-        "_validators",
-        "_hooks",
-        "_desc",
         "_full_key",
         "full_key",
+        "_desc",
+        "_schema_frozen",
+        "_new_allowed",
+        "_leaf_spec",
+        "_validators",
+        "_transforms",
+        "_hooks",
+        "_module",
+        "_safe_save",
+        "_parent",
     )
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
 
@@ -42,7 +38,6 @@ class CfgNode(UserDict):
         first: Any = None,
         *,
         schema_frozen: bool = False,
-        frozen: bool = False,
         new_allowed: bool = False,
         full_key: str = None,
         desc: str = None,
@@ -59,14 +54,15 @@ class CfgNode(UserDict):
         self._desc = desc
 
         self._schema_frozen = schema_frozen
-        self._frozen = frozen
         self._new_allowed = new_allowed
-        self._was_unfrozen = False
         self._leaf_spec = leaf_spec
         self._validators = []
         self._transforms = []
         self._hooks = []
         self._module = None
+
+        self._safe_save = True
+        self._parent = None
 
         if self._leaf_spec is not None:
             self._new_allowed = True
@@ -75,8 +71,6 @@ class CfgNode(UserDict):
             self._init_with_base(base)
 
     def __setitem__(self, key: str, value: Any) -> None:
-        if self.frozen:
-            raise NodeFrozenError()
         if key in self:
             self._set_existing(key, value)
         else:
@@ -122,11 +116,10 @@ class CfgNode(UserDict):
             raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
         if hasattr(cfg, "NAME"):
             cfg.NAME = cfg.NAME or cfg_path.stem
-        cfg.set_module(merge_cfg_module(module))
         cfg.transform()
-        cfg.freeze()
         cfg.validate()
         cfg.run_hooks()
+        cfg.set_module(merge_cfg_module(module))
 
         return cfg
 
@@ -134,15 +127,15 @@ class CfgNode(UserDict):
     def validate_required(cfg: CfgNode) -> None:
         if cfg.leaf_spec is not None and cfg.leaf_spec.required and len(cfg) == 0:
             raise MissingRequired(f"Missing required members for {cfg.leaf_spec} at key {cfg.full_key}")
-        for key, attr in cfg.attrs:
+        for _, attr in cfg.attrs:
             if isinstance(attr, CfgNode):
                 CfgNode.validate_required(attr)
             elif attr.required and attr.value is None:
                 raise MissingRequired(f"Key {attr} is required, but was not provided.")
 
     def save(self, path: Path) -> None:
-        if self._was_unfrozen:
-            raise SaveError("Trying to save config which was unfrozen.")
+        if not self._safe_save:
+            raise SaveError("Config was updated in such a way that it can no longer be saved!")
         if not self._module:
             raise SaveError("Config was not loaded.")
         with path.open("w") as f:
@@ -229,26 +222,9 @@ class CfgNode(UserDict):
             if isinstance(attr, CfgNode):
                 attr.unfreeze_schema()
 
-    def freeze(self) -> None:
-        self._frozen = True
-        for key, attr in self.attrs:
-            if isinstance(attr, CfgNode):
-                attr.freeze()
-
-    def unfreeze(self) -> None:
-        self._frozen = False
-        self._was_unfrozen = True
-        for key, attr in self.attrs:
-            if isinstance(attr, CfgNode):
-                attr.unfreeze()
-
     @property
     def schema_frozen(self) -> bool:
         return self._schema_frozen
-
-    @property
-    def frozen(self) -> bool:
-        return self._frozen
 
     @property
     def leaf_spec(self) -> CfgLeaf:
@@ -304,6 +280,8 @@ class CfgNode(UserDict):
             if value_to_set.desc is None:
                 value_to_set.desc = self.leaf_spec.desc
 
+        value_to_set._parent = self
+
         super().__setitem__(key, value_to_set)
 
     def _set_existing(self, key: str, value: Any) -> None:
@@ -337,7 +315,7 @@ class CfgNode(UserDict):
         return f"{self.full_key}.{key}"
 
     def __reduce__(self):
-        if not self.frozen or not self.schema_frozen:
+        if not self.schema_frozen:
             raise ValueError(f"Can't pickle unfrozen CfgNode: {self.full_key}")
         state = {}
         for attr_name in self._BUILT_IN_ATTRS:
@@ -377,8 +355,6 @@ class CfgNode(UserDict):
         return CfgLeaf(value, type(value), required=True, full_key=full_key)
 
     def clear(self) -> None:
-        if self._frozen:
-            raise AttributeError(f"Can't clear a frozen CfgNode: {self.full_key}")
         if self._schema_frozen and not self._new_allowed:
             raise AttributeError(
                 f"Can only clear CfgNode when _new_allowed == True if schema is frozen: {self.full_key}"
@@ -392,6 +368,24 @@ class CfgNode(UserDict):
                 self[key].update(value)
             else:
                 self[key] = value
+
+    def _update_module(self, full_key: str, value) -> None:
+        if self._parent is not None:
+            self._parent._update_module(full_key, value)
+            return
+        if self._module is None:  # Before config is loaded
+            return
+
+        if type(value) in [int, float, str]:
+            for info in inspect.stack()[1:]:
+                # Kind of a hack, need to keep track of all our files
+                if "/".join(info.filename.rsplit("/")[-2:]) in ["ntc/node.py", "ntc/leaf.py"]:
+                    continue
+                lines = [f"# {info.filename}:{info.lineno} {info.code_context[0]}", f"{full_key} = {value!r}\n"]
+                self._module.extend(lines)
+        else:
+            logger.warning(f"Config was modified with unsavable value: {value!r}")
+            self._safe_save = False
 
 
 CN = CfgNode

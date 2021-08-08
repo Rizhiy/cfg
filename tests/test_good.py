@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, NodeFrozenError, SaveError
+from ntc import CN, SaveError
 from tests.data.base_cfg import cfg
 from tests.data.base_class import BaseClass, SubClass
 
@@ -38,36 +38,16 @@ def test_node():
 
 def test_save(tmp_path):
     cfg = CN.load(DATA_DIR / "good.py")
-    cfg.save(tmp_path / "good.py")
 
-    cfg2 = CN.load(tmp_path / "good.py")
+    save_path = tmp_path / "good.py"
+    cfg.save(save_path)
+    cfg2 = CN.load(save_path)
     assert cfg == cfg2
-
-
-def test_save_unfrozen(tmp_path):
-    cfg = CN.load(DATA_DIR / "good.py")
-    cfg.unfreeze()
-    cfg.freeze()
-    with pytest.raises(SaveError):
-        cfg.save(tmp_path / "good2.py")
 
 
 def test_save_base(tmp_path):
     with pytest.raises(SaveError):
         cfg.save(tmp_path / "base_cfg2.py")
-
-
-def test_freeze_loaded():
-    cfg = CN.load(DATA_DIR / "good.py")
-    with pytest.raises(NodeFrozenError):
-        # first level assignment
-        cfg.NAME = "bar"
-    with pytest.raises(NodeFrozenError):
-        # nested assignment
-        cfg.DICT.FOO = "bar"
-    with pytest.raises(NodeFrozenError):
-        # new attribute
-        cfg.BAR = "bar"
 
 
 def test_node_subclass():
@@ -115,3 +95,26 @@ def test_inheritance_changes_multiple_loads():
 def test_new_allowed():
     cfg = CN.load(DATA_DIR / "new_allowed.py")
     assert cfg.NEW.one == "one"
+
+
+def test_save_simple_modify(tmp_path):
+    cfg = CN.load(DATA_DIR / "good.py")
+    cfg.DICT.INT = 2
+    cfg.DICT.FOO = "bar"
+
+    save_path = tmp_path / "good.py"
+    cfg.save(save_path)
+    cfg2 = CN.load(save_path)
+    assert cfg == cfg2
+
+
+def test_save_unsafe_modify(tmp_path):
+    class A(int):
+        pass
+
+    cfg = CN.load(DATA_DIR / "good.py")
+    cfg.DICT.INT = A(2)
+
+    save_path = tmp_path / "good.py"
+    with pytest.raises(SaveError):
+        cfg.save(save_path)

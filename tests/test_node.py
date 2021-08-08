@@ -1,7 +1,7 @@
 import pytest
 
 from ntc import CfgLeaf, CfgNode
-from ntc.errors import MissingRequired, NodeFrozenError, NodeReassignment, SchemaFrozenError, TypeMismatch
+from ntc.errors import MissingRequired, NodeReassignment, SchemaFrozenError, TypeMismatch
 
 
 class Quux:
@@ -142,16 +142,6 @@ def test_freeze_unfreeze_schema(basic_cfg):
     basic_cfg.BAR = "bar"
 
 
-def test_freeze_unfreeze(basic_cfg):
-    basic_cfg.freeze()
-
-    with pytest.raises(NodeFrozenError):
-        basic_cfg.FOO = 42
-
-    basic_cfg.unfreeze()
-    basic_cfg.FOO = 42
-
-
 def test_new_allowed():
     cfg = CfgNode()
     cfg.FOO = CfgNode(new_allowed=True)
@@ -192,7 +182,7 @@ def test_init_from_dict():
 
 
 def test_properties(basic_cfg):
-    for name in ["schema_frozen", "frozen", "leaf_spec"]:
+    for name in ["schema_frozen", "leaf_spec"]:
         getattr(basic_cfg, name)
 
 
@@ -209,12 +199,3 @@ def test_clear_schema_frozen_new_not_allowed(basic_cfg):
     basic_cfg.freeze_schema()
     with pytest.raises(AttributeError):
         basic_cfg.clear()
-
-
-def test_clear_frozen():
-    cfg = CfgNode(new_allowed=True)
-    cfg.freeze_schema()
-    cfg.test = "test"
-    cfg.freeze()
-    with pytest.raises(AttributeError):
-        cfg.clear()

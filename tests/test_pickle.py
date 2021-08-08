@@ -16,7 +16,6 @@ def test_node_pickle():
     node = CN()
     node.STR = CL(str)
     node.INT = CL(42)
-    node.freeze()
     node.freeze_schema()
 
     pickled = pickle.dumps(node)
