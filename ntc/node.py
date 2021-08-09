@@ -59,8 +59,8 @@ class CfgNode(UserDict):
         self._validators = []
         self._transforms = []
         self._hooks = []
-        self._module = None
 
+        self._module = None
         self._safe_save = True
         self._parent = None
 
@@ -213,13 +213,13 @@ class CfgNode(UserDict):
 
     def freeze_schema(self) -> None:
         self._schema_frozen = True
-        for key, attr in self.attrs:
+        for _, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.freeze_schema()
 
     def unfreeze_schema(self) -> None:
         self._schema_frozen = False
-        for key, attr in self.attrs:
+        for _, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.unfreeze_schema()
 
@@ -296,13 +296,15 @@ class CfgNode(UserDict):
 
     def _init_with_base(self, base: Union[dict, CfgNode]) -> None:
         if isinstance(base, CfgNode):
-            self.full_key = base.full_key
-            self._transforms = base._transforms + self._transforms
-            self._validators = base._validators + self._validators
-            self._hooks = base._hooks + self._hooks
+            for name in ["full_key", "desc", "new_allowed", "leaf_spec", "module", "safe_save", "parent"]:
+                name = f"_{name}"
+                setattr(self, name, getattr(base, name))
+
+            for name in ["transforms", "validators", "hooks"]:
+                name = f"_{name}"
+                setattr(self, name, getattr(base, name) + getattr(self, name))
+
             self._set_attrs(base.attrs)
-            self._desc = base._desc
-            self._new_allowed = base._new_allowed
             self.freeze_schema()
         elif isinstance(base, dict):
             for key, value in base.items():

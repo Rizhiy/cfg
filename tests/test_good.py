@@ -118,3 +118,15 @@ def test_save_unsafe_modify(tmp_path):
     save_path = tmp_path / "good.py"
     with pytest.raises(SaveError):
         cfg.save(save_path)
+
+
+def test_save_clone(tmp_path):
+    cfg = CN.load(DATA_DIR / "good.py")
+    cfg.DICT.INT = 2
+    cfg = cfg.clone()
+    cfg.DICT.FOO = "bar"
+
+    save_path = tmp_path / "good.py"
+    cfg.save(save_path)
+    cfg2 = CN.load(save_path)
+    assert cfg == cfg2
