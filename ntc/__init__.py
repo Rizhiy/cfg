@@ -1,4 +1,5 @@
 from .errors import *
+from .interfaces import *
 from .leaf import *
 from .node import *
 

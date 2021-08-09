@@ -1,3 +1,4 @@
+import datetime as dt
 from functools import partial
 from pathlib import Path
 
@@ -5,7 +6,7 @@ import pytest
 
 from ntc import CN, SaveError
 from tests.data.base_cfg import cfg
-from tests.data.base_class import BaseClass, SubClass
+from tests.data.base_class import BaseClass, SavableClass, SubClass
 
 DATA_DIR = Path(__file__).parent / "data" / "good"
 
@@ -97,10 +98,12 @@ def test_new_allowed():
     assert cfg.NEW.one == "one"
 
 
-def test_save_simple_modify(tmp_path):
+def test_save_modify(tmp_path):
     cfg = CN.load(DATA_DIR / "good.py")
     cfg.DICT.INT = 2
     cfg.DICT.FOO = "bar"
+    cfg.CLASS = SavableClass(dt.date(2021, 1, 1))
+    cfg.SUBCLASS = SubClass
 
     save_path = tmp_path / "good.py"
     cfg.save(save_path)

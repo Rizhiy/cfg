@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 import yaml
 
 from ntc.errors import MissingRequired, NodeReassignment, SaveError, SchemaError, SchemaFrozenError, ValidationError
+from ntc.interfaces import CfgSavable
 from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 from .leaf import CfgLeaf
@@ -379,17 +380,30 @@ class CfgNode(UserDict):
         if self._module is None:  # Before config is loaded
             return
 
-        if type(value) in [int, float, str]:
-            for info in inspect.stack()[1:]:
-                # Kind of a hack, need to keep track of all our files
-                if "/".join(info.filename.rsplit("/")[-2:]) in ["ntc/node.py", "ntc/leaf.py"]:
-                    continue
-                lines = [f"# {info.filename}:{info.lineno} {info.code_context[0]}", f"{full_key} = {value!r}\n"]
-                self._module.extend(lines)
-                break
+        for info in inspect.stack()[1:]:
+            # Kind of a hack, need to keep track of all our files
+            if "/".join(info.filename.rsplit("/")[-2:]) in ["ntc/node.py", "ntc/leaf.py"]:
+                continue
+            reference_comment = f"# {info.filename}:{info.lineno} {info.code_context[0]}"
+            break
+
+        lines = [reference_comment]
+        if isinstance(value, type):
+            module = inspect.getmodule(value)
+            lines.append(f"from {module.__name__} import {value.__name__}\n")
+            lines.append(f"{full_key} = {value.__name__}\n")
+        elif type(value) in [int, float, str]:
+            lines.append(f"{full_key} = {value!r}\n")
+        elif isinstance(value, CfgSavable):
+            import_str, cls_name, args, kwargs = value.save_strs()
+            lines.append(f"{import_str}\n")
+            lines.append(f"{full_key} = {value.create_eval_str(cls_name, args, kwargs)}\n")
         else:
-            logger.warning(f"Config was modified with unsavable value: {value!r}")
+            message = f"Config was modified with unsavable value: {value!r}"
+            logger.warning(message)
+            lines.append(f"# {message}")
             self._safe_save = False
+        self._module.extend(lines)
 
 
 CN = CfgNode
