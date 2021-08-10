@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import logging
 from collections import UserDict
-from pathlib import Path
+from pathlib import Path, PosixPath
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import yaml
@@ -393,6 +393,9 @@ class CfgNode(UserDict):
             lines.append(f"from {module.__name__} import {value.__name__}\n")
             lines.append(f"{full_key} = {value.__name__}\n")
         elif type(value) in [int, float, str]:
+            lines.append(f"{full_key} = {value!r}\n")
+        elif type(value) == PosixPath:
+            lines.append("from pathlib import PosixPath\n")
             lines.append(f"{full_key} = {value!r}\n")
         elif isinstance(value, CfgSavable):
             import_str, cls_name, args, kwargs = value.save_strs()

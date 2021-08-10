@@ -101,9 +101,7 @@ def test_new_allowed():
 def test_save_modify(tmp_path):
     cfg = CN.load(DATA_DIR / "good.py")
     cfg.DICT.INT = 2
-    cfg.DICT.FOO = "bar"
     cfg.CLASS = SavableClass(dt.date(2021, 1, 1))
-    cfg.SUBCLASS = SubClass
 
     save_path = tmp_path / "good.py"
     cfg.save(save_path)
@@ -130,6 +128,18 @@ def test_save_clone(tmp_path):
     cfg.DICT.FOO = "bar"
 
     save_path = tmp_path / "good.py"
+    cfg.save(save_path)
+    cfg2 = CN.load(save_path)
+    assert cfg == cfg2
+
+
+@pytest.mark.parametrize(
+    "name, value", {"int": 2, "str": "bar", "float": 2.71, "path": Path("another"), "type": SubClass}.items()
+)
+def test_save_safe_types(tmp_path, name, value):
+    cfg = CN.load(DATA_DIR / "save_safe_types.py")
+    setattr(cfg.NEW, name, value)
+    save_path = tmp_path / "save_safe_types.py"
     cfg.save(save_path)
     cfg2 = CN.load(save_path)
     assert cfg == cfg2
