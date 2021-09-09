@@ -54,3 +54,9 @@ def test_clone():
     leaf.value.remove(1)
 
     assert len(clone.value) == 3
+
+
+def test_description():
+    desc = "Description"
+    leaf = CL(1.0, desc=desc)
+    assert leaf.desc == desc

@@ -25,6 +25,7 @@ cfg.DICT.INT = 1
 cfg.NAME = CL(None, str, required=True)  # Specification of config leaf to be defined in children configs
 cfg.CLASSES = CN(BaseClass)  # Config node with type specification of its config leafs
 cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))  # Config node with subclass specification of its config leafs
+cfg.VAL = CL(1, desc="Interesting description") # Config leaf with description
 
 def transform(cfg: CN) -> None:
     cfg.DICT.FOO = "BAR"
