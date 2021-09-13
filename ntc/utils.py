@@ -9,7 +9,7 @@ import yaml
 
 from .errors import ModuleError
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def import_module(module_path: Path) -> ModuleType:

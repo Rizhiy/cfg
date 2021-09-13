@@ -14,7 +14,7 @@ from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 from .leaf import CfgLeaf
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class CfgNode(UserDict):
@@ -403,7 +403,7 @@ class CfgNode(UserDict):
             lines.append(f"{full_key} = {value.create_eval_str(cls_name, args, kwargs)}\n")
         else:
             message = f"Config was modified with unsavable value: {value!r}"
-            logger.warning(message)
+            LOGGER.warning(message)
             lines.append(f"# {message}")
             self._safe_save = False
         self._module.extend(lines)
