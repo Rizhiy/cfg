@@ -1,5 +1,4 @@
 import importlib.util
-import logging
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -8,8 +7,6 @@ from typing import Set
 import yaml
 
 from .errors import ModuleError
-
-LOGGER = logging.getLogger(__name__)
 
 
 def import_module(module_path: Path) -> ModuleType:
