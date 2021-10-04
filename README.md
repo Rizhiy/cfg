@@ -1,6 +1,6 @@
 # NeuroTrade Config
-[![pipeline status](http://192.168.135.11/utilities/config/badges/master/pipeline.svg)](http://192.168.135.11/utilities/config/commits/master)
-[![coverage report](http://192.168.135.11/utilities/config/badges/master/coverage.svg)](http://192.168.135.11/utilities/config/commits/master)
+[![pipeline status](http://192.168.135.12/utilities/ntc/badges/master/pipeline.svg)](http://192.168.135.12/utilities/ntc/-/commits/master)
+[![coverage report](http://192.168.135.12/utilities/ntc/badges/master/coverage.svg)](http://192.168.135.12/utilities/ntc/-/commits/master)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Description
