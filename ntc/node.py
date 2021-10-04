@@ -77,13 +77,13 @@ class CfgNode(UserDict):
         else:
             self._set_new(key, value)
 
-    def _get_raw(self, key):
+    def get_raw(self, key):
         if key not in self:
             raise KeyError(key)
         return super().__getitem__(key)
 
     def __getitem__(self, key: str) -> Any:
-        attr = self._get_raw(key)
+        attr = self.get_raw(key)
         if isinstance(attr, CfgLeaf):
             return attr.value
         return attr
@@ -207,7 +207,7 @@ class CfgNode(UserDict):
     def attrs(self) -> List[Tuple[str, Union[CfgNode, CfgLeaf]]]:
         attrs_list = []
         for key in super().keys():
-            value = self._get_raw(key)
+            value = self.get_raw(key)
             if isinstance(value, (CfgNode, CfgLeaf)):
                 attrs_list.append((key, value))
         return attrs_list

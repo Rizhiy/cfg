@@ -143,3 +143,12 @@ def test_save_safe_types(tmp_path, name, value):
     cfg.save(save_path)
     cfg2 = CN.load(save_path)
     assert cfg == cfg2
+
+
+def test_full_key_node_assign():
+    cfg = CN.load(DATA_DIR / "full_key_node_assign_changes.py")
+
+    assert cfg.FOO.BAR == cfg.FOO.FOO == "foo"
+
+    assert cfg.FOO.get_raw("BAR").full_key == "cfg.FOO.BAR"
+    assert cfg.FOO.get_raw("FOO").full_key == "cfg.FOO.FOO"
