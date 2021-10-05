@@ -102,6 +102,7 @@ def test_save_modify(tmp_path):
     cfg = CN.load(DATA_DIR / "good.py")
     cfg.DICT.INT = 2
     cfg.CLASS = SavableClass(dt.date(2021, 1, 1))
+    cfg.LIST = [2, 3, 4, 5]
 
     save_path = tmp_path / "good.py"
     cfg.save(save_path)

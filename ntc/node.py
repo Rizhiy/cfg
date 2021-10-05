@@ -388,11 +388,12 @@ class CfgNode(UserDict):
             break
 
         lines = [reference_comment]
+        valid_types = [int, float, str]
         if isinstance(value, type):
             module = inspect.getmodule(value)
             lines.append(f"from {module.__name__} import {value.__name__}\n")
             lines.append(f"{full_key} = {value.__name__}\n")
-        elif type(value) in [int, float, str]:
+        elif type(value) in valid_types:
             lines.append(f"{full_key} = {value!r}\n")
         elif type(value) == PosixPath:
             lines.append("from pathlib import PosixPath\n")
@@ -401,6 +402,8 @@ class CfgNode(UserDict):
             import_str, cls_name, args, kwargs = value.save_strs()
             lines.append(f"{import_str}\n")
             lines.append(f"{full_key} = {value.create_eval_str(cls_name, args, kwargs)}\n")
+        elif isinstance(value, list) and all([type(v) in valid_types for v in value]):
+            lines.append(f"{full_key} = {value!r}\n")
         else:
             message = f"Config was modified with unsavable value: {value!r}"
             LOGGER.warning(message)
