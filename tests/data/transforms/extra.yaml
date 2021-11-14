@@ -1,2 +1,2 @@
 DICT:
-  FOO: "bar"
+  FOO: "foo_value_from_yaml_file"
