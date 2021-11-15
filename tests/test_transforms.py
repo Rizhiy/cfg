@@ -8,8 +8,8 @@ DATA_DIR = Path(__file__).parent / "data" / "transforms"
 
 def test_load_from_file():
     cfg = CN.load(DATA_DIR / "load_from_file_changes.py")
-    assert cfg.DICT.FOO == "foo_value_from_yaml_file"
-    assert cfg.DICT.FOO2 == "foo2_value_from_changes"
+    assert cfg.DICT.FOO == "Foo value from yaml"
+    assert cfg.DICT.FOO2 == "Foo2 value from changes"
 
 
 def test_load_from_key_value():
@@ -17,11 +17,11 @@ def test_load_from_key_value():
 
     cfg = cfg_base.inherit()
     flat_data = {
-        "DICT.FOO": "foo_value_from_flat_data",
-        "STR": "str_value_from_flat_data",
+        "DICT.FOO": "Foo value from flat data",
+        "STR": "Str value from flat data",
     }
     cfg.add_transform(load_from_key_value(flat_data))
     cfg.transform()
-    assert cfg.DICT.FOO == "foo_value_from_flat_data"
-    assert cfg.DICT.FOO2 == "foo2_value_default"
-    assert cfg.STR == "str_value_from_flat_data"
+    assert cfg.DICT.FOO == flat_data["DICT.FOO"]
+    assert cfg.DICT.FOO2 == "Default foo2 value"
+    assert cfg.STR == flat_data["STR"]

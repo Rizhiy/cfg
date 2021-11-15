@@ -19,7 +19,7 @@ def load_from_file(filepath: Union[str, Path]):
     return _merge
 
 
-def _flat_to_structured(kv: Dict[str, Any], sep: str = ".") -> Dict[str, Any]:
+def _flat_to_structured(kv: Dict[str, Any], sep=".") -> Dict[str, Any]:
     """
     >>> _flat_to_structured({"a.b.c": 1, "a.b2": 2})
     {"a": {"b": {"c": 1}, "b2": 2}}
@@ -35,9 +35,7 @@ def _flat_to_structured(kv: Dict[str, Any], sep: str = ".") -> Dict[str, Any]:
 
 
 def load_from_key_value(kv: Dict[str, str]):
-    structured = _flat_to_structured(kv)
-
     def _merge(cfg: CN) -> None:
-        cfg.update(structured)
+        cfg.update(_flat_to_structured(kv))
 
     return _merge
