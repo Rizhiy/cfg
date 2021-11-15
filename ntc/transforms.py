@@ -34,8 +34,10 @@ def _flat_to_structured(kv: Dict[str, Any], sep=".") -> Dict[str, Any]:
     return structured
 
 
-def load_from_key_value(kv: Dict[str, str]):
+def load_from_key_value(kv: Dict[str, Any]):
+    structured = _flat_to_structured(kv)
+
     def _merge(cfg: CN) -> None:
-        cfg.update(_flat_to_structured(kv))
+        cfg.update(structured)
 
     return _merge
