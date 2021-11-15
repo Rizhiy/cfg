@@ -1,2 +1,2 @@
 DICT:
-  FOO: "bar"
+  FOO: "Foo value from yaml"
