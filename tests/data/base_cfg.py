@@ -12,6 +12,7 @@ cfg.DICT.FOO2 = "Default foo2 value"
 cfg.DICT.X = "X"
 cfg.LIST = [1, 2, 3, 4]
 cfg.STR = "Default str value"
+cfg.BOOL = False
 cfg.CLASS = BaseClass()
 cfg.CLASSES = CN(BaseClass)
 cfg.SUBCLASS = BaseClass
