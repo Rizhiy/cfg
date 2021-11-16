@@ -1,9 +1,8 @@
 from pathlib import Path
 
-from ntc.transforms import load_from_file
+from ntc.transforms import LoadFromFile
 
-from ..base_cfg import cfg
+from ..base_cfg import cfg as base_cfg
 
-cfg = cfg.inherit()
-
-cfg.add_transform(load_from_file(Path(__file__).parent / "extra.yaml"))
+cfg = base_cfg.inherit()
+cfg.add_transform(LoadFromFile(Path(__file__).parent / "extra.yaml", require=True))
