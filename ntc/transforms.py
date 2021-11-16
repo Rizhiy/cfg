@@ -1,4 +1,6 @@
+import abc
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
 
@@ -9,17 +11,39 @@ from .node import CN
 LoaderType = Callable[[CN], None]
 
 
+@dataclass
+class TransformBase(LoaderType):
+    @abc.abstractmethod
+    def get_updates(self) -> Optional[Dict[str, Any]]:
+        raise NotImplementedError
+
+    def __call__(self, cfg: CN) -> None:
+        updates = self.get_updates()
+        if updates is not None:
+            cfg.update(updates)
+
+
+@dataclass
+class LoadFromFile(TransformBase):
+    filepath: Union[str, Path]
+    require: bool = True
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.filepath, Path):
+            self.filepath = Path(self.filepath)
+
+    def get_updates(self) -> Optional[Dict[str, Any]]:
+        try:
+            with self.filepath.open() as fobj:
+                return yaml.safe_load(fobj)
+        except FileNotFoundError:
+            if self.require:
+                raise
+            return None
+
+
 def load_from_file(filepath: Union[str, Path]) -> LoaderType:
-    if not isinstance(filepath, Path):
-        filepath = Path(filepath)
-
-    def _merge(cfg: CN) -> None:
-        if not filepath.exists():
-            return
-        with filepath.open() as f:
-            cfg.update(yaml.load(f, Loader=yaml.Loader))
-
-    return _merge
+    return LoadFromFile(filepath=filepath, require=False)
 
 
 def _flat_to_structured(kv: Dict[str, Any], sep=".") -> Dict[str, Any]:
@@ -37,28 +61,38 @@ def _flat_to_structured(kv: Dict[str, Any], sep=".") -> Dict[str, Any]:
     return structured
 
 
+@dataclass
+class LoadFromKeyValue(TransformBase):
+    flat_data: Dict[str, Any]
+
+    def __post_init__(self) -> None:
+        self._structured_data = _flat_to_structured(self.flat_data)
+
+    def get_updates(self) -> Optional[Dict[str, Any]]:
+        return self._structured_data
+
+
 def load_from_key_value(kv: Dict[str, Any]) -> LoaderType:
-    structured = _flat_to_structured(kv)
-
-    def _merge(cfg: CN) -> None:
-        cfg.update(structured)
-
-    return _merge
+    return LoadFromKeyValue(flat_data=kv)
 
 
-def load_from_envvars(prefix: str) -> LoaderType:
-    def _normalize_key(key: str) -> Optional[str]:
-        if not key.startswith(prefix):
+@dataclass
+class LoadFromEnvVars(TransformBase):
+    prefix: str
+
+    def _normalize_key(self, key: str) -> Optional[str]:
+        if not key.startswith(self.prefix):
             return None
-        key = key[len(prefix) :]  # key.removeprefix(prefix)  # noqa: E203
+        key = key[len(self.prefix) :]  # key.removeprefix(prefix)  # noqa: E203
         # dots are not quite valid identifiers (in shell syntax).
         key = key.replace("__", ".")
         return key
 
-    def _merge(cfg: CN):
-        flat = {_normalize_key(key): val for key, val in os.environ.items() if key.startswith(prefix)}
-        flat_loaded = {key: yaml.safe_load(value) for key, value in flat.items()}
-        structured = _flat_to_structured(flat_loaded)
-        cfg.update(structured)
+    def get_updates(self) -> Optional[Dict[str, Any]]:
+        flat = {self._normalize_key(key): val for key, val in os.environ.items()}
+        flat_loaded = {key: yaml.safe_load(value) for key, value in flat.items() if key is not None}
+        return _flat_to_structured(flat_loaded)
 
-    return _merge
+
+def load_from_envvars(prefix: str) -> LoaderType:
+    return LoadFromEnvVars(prefix)
