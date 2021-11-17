@@ -1,1 +1,1 @@
-include ntc/requirements.txt
+prune tests*
