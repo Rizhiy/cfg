@@ -42,10 +42,6 @@ class LoadFromFile(TransformBase):
             return None
 
 
-def load_from_file(filepath: Union[str, Path]) -> LoaderType:
-    return LoadFromFile(filepath=filepath, require=False)
-
-
 def _flat_to_structured(kv: Dict[str, Any], sep=".") -> Dict[str, Any]:
     """
     >>> _flat_to_structured({"a.b.c": 1, "a.b2": 2})
@@ -72,10 +68,6 @@ class LoadFromKeyValue(TransformBase):
         return self._structured_data
 
 
-def load_from_key_value(kv: Dict[str, Any]) -> LoaderType:
-    return LoadFromKeyValue(flat_data=kv)
-
-
 @dataclass
 class LoadFromEnvVars(TransformBase):
     prefix: str
@@ -92,7 +84,3 @@ class LoadFromEnvVars(TransformBase):
         flat = {self._normalize_key(key): val for key, val in os.environ.items()}
         flat_loaded = {key: yaml.safe_load(value) for key, value in flat.items() if key is not None}
         return _flat_to_structured(flat_loaded)
-
-
-def load_from_envvars(prefix: str) -> LoaderType:
-    return LoadFromEnvVars(prefix)
