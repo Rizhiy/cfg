@@ -45,7 +45,7 @@ class LoadFromFile(TransformBase):
 def _flat_to_structured(kv: Dict[str, Any], sep=".") -> Dict[str, Any]:
     """
     >>> _flat_to_structured({"a.b.c": 1, "a.b2": 2})
-    {"a": {"b": {"c": 1}, "b2": 2}}
+    {'a': {'b': {'c': 1}, 'b2': 2}}
     """
     structured = {}
     for key, value in kv.items():
