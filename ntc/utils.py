@@ -63,6 +63,8 @@ def add_yaml_str_representer():
 
 def _load_module(module_name: str, module_path: Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location(module_name, module_path)
+    if spec is None:
+        raise Exception(f"Could not find an importable module at {module_name=!r}, {module_path=!r}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
