@@ -1,5 +1,3 @@
 include:
-  - project: utilities/ntu
-    file: ntu/release/gitlab-ci-base.yml
-  - project: utilities/ntu
-    file: ntu/release/gitlab-tests-basic.yml
+- project: utilities/ntu
+  file: ntu/release/gitlab-python-tests-basic.yml
