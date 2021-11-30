@@ -1,3 +1,8 @@
 include:
 - project: utilities/ntu
   file: ntu/release/gitlab-python-tests-basic.yml
+
+.common__tests:
+  script:
+  - git lfs pull
+  - ntest --doctest-modules --coverage --exitfirst
