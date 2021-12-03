@@ -17,6 +17,22 @@ from .leaf import CfgLeaf
 LOGGER = logging.getLogger(__name__)
 
 
+def _cfg_path_to_name(cfg_path: Path, root_name="config"):
+    """
+    >>> _cfg_path_to_name(Path("some/deep/name.py"))
+    'name'
+    >>> _cfg_path_to_name(Path("some/config/deep/name.py"))
+    'deep/name'
+    """
+    cfg_path.parts
+    try:
+        path_config_idx = cfg_path.parts.index(root_name)
+    except ValueError:  # '... not in tuple'
+        return cfg_path.stem
+    rel_parts = cfg_path.parts[path_config_idx + 1 :]
+    return str(Path(*rel_parts).with_suffix(""))
+
+
 class CfgNode(UserDict):
     _BUILT_IN_ATTRS = (
         "_full_key",
@@ -116,7 +132,7 @@ class CfgNode(UserDict):
         if not cfg.schema_frozen:
             raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
         if hasattr(cfg, "NAME"):
-            cfg.NAME = cfg.NAME or cfg_path.stem
+            cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path)
         cfg.transform()
         cfg.validate()
         cfg.run_hooks()
