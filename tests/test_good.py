@@ -21,6 +21,11 @@ def test_import_str():
     assert cfg.NAME == "Good"
 
 
+def test_root_name():
+    cfg = CN.load(DATA_DIR / "root_test" / "abc" / "root_name.py")
+    assert cfg.NAME == "abc/root_name"
+
+
 def test_subclass():
     cfg = CN.load(DATA_DIR / "subclass.py")
     assert isinstance(cfg.CLASS, SubClass)
