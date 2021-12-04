@@ -17,12 +17,14 @@ from .leaf import CfgLeaf
 LOGGER = logging.getLogger(__name__)
 
 
-def _cfg_path_to_name(cfg_path: Path, root_name="config"):
+def _cfg_path_to_name(cfg_path: Path, root_name="configs"):
     """
     >>> _cfg_path_to_name(Path("some/deep/name.py"))
     'name'
-    >>> _cfg_path_to_name(Path("some/config/deep/name.py"))
+    >>> _cfg_path_to_name(Path("some/configs/deep/name.py"))
     'deep/name'
+    >>> _cfg_path_to_name(Path("some/test/abc/bcd.py"), 'test')
+    'abc/bcd'
     """
     cfg_path.parts
     try:
@@ -38,6 +40,7 @@ class CfgNode(UserDict):
         "_full_key",
         "full_key",
         "_desc",
+        "_root_name",
         "_schema_frozen",
         "_new_allowed",
         "_leaf_spec",
@@ -69,6 +72,7 @@ class CfgNode(UserDict):
 
         self._full_key = full_key
         self._desc = desc
+        self._root_name = "configs"
 
         self._schema_frozen = schema_frozen
         self._new_allowed = new_allowed
@@ -132,7 +136,7 @@ class CfgNode(UserDict):
         if not cfg.schema_frozen:
             raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
         if hasattr(cfg, "NAME"):
-            cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path)
+            cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path, cfg._root_name)
         cfg.transform()
         cfg.validate()
         cfg.run_hooks()
@@ -313,7 +317,7 @@ class CfgNode(UserDict):
 
     def _init_with_base(self, base: Union[dict, CfgNode]) -> None:
         if isinstance(base, CfgNode):
-            for name in ["full_key", "desc", "new_allowed", "leaf_spec", "module", "safe_save", "parent"]:
+            for name in ["full_key", "desc", "root_name", "new_allowed", "leaf_spec", "module", "safe_save", "parent"]:
                 name = f"_{name}"
                 setattr(self, name, getattr(base, name))
 
@@ -426,6 +430,9 @@ class CfgNode(UserDict):
             lines.append(f"# {message}")
             self._safe_save = False
         self._module.extend(lines)
+
+    def set_root_name(self, name: str) -> None:
+        self._root_name = name
 
 
 CN = CfgNode
