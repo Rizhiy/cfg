@@ -111,13 +111,15 @@ pip install ntc
 ```
 
 ## Development
+
 ### Formatting
 This repository follows strict formatting style which will be checked by the CI.
 
-To properly format the code use **ntu** package:
+To properly format the code use **nt-dev** package:
 ```bash
-pip install ntu
-format
+pip install nt-dev
+nt-format
 ```
+
 ### Testing
-Before uploading a commit you can run `ntest` which will try to format the files and run tests.
+To test code, install `nt-dev` and run `nt-test`.
