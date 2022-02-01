@@ -83,7 +83,7 @@ class CfgNode(UserDict):
 
         self._module = None
         self._safe_save = True
-        self._parent = None
+        self._parent: CfgNode = None
 
         if self._leaf_spec is not None:
             self._new_allowed = True
@@ -288,6 +288,7 @@ class CfgNode(UserDict):
             raise SchemaFrozenError(f"Trying to add leaf to node {self.full_key} with frozen schema.")
         child_full_key = self._build_child_key(key)
 
+        value_to_set: Union[CfgNode, CfgLeaf]
         if isinstance(value, CfgNode):
             value_to_set = self._value_to_set_from_node(child_full_key, value)
         elif isinstance(value, CfgLeaf):
