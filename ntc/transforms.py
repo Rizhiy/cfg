@@ -1,19 +1,15 @@
-import abc
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import yaml
 
 from .node import CN
 
-LoaderType = Callable[[CN], None]
-
 
 @dataclass
-class TransformBase(LoaderType):
-    @abc.abstractmethod
+class TransformBase:
     def get_updates(self) -> Optional[Dict[str, Any]]:
         raise NotImplementedError
 
@@ -29,12 +25,11 @@ class LoadFromFile(TransformBase):
     require: bool = True
 
     def __post_init__(self) -> None:
-        if not isinstance(self.filepath, Path):
-            self.filepath = Path(self.filepath)
+        self._filepath = self.filepath if isinstance(self.filepath, Path) else Path(self.filepath)
 
     def get_updates(self) -> Optional[Dict[str, Any]]:
         try:
-            with self.filepath.open() as fobj:
+            with self._filepath.open() as fobj:
                 return yaml.safe_load(fobj)
         except FileNotFoundError:
             if self.require:

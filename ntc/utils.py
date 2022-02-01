@@ -18,18 +18,18 @@ def import_module(module_path: Path) -> ModuleType:
     return _load_module(module_name, module_path)
 
 
-def merge_cfg_module(module: ModuleType, imported_modules: Set[str] = None) -> None:
+def merge_cfg_module(module: ModuleType, imported_modules: Set[str] = None) -> list[str]:
     lines = []
     if imported_modules is None:
         imported_modules = set()
     module_name = module.__spec__.name
     if module_name in imported_modules:
-        return
+        return []
 
     module_path = Path(module.__file__)
 
-    with module_path.open() as module_file:
-        module_file = list(module_file)
+    with module_path.open() as module_file_fobj:
+        module_file = list(module_file_fobj)
         if "cfg = CN(cfg)\n" not in module_file:
             raise ModuleError("Can't find config definition, please import config schema using absolute path")
         lines.append(f"# START --- {module_path} ---\n")

@@ -6,3 +6,8 @@ include:
   script:
   - git lfs pull
   - ntest --doctest-modules --coverage --exitfirst
+
+test-mypy:
+  extends: .common__tests_frozen
+  script:
+  - nt-mypy .
