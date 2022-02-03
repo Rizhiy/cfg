@@ -87,7 +87,7 @@ def _load_package(package_path: Path) -> str:
 
 def full_type_name(_type) -> str:
     module = _type.__module__
-    class_name = _type.__name__
+    class_name = getattr(_type, "__name__", None) or str(_type)
     if module is None or module == str.__class__.__module__:
         return class_name  # Avoid reporting __builtin__
     else:

@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 
 from ntc import CL
@@ -32,6 +34,18 @@ def test_create_value():
 
     assert leaf.type == int
     assert leaf.value == 42
+
+
+def test_typing_types():
+    leaf = CL(None, typing.Mapping)
+    leaf.value = dict(a=1)
+    with pytest.raises(TypeMismatch):
+        leaf.value = [22]
+
+    leaf = CL(None, typing.Sequence)
+    with pytest.raises(TypeMismatch):
+        leaf.value = dict(a=1)
+    leaf.value = [22, "33"]
 
 
 def test_create_type():
