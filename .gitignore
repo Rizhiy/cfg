@@ -4,10 +4,10 @@
 
 # Local files
 *.pyc
-*.pkl
 *.egg-info
-build
-dist
 .DS_Store
-tests/data/good2.py
+dist
+build
+*.pkl
 .coverage
+tests/data/good2.py

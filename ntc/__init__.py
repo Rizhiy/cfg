@@ -1,3 +1,4 @@
+""" NeuroTrade Config Library """
 from .errors import *
 from .interfaces import *
 from .leaf import *
