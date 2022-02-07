@@ -4,11 +4,9 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Description
-
 Library to define configs for model run.
 
 ### Usage
-
 1) Define first-level base config. It can represent a global base config shared between projects.
 
 ```python
@@ -115,7 +113,7 @@ pip install ntc
 ### Formatting
 This repository follows strict formatting style which will be checked by the CI.
 
-To properly format the code use **nt-dev** package:
+To properly format the code, use the **nt-dev** package:
 ```bash
 pip install nt-dev
 nt-format
