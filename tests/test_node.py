@@ -121,14 +121,8 @@ def test_clone(basic_cfg):
 
     cfg2.BAR.BAZ = "baz2"
 
-    assert cfg1.to_dict() == {
-        "BAR": {"BAZ": "baz1"},
-        "FOO": 32,
-    }
-    assert cfg2.to_dict() == {
-        "BAR": {"BAZ": "baz2"},
-        "FOO": 32,
-    }
+    assert cfg1.to_dict() == {"BAR": {"BAZ": "baz1"}, "FOO": 32}
+    assert cfg2.to_dict() == {"BAR": {"BAZ": "baz2"}, "FOO": 32}
 
 
 def test_freeze_unfreeze_schema(basic_cfg):

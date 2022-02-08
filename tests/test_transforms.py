@@ -17,11 +17,7 @@ def test_LoadFromKeyValue():
     from .data.base_cfg import cfg as cfg_base
 
     cfg = cfg_base.inherit()
-    flat_data = {
-        "DICT.FOO": "Foo value from flat data",
-        "STR": "Str value from flat data",
-        "BOOL": True,
-    }
+    flat_data = {"DICT.FOO": "Foo value from flat data", "STR": "Str value from flat data", "BOOL": True}
     cfg.add_transform(LoadFromKeyValue(flat_data))
     cfg.transform()
     assert cfg.DICT.FOO == flat_data["DICT.FOO"]

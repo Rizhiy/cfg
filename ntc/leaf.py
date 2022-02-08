@@ -108,7 +108,7 @@ class CfgLeaf:
 
     def clone(self) -> CfgLeaf:
         return CfgLeaf(
-            deepcopy(self._value), self._type, required=self._required, subclass=self._subclass, desc=self._desc,
+            deepcopy(self._value), self._type, required=self._required, subclass=self._subclass, desc=self._desc
         )
 
     def check(self, leaf_spec: CfgLeaf) -> None:
