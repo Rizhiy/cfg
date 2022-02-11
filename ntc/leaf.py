@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from functools import partial
-from typing import Any, Type
+from typing import Any
 
 from ntc.errors import MissingRequired, SchemaError, TypeMismatch
 
@@ -57,7 +57,7 @@ class CfgLeaf:
         return result
 
     @property
-    def type(self) -> Type:
+    def type(self) -> type:
         return self._type
 
     @property

@@ -3,8 +3,9 @@ from __future__ import annotations
 import inspect
 import logging
 from collections import UserDict
+from collections.abc import Callable
 from pathlib import Path, PosixPath
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Union
 
 import yaml
 
@@ -214,7 +215,7 @@ class CfgNode(UserDict):
             raise SchemaFrozenError("Can't add hook after schema has been frozen")
         self._hooks.append(hook)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         attrs = {}
         for key, attr in self.attrs:
             if isinstance(attr, CfgNode):
@@ -224,7 +225,7 @@ class CfgNode(UserDict):
         return attrs
 
     @property
-    def attrs(self) -> List[Tuple[str, Union[CfgNode, CfgLeaf]]]:
+    def attrs(self) -> list[tuple[str, Union[CfgNode, CfgLeaf]]]:
         attrs_list = []
         for key in super().keys():
             value = self.get_raw(key)
@@ -279,7 +280,7 @@ class CfgNode(UserDict):
     def set_module(self, module) -> None:
         self._module = module
 
-    def _set_attrs(self, attrs: List[Tuple[str, Union[CfgNode, CfgLeaf]]]) -> None:
+    def _set_attrs(self, attrs: list[tuple[str, Union[CfgNode, CfgLeaf]]]) -> None:
         for key, attr in attrs:
             setattr(self, key, attr.clone())
 

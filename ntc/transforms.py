@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 import yaml
 
@@ -10,7 +10,7 @@ from .node import CN
 
 @dataclass
 class TransformBase:
-    def get_updates(self) -> Optional[Dict[str, Any]]:
+    def get_updates(self) -> Optional[dict[str, Any]]:
         raise NotImplementedError
 
     def __call__(self, cfg: CN) -> None:
@@ -27,7 +27,7 @@ class LoadFromFile(TransformBase):
     def __post_init__(self) -> None:
         self._filepath = self.filepath if isinstance(self.filepath, Path) else Path(self.filepath)
 
-    def get_updates(self) -> Optional[Dict[str, Any]]:
+    def get_updates(self) -> Optional[dict[str, Any]]:
         try:
             with self._filepath.open() as fobj:
                 return yaml.safe_load(fobj)
@@ -37,7 +37,7 @@ class LoadFromFile(TransformBase):
             return None
 
 
-def _flat_to_structured(kv: Dict[str, Any], sep=".") -> Dict[str, Any]:
+def _flat_to_structured(kv: dict[str, Any], sep=".") -> dict[str, Any]:
     """
     >>> _flat_to_structured({"a.b.c": 1, "a.b2": 2})
     {'a': {'b': {'c': 1}, 'b2': 2}}
@@ -54,12 +54,12 @@ def _flat_to_structured(kv: Dict[str, Any], sep=".") -> Dict[str, Any]:
 
 @dataclass
 class LoadFromKeyValue(TransformBase):
-    flat_data: Dict[str, Any]
+    flat_data: dict[str, Any]
 
     def __post_init__(self) -> None:
         self._structured_data = _flat_to_structured(self.flat_data)
 
-    def get_updates(self) -> Optional[Dict[str, Any]]:
+    def get_updates(self) -> Optional[dict[str, Any]]:
         return self._structured_data
 
 
@@ -75,7 +75,7 @@ class LoadFromEnvVars(TransformBase):
         key = key.replace("__", ".")
         return key
 
-    def get_updates(self) -> Optional[Dict[str, Any]]:
+    def get_updates(self) -> Optional[dict[str, Any]]:
         flat = {self._normalize_key(key): val for key, val in os.environ.items()}
         flat_loaded = {key: yaml.safe_load(value) for key, value in flat.items() if key is not None}
         return _flat_to_structured(flat_loaded)
