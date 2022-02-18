@@ -14,10 +14,10 @@ dependencies = [
 
 [project.optional-dependencies]
 tests = [
-    "nt-dev>=0.29",
+    "nt-dev>=0.32",
 ]
 dev = [
-    "nt-dev>=0.29",
+    "nt-dev>=0.32",
 ]
 
 [tool.flit.sdist]
