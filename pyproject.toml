@@ -32,6 +32,9 @@ exclude = [
 [tool.semantic_release]
 version_variable = "ntc/__init__.py:__version__"
 
+[tool.mypy]
+exclude = ["tests/data"]
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "--doctest-modules"
