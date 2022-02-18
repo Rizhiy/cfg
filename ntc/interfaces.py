@@ -1,12 +1,9 @@
-from typing import Dict, List, Tuple
-
-
 class CfgSavable:
     """
     Class to indicate that an instance will be saveable by Cfg
     """
 
-    def save_strs(self) -> Tuple[str, str, List[str], Dict[str, str]]:
+    def save_strs(self) -> tuple[str, str, list[str], dict[str, str]]:
         """
         Return strings required for saving
 

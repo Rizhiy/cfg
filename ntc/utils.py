@@ -2,7 +2,6 @@ import importlib.util
 import sys
 from pathlib import Path
 from types import ModuleType
-from typing import Set
 
 import yaml
 
@@ -18,7 +17,7 @@ def import_module(module_path: Path) -> ModuleType:
     return _load_module(module_name, module_path)
 
 
-def merge_cfg_module(module: ModuleType, imported_modules: Set[str] = None) -> list[str]:
+def merge_cfg_module(module: ModuleType, imported_modules: set[str] = None) -> list[str]:
     lines = []
     if imported_modules is None:
         imported_modules = set()
