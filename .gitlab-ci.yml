@@ -1,13 +1,14 @@
+---
 include:
-- project: utilities/nt-dev
-  file: nt_dev/release/gitlab-python-tests-basic.yml
-
-.common__tests:
-  script:
-  - git lfs pull
-  - ntest --doctest-modules --coverage --exitfirst
+  - project: utilities/nt-dev
+    file: nt_dev/release/gitlab-python-tests-basic.yml
 
 test-mypy:
   extends: .common__tests_frozen
   script:
-  - nt-mypy .
+    - nt-mypy .
+
+check-yamlfix:
+  extends: .common__tests_frozen
+  script:
+    - nt-yamlfix --check
