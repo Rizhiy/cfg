@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ..base_cfg import cfg
 from ..base_class import BaseClass
 

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
 
 from ntc import CN, TypeMismatch
+from ntc.errors import ConfigUseError
 
 DATA_DIR = Path(__file__).parent / "data" / "description"
 
@@ -14,7 +17,7 @@ def test_description():
     assert cfg.DESCRIBED == "described"
     assert cfg.describe("DESCRIBED") == "Described leaf"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ConfigUseError):
         cfg.describe("NONEXISTENT")
 
 
