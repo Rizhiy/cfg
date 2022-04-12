@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from ntc import CfgLeaf, CfgNode
@@ -17,7 +19,7 @@ class FooSubclass(Foo):
     pass
 
 
-@pytest.fixture
+@pytest.fixture()
 def basic_cfg():
     cfg = CfgNode()
     cfg.FOO = 32

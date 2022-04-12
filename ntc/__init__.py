@@ -1,4 +1,6 @@
 """ NeuroTrade Config Library """
+from __future__ import annotations
+
 from .errors import *
 from .interfaces import *
 from .leaf import *

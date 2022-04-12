@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ntc import CN
 from tests.data.required.required_plain_value import cfg
 

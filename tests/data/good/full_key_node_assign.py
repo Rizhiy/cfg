@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 from ntc.node import CN
 
 from ..base_cfg import cfg
 
 cfg = cfg.inherit()
 
-foo = CN()
-foo.BAR = "bar"
-foo.FOO = "foo"
+sub_cfg = CN()
+sub_cfg.BAR = "bar"
+sub_cfg.FOO = "foo"
 
-cfg.FOO = foo
+cfg.FOO = sub_cfg

@@ -9,7 +9,15 @@ from typing import Any, Union
 
 import yaml
 
-from ntc.errors import MissingRequired, NodeReassignment, SaveError, SchemaError, SchemaFrozenError, ValidationError
+from ntc.errors import (
+    ConfigUseError,
+    MissingRequired,
+    NodeReassignment,
+    SaveError,
+    SchemaError,
+    SchemaFrozenError,
+    ValidationError,
+)
 from ntc.interfaces import CfgSavable
 from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
@@ -260,14 +268,14 @@ class CfgNode(UserDict):
     @full_key.setter
     def full_key(self, value: str):
         if self._full_key and value != self._full_key:
-            raise ValueError(f"full_key cannot be reassigned for node at {self._full_key}")
+            raise ConfigUseError(f"full_key cannot be reassigned for node at {self._full_key}")
         self._full_key = value
 
     def describe(self, key: str = None) -> str:
         if key is None:
             return self._desc
         if key not in self:
-            raise ValueError(f"{key!r} key does not exist")
+            raise ConfigUseError(f"{key!r} key does not exist")
 
         attr = super().__getitem__(key)
         if isinstance(attr, CfgNode):
@@ -335,14 +343,14 @@ class CfgNode(UserDict):
                     value = CfgNode(value, full_key=self._build_child_key(key))
                 self[key] = value
         else:
-            raise ValueError("This should not happen!")
+            raise Exception("This should not happen!")
 
     def _build_child_key(self, key: str) -> str:
         return f"{self.full_key}.{key}"
 
     def __reduce__(self):
         if not self.schema_frozen:
-            raise ValueError(f"Can't pickle unfrozen CfgNode: {self.full_key}")
+            raise ConfigUseError(f"Can't pickle unfrozen CfgNode: {self.full_key}")
         state = {}
         for attr_name in self._BUILT_IN_ATTRS:
             state[attr_name] = getattr(self, attr_name)

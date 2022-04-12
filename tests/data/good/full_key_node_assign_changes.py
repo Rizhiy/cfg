@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ntc import CN
 from tests.data.good.full_key_node_assign import cfg
 

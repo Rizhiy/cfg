@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class CfgSavable:
     """
     Class to indicate that an instance will be saveable by Cfg

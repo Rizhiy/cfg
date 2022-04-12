@@ -14,10 +14,11 @@ dependencies = [
 
 [project.optional-dependencies]
 tests = [
-    "nt-dev>=0.32",
+    "nt-dev>=0.34",
+    "types-pyyaml",
 ]
 dev = [
-    "nt-dev>=0.32",
+    "nt-dev>=0.34",
 ]
 
 [tool.flit.sdist]

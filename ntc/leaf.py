@@ -4,7 +4,7 @@ from copy import deepcopy
 from functools import partial
 from typing import Any
 
-from ntc.errors import MissingRequired, SchemaError, TypeMismatch
+from ntc.errors import ConfigUseError, MissingRequired, SchemaError, TypeMismatch
 
 from .utils import full_type_name
 
@@ -57,7 +57,7 @@ class CfgLeaf:
         return result
 
     @property
-    def type(self) -> type:
+    def type(self) -> type:  # noqa: A003  # "type" at class-level isn't so bad.
         return self._type
 
     @property
@@ -73,20 +73,21 @@ class CfgLeaf:
         return self._value
 
     @value.setter
-    def value(self, val) -> None:
-        if self._required and val is None:
-            raise MissingRequired(f"Can't set required value to None for {self}")
-        if val is not None:
-            check_val = val.func if isinstance(val, partial) else val
+    def value(self, new_value) -> None:
+        if new_value is None:
+            if self._required:
+                raise MissingRequired(f"Can't set required value to None for {self}")
+        else:
+            check_val = new_value.func if isinstance(new_value, partial) else new_value
             expected_type = full_type_name(self._type)
             if self._subclass and (not isinstance(check_val, type) or not issubclass(check_val, self._type)):
                 raise TypeMismatch(f"Subclass of type <{expected_type}> expected, but {check_val!r} found for {self}!")
             if not self._subclass and not isinstance(check_val, self._type):
                 raise TypeMismatch(f"Instance of type <{expected_type}> expected, but {check_val!r} found for {self}!")
-        self._value = val
+        self._value = new_value
 
         if self._parent:
-            self._parent._update_module(self._full_key, val)
+            self._parent._update_module(self._full_key, new_value)
 
     @property
     def full_key(self):
@@ -95,7 +96,7 @@ class CfgLeaf:
     @full_key.setter
     def full_key(self, value: str):
         if self._full_key and value != self._full_key:
-            raise ValueError(f"full_key cannot be reassigned for leaf {self}")
+            raise ConfigUseError(f"full_key cannot be reassigned for leaf {self}")
         self._full_key = value
 
     @property
@@ -132,10 +133,10 @@ class CfgLeaf:
             raise SchemaError(f"Value of {self} must be an instance of {leaf_spec.type}")
 
     def __eq__(self, other: CfgLeaf):
-        for attr_name in ["_type", "_required", "_subclass", "_value", "_desc"]:
-            if getattr(self, attr_name) != getattr(other, attr_name):
-                return False
-        return True
+        return all(
+            getattr(self, attr_name) == getattr(other, attr_name)
+            for attr_name in ("_type", "_required", "_subclass", "_value", "_desc")
+        )
 
 
 CL = CfgLeaf
