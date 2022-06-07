@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 import logging
+import warnings
 from collections import UserDict
 from collections.abc import Callable
 from pathlib import Path, PosixPath
@@ -186,6 +187,8 @@ class CfgNode(UserDict):
         """
         Specify additional changes to be made after manual changes, run during loading from file
         """
+        if not self._schema_frozen:
+            warnings.warn("Transforming without freezing schema is discouraged, as it frequently leads to bugs")
         for transformer in self._transforms:
             transformer(self)
 
