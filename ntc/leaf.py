@@ -2,24 +2,22 @@ from __future__ import annotations
 
 from copy import deepcopy
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ntc.errors import ConfigUseError, MissingRequired, SchemaError, TypeMismatch
+from ntc.errors import MissingRequired, SchemaError, TypeMismatch
+from ntc.full_key_value import FullKeyValue
 
 from .utils import full_type_name
 
+if TYPE_CHECKING:
+    from .node import CfgNode
 
-class CfgLeaf:
-    def __init__(
-        self,
-        first: Any = None,
-        second: Any = None,
-        *,
-        required=False,
-        subclass=False,
-        full_key: str = None,
-        desc: str = None,
-    ):
+
+class CfgLeaf(FullKeyValue):
+    def __init__(self, first: Any = None, second: Any = None, *, required=False, subclass=False, desc: str = None):
+        super().__init__()
+        self._parent: CfgNode
+
         if first is None and second is None:
             raise SchemaError("Must provide either type or default value for config leaf")
         if second is None:
@@ -39,19 +37,16 @@ class CfgLeaf:
         self._required = required
         self._subclass = subclass
 
-        self._full_key = full_key
         self._value = value
         self._desc = desc
-
-        self._parent = None
 
     def __repr__(self):
         return f"CfgLeaf({repr(self.value)})"
 
     def __str__(self):
         result = f"CfgLeaf({self.value})"
-        if self._full_key:
-            result += f" at {self._full_key}"
+        if self.full_key:
+            result += f" at {self.full_key}"
         if self.desc:
             result += f" ({self._desc})"
         return result
@@ -87,17 +82,7 @@ class CfgLeaf:
         self._value = new_value
 
         if self._parent:
-            self._parent._update_module(self._full_key, new_value)
-
-    @property
-    def full_key(self):
-        return self._full_key
-
-    @full_key.setter
-    def full_key(self, value: str):
-        if self._full_key and value != self._full_key:
-            raise ConfigUseError(f"full_key cannot be reassigned for leaf {self}")
-        self._full_key = value
+            self._parent._update_module(self.key, new_value)
 
     @property
     def desc(self):

@@ -195,3 +195,25 @@ def test_clear_schema_frozen_new_not_allowed(basic_cfg):
     basic_cfg.freeze_schema()
     with pytest.raises(AttributeError):
         basic_cfg.clear()
+
+
+def test_full_key():
+    part_cfg = CfgNode()
+    part_cfg.FOO = "bar"
+
+    cfg = CfgNode()
+    cfg.TEST = part_cfg
+    assert cfg.TEST.get_raw("FOO").full_key == "cfg.TEST.FOO"
+
+    cfg2 = CfgNode()
+    cfg2.BEST = cfg
+    assert cfg2.BEST.TEST.get_raw("FOO").full_key == "cfg.BEST.TEST.FOO"
+
+
+def test_circular_dependency_key():
+    cfg = CfgNode()
+
+    cfg.FOO = {"bar": cfg}  # This is allowed, since full_key doesn't follow through dicts
+
+    with pytest.raises(ValueError, match="Tried to set circular cfg for"):
+        cfg.BAR = cfg

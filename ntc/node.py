@@ -11,6 +11,7 @@ from typing import Any, Union
 import yaml
 
 from ntc.errors import (
+    ConfigError,
     ConfigUseError,
     MissingRequired,
     NodeReassignment,
@@ -19,6 +20,7 @@ from ntc.errors import (
     SchemaFrozenError,
     ValidationError,
 )
+from ntc.full_key_value import FullKeyParent
 from ntc.interfaces import CfgSavable
 from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
@@ -45,10 +47,14 @@ def _cfg_path_to_name(cfg_path: Path, root_name="configs"):
     return str(Path(*rel_parts).with_suffix(""))
 
 
-class CfgNode(UserDict):
+class CfgNode(UserDict, FullKeyParent):
     _BUILT_IN_ATTRS = (
-        "_full_key",
-        "full_key",
+        # FullKeyValue
+        "_parent",
+        "_key",
+        "parent",
+        "key",
+        # CfgNode
         "_desc",
         "_root_name",
         "_schema_frozen",
@@ -59,20 +65,15 @@ class CfgNode(UserDict):
         "_hooks",
         "_module",
         "_safe_save",
-        "_parent",
     )
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
 
-    def __init__(
-        self,
-        first: Any = None,
-        *,
-        schema_frozen: bool = False,
-        new_allowed: bool = False,
-        full_key: str = None,
-        desc: str = None,
-    ):
+    def __init__(self, first: Any = None, *, schema_frozen=False, new_allowed=False, desc: str = None):
         super().__init__()
+        # Have to repeat it here for correct interaction with __getattr__
+        self._parent: CfgNode = None
+        self._key: str = None
+
         if isinstance(first, (dict, CfgNode)):
             base, leaf_spec = first, None
         else:
@@ -80,7 +81,6 @@ class CfgNode(UserDict):
         if leaf_spec is not None and not isinstance(leaf_spec, CfgLeaf):
             leaf_spec = CfgLeaf(None, leaf_spec)
 
-        self._full_key = full_key
         self._desc = desc
         self._root_name = "configs"
 
@@ -93,13 +93,16 @@ class CfgNode(UserDict):
 
         self._module = None
         self._safe_save = True
-        self._parent: CfgNode = None
 
         if self._leaf_spec is not None:
             self._new_allowed = True
 
         if base is not None:
             self._init_with_base(base)
+
+    @property
+    def _default_key(self):
+        return "cfg"
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key in self:
@@ -264,16 +267,6 @@ class CfgNode(UserDict):
     def leaf_spec(self) -> CfgLeaf:
         return self._leaf_spec
 
-    @property
-    def full_key(self):
-        return self._full_key or "cfg"
-
-    @full_key.setter
-    def full_key(self, value: str):
-        if self._full_key and value != self._full_key:
-            raise ConfigUseError(f"full_key cannot be reassigned for node at {self._full_key}")
-        self._full_key = value
-
     def describe(self, key: str = None) -> str:
         if key is None:
             return self._desc
@@ -298,31 +291,31 @@ class CfgNode(UserDict):
     def _set_new(self, key: str, value: Any) -> None:
         if self._schema_frozen and not self._new_allowed:
             raise SchemaFrozenError(f"Trying to add leaf to node {self.full_key} with frozen schema.")
-        child_full_key = self._build_child_key(key)
 
         value_to_set: Union[CfgNode, CfgLeaf]
         if isinstance(value, CfgNode):
-            value_to_set = self._value_to_set_from_node(child_full_key, value)
+            value_key = self._child_full_key(key)
+            _check_circular_path(value, value_key, [id(self)])
+            value_to_set = self._value_to_set_from_node(value, value_key)
         elif isinstance(value, CfgLeaf):
-            value_to_set = self._value_to_set_from_leaf(child_full_key, value)
+            value_to_set = value
         elif isinstance(value, type):
-            value_to_set = self._value_to_set_from_type(child_full_key, value)
+            value_to_set = self._value_to_set_from_type(value)
         else:
-            value_to_set = self._value_to_set_from_value(child_full_key, value)
+            value_to_set = self._value_to_set_from_value(value, key)
+        self._set_key_for_child(value_to_set, key)
 
         if isinstance(value_to_set, CfgLeaf) and self.leaf_spec:
             value_to_set.check(self.leaf_spec)
             if value_to_set.desc is None:
                 value_to_set.desc = self.leaf_spec.desc
 
-        value_to_set._parent = self
-
         super().__setitem__(key, value_to_set)
 
     def _set_existing(self, key: str, value: Any) -> None:
         cur_attr = super().__getitem__(key)
         if isinstance(cur_attr, CfgNode):
-            raise NodeReassignment(f"Nested CfgNode {self._build_child_key(key)} cannot be reassigned.")
+            raise NodeReassignment(f"Nested CfgNode {self._child_full_key(key)} cannot be reassigned.")
         elif isinstance(cur_attr, CfgLeaf):
             cur_attr.value = value
         else:
@@ -330,7 +323,7 @@ class CfgNode(UserDict):
 
     def _init_with_base(self, base: Union[dict, CfgNode]) -> None:
         if isinstance(base, CfgNode):
-            for name in ["full_key", "desc", "root_name", "new_allowed", "leaf_spec", "module", "safe_save", "parent"]:
+            for name in ["desc", "root_name", "new_allowed", "leaf_spec", "module", "safe_save"]:
                 name = f"_{name}"
                 setattr(self, name, getattr(base, name))
 
@@ -338,18 +331,19 @@ class CfgNode(UserDict):
                 name = f"_{name}"
                 setattr(self, name, getattr(base, name) + getattr(self, name))
 
-            self._set_attrs(base.attrs)
+            for key, value in base.attrs:
+                if isinstance(value, (CfgNode, CfgLeaf)):
+                    value = value.clone()
+                setattr(self, key, value)
+
             self.freeze_schema()
         elif isinstance(base, dict):
             for key, value in base.items():
                 if isinstance(value, dict):
-                    value = CfgNode(value, full_key=self._build_child_key(key))
+                    value = CfgNode(value)
                 self[key] = value
         else:
             raise Exception("This should not happen!")
-
-    def _build_child_key(self, key: str) -> str:
-        return f"{self.full_key}.{key}"
 
     def __reduce__(self):
         if not self.schema_frozen:
@@ -359,17 +353,12 @@ class CfgNode(UserDict):
             state[attr_name] = getattr(self, attr_name)
         return self.__class__, (self.to_dict(),), state
 
-    def _value_to_set_from_node(self, full_key: str, node: CfgNode) -> CfgNode:
+    def _value_to_set_from_node(self, node: CfgNode, full_key: str) -> CfgNode:
         if self.leaf_spec:
             raise SchemaError(f"Key {full_key} cannot contain nested nodes as leaf spec is defined for it.")
-        node.full_key = full_key
         return node
 
-    def _value_to_set_from_leaf(self, full_key: str, leaf: CfgLeaf) -> CfgLeaf:
-        leaf.full_key = full_key
-        return leaf
-
-    def _value_to_set_from_type(self, full_key: str, type_: type) -> CfgLeaf:
+    def _value_to_set_from_type(self, type_: type) -> CfgLeaf:
         if self.leaf_spec:
             required, desc = self.leaf_spec.required, self.leaf_spec.desc
         else:
@@ -379,17 +368,20 @@ class CfgNode(UserDict):
             type_,  # Need to pass value here instead of copying from spec, in case new value is more restrictive
             subclass=True,
             required=required,
-            full_key=full_key,
             desc=desc,
         )
 
-    def _value_to_set_from_value(self, full_key: str, value: Any) -> CfgLeaf:
+    def _value_to_set_from_value(self, value: Any, key: str) -> CfgLeaf:
         if self.leaf_spec:
-            leaf = self.leaf_spec.clone()
-            leaf.full_key = full_key
-            leaf.value = value
+            try:
+                leaf = self.leaf_spec.clone()
+                leaf.value = value
+            except ConfigError:
+                # Set key and parent to get proper error message
+                self._set_key_for_child(leaf, key)
+                leaf.value = value
             return leaf
-        return CfgLeaf(value, type(value), required=True, full_key=full_key)
+        return CfgLeaf(value, type(value), required=True)
 
     def clear(self) -> None:
         if self._schema_frozen and not self._new_allowed:
@@ -406,12 +398,12 @@ class CfgNode(UserDict):
             else:
                 self[key] = value
 
-    def _update_module(self, full_key: str, value) -> None:
+    def _update_module(self, key: str, value) -> None:
         if self._parent is not None:
-            self._parent._update_module(full_key, value)
-            return
+            self._parent._update_module(f"{self.key}.{key}", value)
         if self._module is None:  # Before config is loaded
             return
+        key = f"{self._default_key}.{key}"
 
         for info in inspect.stack()[1:]:
             # Kind of a hack, need to keep track of all our files
@@ -425,18 +417,18 @@ class CfgNode(UserDict):
         if isinstance(value, type):
             module = inspect.getmodule(value)
             lines.append(f"from {module.__name__} import {value.__name__}\n")
-            lines.append(f"{full_key} = {value.__name__}\n")
+            lines.append(f"{key} = {value.__name__}\n")
         elif type(value) in valid_types:
-            lines.append(f"{full_key} = {value!r}\n")
+            lines.append(f"{key} = {value!r}\n")
         elif type(value) == PosixPath:
             lines.append("from pathlib import PosixPath\n")
-            lines.append(f"{full_key} = {value!r}\n")
+            lines.append(f"{key} = {value!r}\n")
         elif isinstance(value, CfgSavable):
             import_str, cls_name, args, kwargs = value.save_strs()
             lines.append(f"{import_str}\n")
-            lines.append(f"{full_key} = {value.create_eval_str(cls_name, args, kwargs)}\n")
+            lines.append(f"{key} = {value.create_eval_str(cls_name, args, kwargs)}\n")
         elif isinstance(value, list) and all([type(v) in valid_types for v in value]):
-            lines.append(f"{full_key} = {value!r}\n")
+            lines.append(f"{key} = {value!r}\n")
         else:
             message = f"Config was modified with unsavable value: {value!r}"
             LOGGER.warning(message)
@@ -446,6 +438,20 @@ class CfgNode(UserDict):
 
     def set_root_name(self, name: str) -> None:
         self._root_name = name
+
+    def _set_key_for_child(self, child: Union[CfgNode, CfgLeaf], key: str) -> None:
+        child.key = key
+        child.parent = self
+
+
+def _check_circular_path(new_node: CfgNode, key: str, parent_ids: list[int] = None):
+    parent_ids = parent_ids or []
+    new_id = id(new_node)
+    if any(new_id == parent_id for parent_id in parent_ids):
+        raise ValueError(f"Tried to set circular cfg for {key}")
+    for key, value in new_node.items():
+        if isinstance(value, CfgNode):
+            _check_circular_path(value, key, [new_id, *parent_ids])
 
 
 CN = CfgNode

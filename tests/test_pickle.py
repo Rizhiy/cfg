@@ -8,10 +8,8 @@ from ntc import CL, CN
 def test_leaf_pickle():
     leaf = CL(str)
 
-    pickled = pickle.dumps(leaf)
-    unpickled = pickle.loads(pickled)
+    unpickled = pickle.loads(pickle.dumps(leaf))
     assert unpickled == leaf
-    assert unpickled._full_key == leaf._full_key
 
 
 def test_node_pickle():
@@ -20,9 +18,9 @@ def test_node_pickle():
     node.INT = CL(42)
     node.freeze_schema()
 
-    pickled = pickle.dumps(node)
-    unpickled = pickle.loads(pickled)
+    unpickled = pickle.loads(pickle.dumps(node))
 
     assert unpickled == node
     for attr_name in node._BUILT_IN_ATTRS:
         assert getattr(node, attr_name) == getattr(unpickled, attr_name)
+    assert unpickled.get_raw("STR").full_key == node.get_raw("STR").full_key
