@@ -162,9 +162,7 @@ class CfgNode(UserDict, FullKeyParent):
         if cfg.leaf_spec is not None and cfg.leaf_spec.required and len(cfg) == 0:
             raise MissingRequired(f"Missing required members for {cfg.leaf_spec} at key {cfg.full_key}")
         for _, attr in cfg.attrs:
-            if isinstance(attr, CfgNode):
-                CfgNode.validate_required(attr)
-            elif attr.required and attr.value is None:
+            if isinstance(attr, CfgLeaf) and attr.required and attr.value is None:
                 raise MissingRequired(f"Key {attr} is required, but was not provided.")
 
     def save(self, path: Union[Path, str]) -> None:
@@ -189,16 +187,24 @@ class CfgNode(UserDict, FullKeyParent):
     def transform(self) -> None:
         """
         Specify additional changes to be made after manual changes, run during loading from file
+        Will be applied recursively on all nested nodes first
         """
         if not self._schema_frozen:
             warnings.warn("Transforming without freezing schema is discouraged, as it frequently leads to bugs")
+        for _, attr in self.attrs:
+            if isinstance(attr, CfgNode):
+                attr.transform()
         for transformer in self._transforms:
             transformer(self)
 
     def validate(self) -> None:
         """
         Check additional rules for config, run during loading after transform
+        Will be applied recursively on all nested nodes first
         """
+        for _, attr in self.attrs:
+            if isinstance(attr, CfgNode):
+                attr.validate()
         validators = [CfgNode.validate_required] + self._validators
         for validator in validators:
             try:
@@ -210,7 +216,11 @@ class CfgNode(UserDict, FullKeyParent):
         """
         Perform actions based on config, run during loading after validation
         Hooks should NOT modify the config
+        Will be applied recursively on all nested nodes first
         """
+        for _, attr in self.attrs:
+            if isinstance(attr, CfgNode):
+                attr.run_hooks()
         for hook in self._hooks:
             hook(self)
 
@@ -315,7 +325,12 @@ class CfgNode(UserDict, FullKeyParent):
     def _set_existing(self, key: str, value: Any) -> None:
         cur_attr = super().__getitem__(key)
         if isinstance(cur_attr, CfgNode):
-            raise NodeReassignment(f"Nested CfgNode {self._child_full_key(key)} cannot be reassigned.")
+            if cur_attr:
+                raise NodeReassignment(f"Non-empty CfgNode {self._child_full_key(key)} cannot be reassigned")
+            if not isinstance(cur_attr, CfgNode):
+                raise NodeReassignment(f"Can only swap CfgNode {self._child_full_key(key)} for another CfgNode")
+            object.__setattr__(value, "_desc", cur_attr.describe())
+            super().__setitem__(key, value)
         elif isinstance(cur_attr, CfgLeaf):
             cur_attr.value = value
         else:

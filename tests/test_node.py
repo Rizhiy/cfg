@@ -80,9 +80,19 @@ def test_nested():
     assert cfg.FOO.BAR == 42
 
 
-def test_nested_reassign_fail():
+def test_nested_empty_reassign():
     cfg = CfgNode()
     cfg.FOO = CfgNode()
+    cfg2 = CfgNode()
+    cfg2.foo = "bar"
+    cfg.FOO = cfg2
+    assert cfg.FOO.foo == "bar"
+
+
+def test_nested_non_empty_reassign_fail():
+    cfg = CfgNode()
+    cfg.FOO = CfgNode()
+    cfg.FOO.foo = "bar"
     with pytest.raises(NodeReassignment):
         cfg.FOO = CfgNode()
 
