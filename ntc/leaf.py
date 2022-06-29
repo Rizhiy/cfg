@@ -76,9 +76,15 @@ class CfgLeaf(FullKeyValue):
             check_val = new_value.func if isinstance(new_value, partial) else new_value
             expected_type = full_type_name(self._type)
             if self._subclass and (not isinstance(check_val, type) or not issubclass(check_val, self._type)):
-                raise TypeMismatch(f"Subclass of type <{expected_type}> expected, but {check_val!r} found for {self}!")
+                raise TypeMismatch(
+                    f"Subclass of type <{expected_type}> expected,"
+                    f" but found {check_val!r} of type {type(check_val)} for {self}!"
+                )
             if not self._subclass and not isinstance(check_val, self._type):
-                raise TypeMismatch(f"Instance of type <{expected_type}> expected, but {check_val!r} found for {self}!")
+                raise TypeMismatch(
+                    f"Instance of type <{expected_type}> expected,"
+                    f" but found {check_val!r} of type {type(check_val)} for {self}!"
+                )
         self._value = new_value
 
         if self._parent:

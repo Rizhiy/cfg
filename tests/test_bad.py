@@ -13,7 +13,10 @@ DATA_DIR = Path(__file__).parent / "data" / "bad"
 def test_bad_type():
     with pytest.raises(TypeMismatch) as excinfo:
         CN.load(DATA_DIR / "bad_type.py")
-    assert str(excinfo.value) == "Instance of type <str> expected, but 1 found for CfgLeaf(Good) at cfg.NAME!"
+    assert (
+        str(excinfo.value)
+        == "Instance of type <str> expected, but found 1 of type <class 'int'> for CfgLeaf(Good) at cfg.NAME!"
+    )
 
 
 def test_bad_attr():
@@ -26,9 +29,10 @@ def test_bad_class():
     with pytest.raises(TypeMismatch) as excinfo:
         CN.load(DATA_DIR / "bad_class.py")
     assert re.match(
-        r"^Instance of type <tests.data.base_class.BaseClass> expected, "
-        r"but <tests.data.bad.bad_class.BadClass object at 0x[0-9a-f]+> found "
-        r"for CfgLeaf\(<tests.data.base_class.BaseClass object at 0x[0-9a-f]+>\) at cfg.CLASS!$",
+        r"^Instance of type <tests.data.base_class.BaseClass> expected,"
+        r" but found <tests.data.bad.bad_class.BadClass object at 0x[0-9a-f]+>"
+        r" of type <class 'tests.data.bad.bad_class.BadClass'>"
+        r" for CfgLeaf\(<tests.data.base_class.BaseClass object at 0x[0-9a-f]+>\) at cfg.CLASS!$",
         str(excinfo.value),
     )
 
@@ -37,8 +41,9 @@ def test_bad_node():
     with pytest.raises((TypeMismatch, SchemaError)) as excinfo:
         CN.load(DATA_DIR / "bad_node.py")
     assert re.match(
-        r"^Instance of type <tests.data.base_class.BaseClass> expected, but "
-        r"<tests.data.bad.bad_node.BadClass object at 0x[0-9a-f]+> found for CfgLeaf\(None\) at cfg.CLASSES.ONE!$",
+        r"^Instance of type <tests.data.base_class.BaseClass> expected,"
+        r" but found <tests.data.bad.bad_node.BadClass object at 0x[0-9a-f]+>"
+        r" of type <class 'tests.data.bad.bad_node.BadClass'> for CfgLeaf\(None\) at cfg.CLASSES.ONE!$",
         str(excinfo.value),
     )
 
@@ -47,9 +52,9 @@ def test_bad_node_subclass():
     with pytest.raises(TypeMismatch) as excinfo:
         CN.load(DATA_DIR / "bad_node_subclass.py")
     assert str(excinfo.value) == (
-        "Subclass of type <tests.data.base_class.BaseClass> expected, but "
-        "<class 'tests.data.bad.bad_node_subclass.BadSubClass'> found "
-        "for CfgLeaf(<class 'tests.data.base_class.BaseClass'>) at cfg.SUBCLASS!"
+        "Subclass of type <tests.data.base_class.BaseClass> expected,"
+        " but found <class 'tests.data.bad.bad_node_subclass.BadSubClass'> of type <class 'type'>"
+        " for CfgLeaf(<class 'tests.data.base_class.BaseClass'>) at cfg.SUBCLASS!"
     )
 
 
@@ -74,9 +79,10 @@ def test_bad_node_instance():
     with pytest.raises((TypeMismatch, SchemaError)) as excinfo:
         CN.load(DATA_DIR / "bad_node_instance.py")
     assert re.match(
-        r"^Subclass of type <tests.data.base_class.BaseClass> expected, "
-        r"but <tests.data.bad.bad_node_instance.SubClass object at 0x[0-9a-f]+> found for "
-        r"CfgLeaf\(None\) at cfg.SUBCLASSES.ONE!$",
+        r"^Subclass of type <tests.data.base_class.BaseClass> expected,"
+        r" but found <tests.data.bad.bad_node_instance.SubClass object at 0x[0-9a-f]+>"
+        r" of type <class 'tests.data.bad.bad_node_instance.SubClass'>"
+        r" for CfgLeaf\(None\) at cfg.SUBCLASSES.ONE!$",
         str(excinfo.value),
     )
 
@@ -84,7 +90,9 @@ def test_bad_node_instance():
 def test_inheritance_changes_bad():
     with pytest.raises(TypeMismatch) as excinfo:
         CN.load(DATA_DIR / "inheritance_changes_bad.py")
-    assert str(excinfo.value) == ("Instance of type <str> expected, but 2 found for CfgLeaf(BAR) at cfg.DICT.BAR!")
+    assert str(excinfo.value) == (
+        "Instance of type <str> expected, but found 2 of type <class 'int'> for CfgLeaf(BAR) at cfg.DICT.BAR!"
+    )
 
 
 def test_bad_inherit():
