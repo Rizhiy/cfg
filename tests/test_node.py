@@ -227,3 +227,35 @@ def test_circular_dependency_key():
 
     with pytest.raises(ValueError, match="Tried to set circular cfg for"):
         cfg.BAR = cfg
+
+
+def test_static_init():
+    VALUE = 1
+
+    cfg = CfgNode()
+    cfg.FOO = "bar"
+
+    def change_foo(cfg):
+        cfg.FOO = "baz"
+
+    def change_value(cfg):
+        nonlocal VALUE
+        VALUE = 2
+
+    cfg.add_transform(change_foo)
+    cfg.add_hook(change_value)
+
+    cfg.static_init()
+    assert cfg.schema_frozen
+    assert cfg.FOO == "baz"
+    assert VALUE == 2
+
+    cfg = CfgNode()
+    cfg.FOO = "bar"
+
+    def validate_foo(cfg):
+        assert cfg.FOO == "baz"
+
+    cfg.add_transform(validate_foo)
+    with pytest.raises(AssertionError):
+        cfg.static_init()

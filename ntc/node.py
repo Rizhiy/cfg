@@ -91,7 +91,7 @@ class CfgNode(UserDict, FullKeyParent):
         self._transforms = []
         self._hooks = []
 
-        self._module = None
+        self._module: list[str] = None
         self._safe_save = True
 
         if self._leaf_spec is not None:
@@ -153,7 +153,7 @@ class CfgNode(UserDict, FullKeyParent):
         cfg.transform()
         cfg.validate()
         cfg.run_hooks()
-        cfg.set_module(merge_cfg_module(module))
+        cfg._module = merge_cfg_module(module)
 
         return cfg
 
@@ -290,9 +290,6 @@ class CfgNode(UserDict, FullKeyParent):
             return attr.desc
         else:
             raise AssertionError("This should not happen!")
-
-    def set_module(self, module) -> None:
-        self._module = module
 
     def _set_attrs(self, attrs: list[tuple[str, Union[CfgNode, CfgLeaf]]]) -> None:
         for key, attr in attrs:
@@ -457,6 +454,13 @@ class CfgNode(UserDict, FullKeyParent):
     def _set_key_for_child(self, child: Union[CfgNode, CfgLeaf], key: str) -> None:
         child.key = key
         child.parent = self
+
+    def static_init(self):
+        """Default initialisation when config is used as is, instead of using load()"""
+        self.freeze_schema()
+        self.transform()
+        self.validate()
+        self.run_hooks()
 
 
 def _check_circular_path(new_node: CfgNode, key: str, parent_ids: list[int] = None):
