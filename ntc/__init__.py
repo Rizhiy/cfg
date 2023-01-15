@@ -6,4 +6,4 @@ from .interfaces import *
 from .leaf import *
 from .node import *
 
-__version__ = "2.2.1"
+__version__ = "2.3.0"
