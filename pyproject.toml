@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tests = [
+test = [
     "nt-dev>=0.34",
     "types-pyyaml",
 ]
