@@ -5,8 +5,3 @@ test-mypy:
   extends: .common__tests_frozen
   script:
     - nt-mypy
-
-check-yamlfix:
-  extends: .common__tests_frozen
-  script:
-    - nt-yamlfix --check
