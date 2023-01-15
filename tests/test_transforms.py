@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from ntc import CN
-from ntc.transforms import LoadFromEnvVars, LoadFromKeyValue
+from ntc.transforms import LoadFromEnvVars, LoadFromFile, LoadFromKeyValue
 
 DATA_DIR = Path(__file__).parent / "data" / "transforms"
 
@@ -15,12 +15,18 @@ def test_load_from_file():
     assert cfg.DICT.FOO2 == "Foo2 value from changes"
 
 
+def test_expand_user():
+    transform = LoadFromFile("~/foo/bar")
+    assert "~" not in str(transform._filepath)
+
+
 def test_LoadFromKeyValue():
     from .data.base_cfg import cfg as cfg_base
 
     cfg = cfg_base.inherit()
     flat_data = {"DICT.FOO": "Foo value from flat data", "STR": "Str value from flat data", "BOOL": True}
     cfg.add_transform(LoadFromKeyValue(flat_data))
+    cfg.freeze_schema()
     cfg.transform()
     assert cfg.DICT.FOO == flat_data["DICT.FOO"]
     assert cfg.DICT.FOO2 == "Default foo2 value"
@@ -37,6 +43,7 @@ def test_LoadFromEnvVars(monkeypatch):
     monkeypatch.setitem(os.environ, "NTCTESTS__BOOL", "true")
     cfg = cfg_base.inherit()
     cfg.add_transform(LoadFromEnvVars("NTCTESTS__"))
+    cfg.freeze_schema()
     cfg.transform()
     assert cfg.DICT.FOO == "Default foo value"
     assert cfg.DICT.FOO2 == "foo2 value from env"

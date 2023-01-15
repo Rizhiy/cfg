@@ -3,8 +3,10 @@ include: https://gitlab.com/api/v4/projects/41380302/repository/files/nt_dev%2Fr
 
 test-mypy:
   extends: .common__tests_frozen
-  script: [nt-mypy]
+  script:
+    - nt-mypy
 
 check-yamlfix:
   extends: .common__tests_frozen
-  script: [nt-yamlfix --check]
+  script:
+    - nt-yamlfix --check
