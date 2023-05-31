@@ -439,7 +439,7 @@ class CfgNode(UserDict, FullKeyParent):
             import_str, cls_name, args, kwargs = value.save_strs()
             lines.append(f"{import_str}\n")
             lines.append(f"{key} = {value.create_eval_str(cls_name, args, kwargs)}\n")
-        elif isinstance(value, list) and all([type(v) in valid_types for v in value]):
+        elif isinstance(value, list) and all(type(v) in valid_types for v in value):
             lines.append(f"{key} = {value!r}\n")
         else:
             message = f"Config was modified with unsavable value: {value!r}"
@@ -455,12 +455,14 @@ class CfgNode(UserDict, FullKeyParent):
         child.key = key
         child.parent = self
 
-    def static_init(self):
+    def static_init(self) -> CfgNode:
         """Default initialisation when config is used as is, instead of using load()"""
-        self.freeze_schema()
-        self.transform()
-        self.validate()
-        self.run_hooks()
+        cfg = self.clone()
+        cfg.freeze_schema()
+        cfg.transform()
+        cfg.validate()
+        cfg.run_hooks()
+        return cfg
 
 
 def _check_circular_path(new_node: CfgNode, key: str, parent_ids: list[int] = None):

@@ -238,14 +238,14 @@ def test_static_init():
     def change_foo(cfg):
         cfg.FOO = "baz"
 
-    def change_value(cfg):
+    def change_value(_):
         nonlocal VALUE
         VALUE = 2
 
     cfg.add_transform(change_foo)
     cfg.add_hook(change_value)
 
-    cfg.static_init()
+    cfg = cfg.static_init()
     assert cfg.schema_frozen
     assert cfg.FOO == "baz"
     assert VALUE == 2
