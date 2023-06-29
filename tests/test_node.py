@@ -259,3 +259,15 @@ def test_static_init():
     cfg.add_transform(validate_foo)
     with pytest.raises(AssertionError):
         cfg.static_init()
+
+
+def test_assign_node_and_check_schema():
+    cfg = CfgNode()
+    cfg.FOO = CfgNode()
+    cfg = cfg.static_init()
+
+    cfg2 = CfgNode()
+    cfg2.BAR = "bar"
+
+    cfg.FOO = cfg2
+    assert cfg.FOO.schema_frozen

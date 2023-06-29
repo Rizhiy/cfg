@@ -327,6 +327,8 @@ class CfgNode(UserDict, FullKeyParent):
             if not isinstance(cur_attr, CfgNode):
                 raise NodeReassignment(f"Can only swap CfgNode {self._child_full_key(key)} for another CfgNode")
             object.__setattr__(value, "_desc", cur_attr.describe())
+            if self.schema_frozen:
+                value.freeze_schema()
             super().__setitem__(key, value)
         elif isinstance(cur_attr, CfgLeaf):
             cur_attr.value = value
