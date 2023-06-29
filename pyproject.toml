@@ -10,6 +10,7 @@ requires-python = ">=3.9"
 dynamic = ["version", "description"]
 dependencies = [
     "pyyaml",
+    "nt-utils",
 ]
 
 [project.optional-dependencies]
@@ -39,3 +40,6 @@ exclude = ["tests/data"]
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "--doctest-modules"
+
+[project.scripts]
+ntc-output-dir = "ntc.helpers:_get_output_dir_cli"
