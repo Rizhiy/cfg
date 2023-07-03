@@ -21,10 +21,16 @@ DATA_DIR = Path(__file__).parent / "data" / "helpers"
 )
 def test_get_output_dir(cfg_path: str, output_path: Path):
     cfg = CN.load(DATA_DIR / cfg_path)
-    assert get_output_dir(cfg) == output_path
+    assert get_output_dir(cfg, mkdir=False) == output_path
 
 
 def test_get_output_dir_cli():
     path = DATA_DIR / "configs" / "subdir" / "simple.py"
-    output = subprocess.check_output(["ntc-output-dir", str(path)])
+    output = subprocess.check_output(["ntc-output-dir", str(path), "--mkdir", "False"])
     assert output.decode("utf-8").strip() == str(Path("output") / "subdir" / "simple")
+
+
+def test_get_output_dir_mkdir(tmp_path: Path):
+    cfg = CN.load(DATA_DIR / "configs" / "subdir" / "simple.py")
+    output_dir = get_output_dir(cfg, base_dir=tmp_path)
+    assert output_dir.exists()
