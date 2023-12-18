@@ -4,6 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "rizhiy-cfg"
+maintainers = [{name = "Artem Vasenin", email = "vasart169@gmail.com"}]
 authors = [{name = "Artem Vasenin", email = "vasart169@gmail.com"}, {name = "Vladimir Mikhaylov"}]
 readme = "README.md"
 license = {file = "LICENSE"}
