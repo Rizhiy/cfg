@@ -26,7 +26,7 @@ def test_get_output_dir(cfg_path: str, output_path: Path):
 
 def test_get_output_dir_cli():
     path = DATA_DIR / "configs" / "subdir" / "simple.py"
-    output = subprocess.check_output(["cfg-output-dir", str(path), "--mkdir"])
+    output = subprocess.check_output(["cfg-output-dir", str(path), "--mkdir"])  # noqa: S603, S607 False positives
     assert output.decode("utf-8").strip() == str(Path("output") / "subdir" / "simple")
 
 

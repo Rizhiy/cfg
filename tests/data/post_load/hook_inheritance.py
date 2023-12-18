@@ -6,7 +6,7 @@ from .hook import cfg
 
 
 def hook(cfg: CN) -> None:
-    print("Hook 2")
+    print(cfg.NAME + "Inherit")
 
 
 cfg = cfg.inherit()

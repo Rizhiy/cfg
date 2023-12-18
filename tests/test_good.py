@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 from functools import partial
 from pathlib import Path
 
 import pytest
 
-from cfg import CN, SaveError
+from cfg import CN
+from cfg.errors import SaveError
 from tests.data.base_cfg import cfg
 from tests.data.base_class import BaseClass, SavableClass, SubClass
 
@@ -35,7 +37,7 @@ def test_subclass():
 
 def test_list():
     cfg = CN.load(DATA_DIR / "list.py")
-    assert cfg.LIST == [3, 2, 1]
+    assert [3, 2, 1] == cfg.LIST
 
 
 def test_node():
@@ -89,7 +91,7 @@ def test_inheritance_changes():
 def test_inheritance_changes_separation():
     CN.load(DATA_DIR / "inheritance_changes.py")
     with pytest.raises(AttributeError):
-        cfg.DICT.BAR
+        cfg.DICT.BAR  # noqa: B018 Not useless, since it raises the error
 
 
 def test_inheritance_changes_multiple_loads():
@@ -142,7 +144,7 @@ def test_save_clone(tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("name", "value"), {"int": 2, "str": "bar", "float": 2.71, "path": Path("another"), "type": SubClass}.items()
+    ("name", "value"), {"int": 2, "str": "bar", "float": math.e, "path": Path("another"), "type": SubClass}.items(),
 )
 def test_save_safe_types(tmp_path, name, value):
     cfg = CN.load(DATA_DIR / "save_safe_types.py")

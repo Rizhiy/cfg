@@ -27,11 +27,11 @@ class LoadFromFile(TransformBase):
     require: bool = True
 
     def __post_init__(self) -> None:
-        self._filepath = self.filepath if isinstance(self.filepath, Path) else Path(self.filepath).expanduser()
+        self.filepath = self.filepath if isinstance(self.filepath, Path) else Path(self.filepath).expanduser()
 
     def get_updates(self) -> Optional[dict[str, Any]]:
         try:
-            with self._filepath.open() as fobj:
+            with self.filepath.open() as fobj:
                 return yaml.safe_load(fobj)
         except FileNotFoundError:
             if self.require:

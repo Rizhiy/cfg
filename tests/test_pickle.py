@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# ruff: noqa
+
 import pickle
 
 from cfg import CL, CN
@@ -21,6 +23,6 @@ def test_node_pickle():
     unpickled = pickle.loads(pickle.dumps(node))
 
     assert unpickled == node
-    for attr_name in node._BUILT_IN_ATTRS:
+    for attr_name in node._BUILT_IN_ATTRS:  # noqa: SLF001
         assert getattr(node, attr_name) == getattr(unpickled, attr_name)
     assert unpickled.get_raw("STR").full_key == node.get_raw("STR").full_key

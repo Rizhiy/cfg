@@ -5,7 +5,7 @@ import typing
 import pytest
 
 from cfg import CL
-from cfg.errors import MissingRequired, TypeMismatch
+from cfg.errors import MissingRequiredError, TypeMismatchError
 
 
 def test_str():
@@ -15,7 +15,7 @@ def test_str():
 
 def test_missing_required():
     leaf = CL(None, str, required=True)
-    with pytest.raises(MissingRequired):
+    with pytest.raises(MissingRequiredError):
         leaf.value = None
 
 
@@ -27,33 +27,33 @@ def test_wrong_subclass():
         pass
 
     leaf = CL(None, BaseClass, subclass=True)
-    with pytest.raises(TypeMismatch):
+    with pytest.raises(TypeMismatchError):
         leaf.value = AnotherClass
 
 
 def test_create_value():
     leaf = CL(42)
 
-    assert leaf.type == int
+    assert leaf.type is int
     assert leaf.value == 42
 
 
 def test_typing_types():
     leaf = CL(None, typing.Mapping)
-    leaf.value = dict(a=1)
-    with pytest.raises(TypeMismatch):
+    leaf.value = {"a": 1}
+    with pytest.raises(TypeMismatchError):
         leaf.value = [22]
 
     leaf = CL(None, typing.Sequence)
-    with pytest.raises(TypeMismatch):
-        leaf.value = dict(a=1)
+    with pytest.raises(TypeMismatchError):
+        leaf.value = {"a": 1}
     leaf.value = [22, "33"]
 
 
 def test_create_type():
     leaf = CL(str)
     assert leaf.value is None
-    assert leaf.type == str
+    assert leaf.type is str
     leaf.value = "test"
     assert leaf.value == "test"
 

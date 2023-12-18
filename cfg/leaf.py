@@ -4,7 +4,7 @@ from copy import deepcopy
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from cfg.errors import MissingRequired, SchemaError, TypeMismatch
+from cfg.errors import MissingRequiredError, SchemaError, TypeMismatchError
 from cfg.full_key_value import FullKeyValue
 
 from .utils import full_type_name
@@ -71,19 +71,19 @@ class CfgLeaf(FullKeyValue):
     def value(self, new_value) -> None:
         if new_value is None:
             if self._required:
-                raise MissingRequired(f"Can't set required value to None for {self}")
+                raise MissingRequiredError(f"Can't set required value to None for {self}")
         else:
             check_val = new_value.func if isinstance(new_value, partial) else new_value
             expected_type = full_type_name(self._type)
             if self._subclass and (not isinstance(check_val, type) or not issubclass(check_val, self._type)):
-                raise TypeMismatch(
+                raise TypeMismatchError(
                     f"Subclass of type <{expected_type}> expected,"
-                    f" but found {check_val!r} of type {type(check_val)} for {self}!"
+                    f" but found {check_val!r} of type {type(check_val)} for {self}!",
                 )
             if not self._subclass and not isinstance(check_val, self._type):
-                raise TypeMismatch(
+                raise TypeMismatchError(
                     f"Instance of type <{expected_type}> expected,"
-                    f" but found {check_val!r} of type {type(check_val)} for {self}!"
+                    f" but found {check_val!r} of type {type(check_val)} for {self}!",
                 )
         self._value = new_value
 
@@ -100,7 +100,7 @@ class CfgLeaf(FullKeyValue):
 
     def clone(self) -> CfgLeaf:
         return CfgLeaf(
-            deepcopy(self._value), self._type, required=self._required, subclass=self._subclass, desc=self._desc
+            deepcopy(self._value), self._type, required=self._required, subclass=self._subclass, desc=self._desc,
         )
 
     def check(self, leaf_spec: CfgLeaf) -> None:

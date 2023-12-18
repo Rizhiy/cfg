@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from cfg import CfgSavable
+from cfg.interfaces import CfgSavable
 
 
 class BaseClass:

@@ -17,10 +17,10 @@ def test_load_from_file():
 
 def test_expand_user():
     transform = LoadFromFile("~/foo/bar")
-    assert "~" not in str(transform._filepath)
+    assert "~" not in str(transform.filepath)
 
 
-def test_LoadFromKeyValue():
+def test_load_from_key_value():
     from .data.base_cfg import cfg as cfg_base
 
     cfg = cfg_base.inherit()
@@ -28,14 +28,14 @@ def test_LoadFromKeyValue():
     cfg.add_transform(LoadFromKeyValue(flat_data))
     cfg.freeze_schema()
     cfg.transform()
-    assert cfg.DICT.FOO == flat_data["DICT.FOO"]
+    assert flat_data["DICT.FOO"] == cfg.DICT.FOO
     assert cfg.DICT.FOO2 == "Default foo2 value"
-    assert cfg.STR == flat_data["STR"]
+    assert flat_data["STR"] == cfg.STR
     assert cfg_base.BOOL is False
     assert cfg.BOOL is True
 
 
-def test_LoadFromEnvVars(monkeypatch):
+def test_load_from_env_vars(monkeypatch):
     from .data.base_cfg import cfg as cfg_base
 
     monkeypatch.setitem(os.environ, "NTCTESTS__DICT__FOO2", "foo2 value from env")

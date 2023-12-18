@@ -9,11 +9,11 @@ class ConfigUseError(ConfigError, ValueError):
     pass
 
 
-class TypeMismatch(ConfigError):
+class TypeMismatchError(ConfigError):
     """Wrong type is used"""
 
 
-class NodeReassignment(ConfigError):
+class NodeReassignmentError(ConfigError):
     """Assigning value to node item"""
 
 
@@ -41,5 +41,5 @@ class ValidationError(ConfigError):
     """Config restrictions are not respected"""
 
 
-class MissingRequired(ValidationError):
+class MissingRequiredError(ValidationError):
     pass

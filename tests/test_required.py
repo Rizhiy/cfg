@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from cfg import CN, MissingRequired, SchemaError
+from cfg import CN
+from cfg.errors import MissingRequiredError, SchemaError
 
 from .data.base_class import BaseClass
 
@@ -12,12 +13,12 @@ DATA_DIR = Path(__file__).parent / "data" / "required"
 
 
 def test_missing():
-    with pytest.raises(MissingRequired):
+    with pytest.raises(MissingRequiredError):
         CN.load(DATA_DIR / "missing_leaf.py")
 
 
 def test_missing_spec():
-    with pytest.raises(MissingRequired):
+    with pytest.raises(MissingRequiredError):
         CN.load(DATA_DIR / "missing_spec.py")
 
 
@@ -54,5 +55,5 @@ def test_plain_value():
 
 
 def test_bad_plain_value():
-    with pytest.raises(MissingRequired):
+    with pytest.raises(MissingRequiredError):
         CN.load(DATA_DIR / "bad_plain_value.py")

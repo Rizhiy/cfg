@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from cfg import CN, TypeMismatch
-from cfg.errors import ConfigUseError
+from cfg import CN
+from cfg.errors import ConfigUseError, TypeMismatchError
 
 DATA_DIR = Path(__file__).parent / "data" / "description"
 
@@ -37,6 +37,6 @@ def test_description_inherited():
 
 
 def test_description_bad():
-    with pytest.raises(TypeMismatch) as excinfo:
+    with pytest.raises(TypeMismatchError) as excinfo:
         CN.load(DATA_DIR / "description_bad.py")
     assert "Described leaf" in str(excinfo.value)

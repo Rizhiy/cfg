@@ -13,8 +13,8 @@ import yaml
 from cfg.errors import (
     ConfigError,
     ConfigUseError,
-    MissingRequired,
-    NodeReassignment,
+    MissingRequiredError,
+    NodeReassignmentError,
     SaveError,
     SchemaError,
     SchemaFrozenError,
@@ -160,10 +160,10 @@ class CfgNode(UserDict, FullKeyParent):
     @staticmethod
     def validate_required(cfg: CfgNode) -> None:
         if cfg.leaf_spec is not None and cfg.leaf_spec.required and len(cfg) == 0:
-            raise MissingRequired(f"Missing required members for {cfg.leaf_spec} at key {cfg.full_key}")
+            raise MissingRequiredError(f"Missing required members for {cfg.leaf_spec} at key {cfg.full_key}")
         for _, attr in cfg.attrs:
             if isinstance(attr, CfgLeaf) and attr.required and attr.value is None:
-                raise MissingRequired(f"Key {attr} is required, but was not provided.")
+                raise MissingRequiredError(f"Key {attr} is required, but was not provided.")
 
     def save(self, path: Union[Path, str]) -> None:
         path = Path(path)
@@ -323,9 +323,9 @@ class CfgNode(UserDict, FullKeyParent):
         cur_attr = super().__getitem__(key)
         if isinstance(cur_attr, CfgNode):
             if cur_attr:
-                raise NodeReassignment(f"Non-empty CfgNode {self._child_full_key(key)} cannot be reassigned")
+                raise NodeReassignmentError(f"Non-empty CfgNode {self._child_full_key(key)} cannot be reassigned")
             if not isinstance(cur_attr, CfgNode):
-                raise NodeReassignment(f"Can only swap CfgNode {self._child_full_key(key)} for another CfgNode")
+                raise NodeReassignmentError(f"Can only swap CfgNode {self._child_full_key(key)} for another CfgNode")
             object.__setattr__(value, "_desc", cur_attr.describe())
             if self.schema_frozen:
                 value.freeze_schema()
@@ -400,7 +400,7 @@ class CfgNode(UserDict, FullKeyParent):
     def clear(self) -> None:
         if self._schema_frozen and not self._new_allowed:
             raise AttributeError(
-                f"Can only clear CfgNode when _new_allowed == True if schema is frozen: {self.full_key}"
+                f"Can only clear CfgNode when _new_allowed == True if schema is frozen: {self.full_key}",
             )
         for key in list(self.keys()):
             del self[key]

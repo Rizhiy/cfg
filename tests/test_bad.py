@@ -5,13 +5,14 @@ from pathlib import Path
 
 import pytest
 
-from cfg import CN, MissingRequired, ModuleError, SchemaError, SchemaFrozenError, TypeMismatch
+from cfg import CN
+from cfg.errors import MissingRequiredError, ModuleError, SchemaError, SchemaFrozenError, TypeMismatchError
 
 DATA_DIR = Path(__file__).parent / "data" / "bad"
 
 
 def test_bad_type():
-    with pytest.raises(TypeMismatch) as excinfo:
+    with pytest.raises(TypeMismatchError) as excinfo:
         CN.load(DATA_DIR / "bad_type.py")
     assert (
         str(excinfo.value)
@@ -26,7 +27,7 @@ def test_bad_attr():
 
 
 def test_bad_class():
-    with pytest.raises(TypeMismatch) as excinfo:
+    with pytest.raises(TypeMismatchError) as excinfo:
         CN.load(DATA_DIR / "bad_class.py")
     assert re.match(
         r"^Instance of type <tests.data.base_class.BaseClass> expected,"
@@ -38,7 +39,7 @@ def test_bad_class():
 
 
 def test_bad_node():
-    with pytest.raises((TypeMismatch, SchemaError)) as excinfo:
+    with pytest.raises((TypeMismatchError, SchemaError)) as excinfo:
         CN.load(DATA_DIR / "bad_node.py")
     assert re.match(
         r"^Instance of type <tests.data.base_class.BaseClass> expected,"
@@ -49,7 +50,7 @@ def test_bad_node():
 
 
 def test_bad_node_subclass():
-    with pytest.raises(TypeMismatch) as excinfo:
+    with pytest.raises(TypeMismatchError) as excinfo:
         CN.load(DATA_DIR / "bad_node_subclass.py")
     assert str(excinfo.value) == (
         "Subclass of type <tests.data.base_class.BaseClass> expected,"
@@ -59,7 +60,7 @@ def test_bad_node_subclass():
 
 
 def test_bad_node_required_subclass():
-    with pytest.raises(MissingRequired) as excinfo:
+    with pytest.raises(MissingRequiredError) as excinfo:
         CN.load(DATA_DIR / "bad_node_required_subclass.py")
     assert str(excinfo.value) == (
         "Can't set required value to None for CfgLeaf(<class 'tests.data.base_class.BaseClass'>) at cfg.SUBCLASS"
@@ -76,7 +77,7 @@ def test_bad_node_nested_subclass():
 
 
 def test_bad_node_instance():
-    with pytest.raises((TypeMismatch, SchemaError)) as excinfo:
+    with pytest.raises((TypeMismatchError, SchemaError)) as excinfo:
         CN.load(DATA_DIR / "bad_node_instance.py")
     assert re.match(
         r"^Subclass of type <tests.data.base_class.BaseClass> expected,"
@@ -88,7 +89,7 @@ def test_bad_node_instance():
 
 
 def test_inheritance_changes_bad():
-    with pytest.raises(TypeMismatch) as excinfo:
+    with pytest.raises(TypeMismatchError) as excinfo:
         CN.load(DATA_DIR / "inheritance_changes_bad.py")
     assert str(excinfo.value) == (
         "Instance of type <str> expected, but found 2 of type <class 'int'> for CfgLeaf(BAR) at cfg.DICT.BAR!"

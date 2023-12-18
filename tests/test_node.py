@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from cfg import CfgLeaf, CfgNode
-from cfg.errors import MissingRequired, NodeReassignment, SchemaFrozenError, TypeMismatch
+from cfg import CL, CN
+from cfg.errors import MissingRequiredError, NodeReassignmentError, SchemaFrozenError, TypeMismatchError
 
 
 class Quux:
@@ -21,7 +21,7 @@ class FooSubclass(Foo):
 
 @pytest.fixture()
 def basic_cfg():
-    cfg = CfgNode()
+    cfg = CN()
     cfg.FOO = 32
     return cfg
 
@@ -32,37 +32,37 @@ def test_define_with_value(basic_cfg):
     basic_cfg.FOO = 42
     assert basic_cfg.FOO == 42
 
-    with pytest.raises(TypeMismatch):
+    with pytest.raises(TypeMismatchError):
         basic_cfg.FOO = "foo"
 
 
 def test_define_with_type():
-    cfg = CfgNode()
+    cfg = CN()
 
     cfg.FOO = Foo
 
-    with pytest.raises(TypeMismatch):
+    with pytest.raises(TypeMismatchError):
         cfg.FOO = Quux
 
     cfg.FOO = FooSubclass
-    assert cfg.FOO == FooSubclass
+    assert FooSubclass == cfg.FOO
 
 
 def test_define_with_type_and_leaf():
-    cfg = CfgNode(CfgLeaf(Foo, Foo, subclass=True))
+    cfg = CN(CL(Foo, Foo, subclass=True))
 
     cfg.FOO = FooSubclass
 
-    with pytest.raises(TypeMismatch):
+    with pytest.raises(TypeMismatchError):
         cfg.FOO = Foo
 
-    assert cfg.FOO == FooSubclass
+    assert FooSubclass == cfg.FOO
 
 
 def test_define_with_leaf():
-    cfg = CfgNode()
+    cfg = CN()
 
-    cfg.FOO = CfgLeaf(32, int)
+    cfg.FOO = CL(32, int)
     assert cfg.FOO == 32
 
     cfg.FOO = 42
@@ -70,8 +70,8 @@ def test_define_with_leaf():
 
 
 def test_nested():
-    cfg = CfgNode()
-    cfg.FOO = CfgNode()
+    cfg = CN()
+    cfg.FOO = CN()
 
     cfg.FOO.BAR = 32
     assert cfg.FOO.BAR == 32
@@ -81,25 +81,25 @@ def test_nested():
 
 
 def test_nested_empty_reassign():
-    cfg = CfgNode()
-    cfg.FOO = CfgNode()
-    cfg2 = CfgNode()
+    cfg = CN()
+    cfg.FOO = CN()
+    cfg2 = CN()
     cfg2.foo = "bar"
     cfg.FOO = cfg2
     assert cfg.FOO.foo == "bar"
 
 
 def test_nested_non_empty_reassign_fail():
-    cfg = CfgNode()
-    cfg.FOO = CfgNode()
+    cfg = CN()
+    cfg.FOO = CN()
     cfg.FOO.foo = "bar"
-    with pytest.raises(NodeReassignment):
-        cfg.FOO = CfgNode()
+    with pytest.raises(NodeReassignmentError):
+        cfg.FOO = CN()
 
 
 def test_str(basic_cfg):
     cfg = basic_cfg
-    cfg.BAR = CfgNode()
+    cfg.BAR = CN()
     cfg.BAR.BAZ = "baz"
     cfg.QUUX = Quux()
 
@@ -108,25 +108,25 @@ def test_str(basic_cfg):
 
 
 def test_required():
-    cfg = CfgNode()
+    cfg = CN()
 
-    cfg.FOO = CfgLeaf(None, int, required=True)
+    cfg.FOO = CL(None, int, required=True)
     cfg.FOO = 42
     assert cfg.FOO == 42
     cfg.validate()
 
 
 def test_required_error():
-    cfg = CfgNode()
+    cfg = CN()
 
-    cfg.FOO = CfgLeaf(None, int, required=True)
-    with pytest.raises(MissingRequired):
+    cfg.FOO = CL(None, int, required=True)
+    with pytest.raises(MissingRequiredError):
         cfg.validate()
 
 
 def test_clone(basic_cfg):
     cfg1 = basic_cfg
-    cfg1.BAR = CfgNode()
+    cfg1.BAR = CN()
     cfg1.BAR.BAZ = "baz1"
 
     cfg2 = cfg1.clone()
@@ -149,12 +149,12 @@ def test_freeze_unfreeze_schema(basic_cfg):
 
 
 def test_new_allowed():
-    cfg = CfgNode()
-    cfg.FOO = CfgNode(new_allowed=True)
+    cfg = CN()
+    cfg.FOO = CN(new_allowed=True)
     cfg.freeze_schema()
 
     cfg.FOO.BAR = 42
-    cfg.FOO.QUUX = CfgNode()
+    cfg.FOO.QUUX = CN()
     with pytest.raises(SchemaFrozenError):
         cfg.BAZ = "baz"
 
@@ -164,14 +164,14 @@ def test_getitem(basic_cfg):
 
 
 def test_items():
-    cfg = CfgNode()
+    cfg = CN()
     cfg.FOO = "bar"
     cfg.BAR = "foo"
     assert set(cfg.items()) == {("FOO", "bar"), ("BAR", "foo")}
 
 
 def test_get():
-    cfg = CfgNode()
+    cfg = CN()
     cfg.FOO = "bar"
 
     assert cfg.get("FOO") == "bar"
@@ -182,7 +182,7 @@ def test_get():
 
 
 def test_init_from_dict():
-    cfg = CfgNode({"FOO": "bar", "BAR": {"BAZ": "foo"}})
+    cfg = CN({"FOO": "bar", "BAR": {"BAZ": "foo"}})
     assert cfg.FOO == "bar"
     assert cfg.BAR.BAZ == "foo"
 
@@ -193,7 +193,7 @@ def test_properties(basic_cfg):
 
 
 def test_clear_happy_path():
-    cfg = CfgNode(new_allowed=True)
+    cfg = CN(new_allowed=True)
     cfg.freeze_schema()
     cfg.test = "test"
 
@@ -208,20 +208,20 @@ def test_clear_schema_frozen_new_not_allowed(basic_cfg):
 
 
 def test_full_key():
-    part_cfg = CfgNode()
+    part_cfg = CN()
     part_cfg.FOO = "bar"
 
-    cfg = CfgNode()
+    cfg = CN()
     cfg.TEST = part_cfg
     assert cfg.TEST.get_raw("FOO").full_key == "cfg.TEST.FOO"
 
-    cfg2 = CfgNode()
+    cfg2 = CN()
     cfg2.BEST = cfg
     assert cfg2.BEST.TEST.get_raw("FOO").full_key == "cfg.BEST.TEST.FOO"
 
 
 def test_circular_dependency_key():
-    cfg = CfgNode()
+    cfg = CN()
 
     cfg.FOO = {"bar": cfg}  # This is allowed, since full_key doesn't follow through dicts
 
@@ -230,17 +230,17 @@ def test_circular_dependency_key():
 
 
 def test_static_init():
-    VALUE = 1
+    value = 1
 
-    cfg = CfgNode()
+    cfg = CN()
     cfg.FOO = "bar"
 
     def change_foo(cfg):
         cfg.FOO = "baz"
 
     def change_value(_):
-        nonlocal VALUE
-        VALUE = 2
+        nonlocal value
+        value = 2
 
     cfg.add_transform(change_foo)
     cfg.add_hook(change_value)
@@ -248,9 +248,9 @@ def test_static_init():
     cfg = cfg.static_init()
     assert cfg.schema_frozen
     assert cfg.FOO == "baz"
-    assert VALUE == 2
+    assert value == 2
 
-    cfg = CfgNode()
+    cfg = CN()
     cfg.FOO = "bar"
 
     def validate_foo(cfg):
@@ -262,11 +262,11 @@ def test_static_init():
 
 
 def test_assign_node_and_check_schema():
-    cfg = CfgNode()
-    cfg.FOO = CfgNode()
+    cfg = CN()
+    cfg.FOO = CN()
     cfg = cfg.static_init()
 
-    cfg2 = CfgNode()
+    cfg2 = CN()
     cfg2.BAR = "bar"
 
     cfg.FOO = cfg2
