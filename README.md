@@ -1,5 +1,6 @@
 # Python Configuration System
-![pipeline status](https://github.com/Rizhiy/cfg/blob/master/.github/workflows/test.yml/badge.svg)
+![tests](https://github.com/Rizhiy/cfg/actions/workflows/test_and_version.yml/badge.svg)
+![publish](https://github.com/Rizhiy/cfg/actions/workflows/publish.yml/badge.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io)
 
 ## Description
