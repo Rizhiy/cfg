@@ -118,3 +118,4 @@ pytest .
 
 ### Committing
 This repository follows semantic-release, which means all commit messages have to follow a [style](https://python-semantic-release.readthedocs.io/en/latest/commit-parsing.html).
+You can use tools like [commitizen](https://github.com/commitizen-tools/commitizen) to write your commits.
