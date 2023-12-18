@@ -44,7 +44,7 @@ exclude = [
 ]
 
 [tool.semantic_release]
-version_variable = ["rizhiy_cfg/__init__.py:__version__"]
+version_variables = ["rizhiy_cfg/__init__.py:__version__"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
