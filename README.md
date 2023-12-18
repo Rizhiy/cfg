@@ -1,17 +1,22 @@
-# NeuroTrade Config
-[![pipeline status](http://192.168.135.12/utilities/ntc/badges/master/pipeline.svg)](http://192.168.135.12/utilities/ntc/-/commits/master)
-[![coverage report](http://192.168.135.12/utilities/ntc/badges/master/coverage.svg)](http://192.168.135.12/utilities/ntc/-/commits/master)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+# Python Configuration System
+![pipeline status](https://github.com/Rizhiy/cfg/blob/master/.github/workflows/test.yml/badge.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io)
 
 ## Description
-Library to define configs for model run.
+Library to define configurations using python files.
+
+## Installation
+Recommended installation with pip:
+```bash
+pip install cfg
+```
 
 ### Usage
-1) Define first-level base config. It can represent a global base config shared between projects.
+1) Define config schema:
 
 ```python
-# global_base_cfg.py
-from ntc import CL, CN
+# project/config.py
+from cfg import CL, CN
 
 class BaseClass:
     pass
@@ -20,7 +25,7 @@ cfg = CN()  # Basic config node
 cfg.DICT = CN()  # Nested config node
 cfg.DICT.FOO = "FOO"  # Config leaf with actual value
 cfg.DICT.INT = 1
-cfg.NAME = CL(None, str, required=True)  # Specification of config leaf to be defined in children configs
+cfg.NAME = CL(None, str, required=True)  # Specification of config leaf to be defined with type
 cfg.CLASSES = CN(BaseClass)  # Config node with type specification of its config leafs
 cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))  # Config node with subclass specification of its config leafs
 cfg.VAL = CL(1, desc="Interesting description") # Config leaf with description
@@ -34,7 +39,6 @@ def validate(cfg: CN) -> None:
 def hook(cfg: CN) -> None:
     print("Loaded")
 
-
 # Add transform, validation & hooks function
 # Transforms are run after config is loaded and can change values in config
 cfg.add_transform(transform)
@@ -45,29 +49,14 @@ cfg.add_hook(hook)
 # Validators and hooks should not (and mostly cannot) modify the config
 ```
 
-2) Define second-level base config, inherited from the first-level one.
-It should represent all variables that are changed between experiments inside the project.
-It's allowed to add new config nodes to the overall config schema here. 
-
-```python
-# project/cfg.py
-from global_base_cfg import cfg
-
-# Use inherit() to inherit from the first-level config.
-cfg = cfg.inherit()
-
-# Schema changes are allowed here.
-cfg.DICT.BAR = "baz"
-```
-
-3) Set actual values for each leaf in the config, **the report has to be absolute**
+2) Set actual values for each leaf in the config, **the import has to be absolute**:
 ```python
 # my_cfg.py
-from ntc import CN
+from cfg import CN
 
-from project.cfg import cfg # Report has to be absolute
+from project.config import cfg # Import has to be absolute
 
-# Pass final schema as an argument to the CN() to inherit from the second-level config.
+# Pass schema as an argument to the CN() to init the schema
 cfg = CN(cfg)
 
 # Schema changes are not allowed here, only leafs can be altered.
@@ -90,22 +79,15 @@ There a few restrictions on imports in configs:
 * When you inherit config values from another file, that import has to be **relative**
 * Other than config inheritance, all other imports have to be **absolute**
 
-4) Load actual config and use it in the code. 
+3) Load actual config and use it in the code.
 ```python
 # main.py
 from ntc import CN
 
 cfg = CN.load("my_cfg.py")
-# Config cannot be altered after it is loaded.
+# Access values as attributes
 assert cfg.NAME == "Hello World!"
 assert cfg.DICT.FOO == "BAR"
-```
-
-
-## Installation
-Recommended installation with pip:
-```bash
-pip install ntc
 ```
 
 ## Development
@@ -113,11 +95,15 @@ pip install ntc
 ### Formatting
 This repository follows strict formatting style which will be checked by the CI.
 
-To properly format the code, use the **nt-dev** package:
+To properly format the code, use the [black](https://black.readthedocs.io) format:
 ```bash
-pip install nt-dev
-nt-format
+pip install -e ".[dev]"
+black .
 ```
 
 ### Testing
-To test code, install `nt-dev` and run `nt-test`.
+To test code, use [pytest](https://pytest.org):
+```bash
+pip install -e ".[test]"
+pytest .
+```

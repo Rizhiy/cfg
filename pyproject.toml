@@ -13,6 +13,9 @@ dependencies = [
     "pyyaml",
 ]
 
+[project.scripts]
+cfg-output-dir = "cfg.helpers:_get_output_dir_cli"
+
 [project.urls]
 Home = "https://github.com/Rizhiy/cfg"
 
@@ -23,9 +26,14 @@ test = [
 ]
 dev = [
     "cfg[test]",
+    "black",
     "ruff",
     "semantic-release",
 ]
+
+[tool.black]
+line-length = 120
+skip-magic-trailing-comma = true
 
 [tool.flit.sdist]
 include = [
@@ -43,5 +51,3 @@ version_variable = "ntc/__init__.py:__version__"
 minversion = "6.0"
 addopts = "--doctest-modules"
 
-[project.scripts]
-cfg-output-dir = "cfg.helpers:_get_output_dir_cli"
