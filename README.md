@@ -108,3 +108,6 @@ To test code, use [pytest](https://pytest.org):
 pip install -e ".[test]"
 pytest .
 ```
+
+### Committing
+This repository follows semantic-release, which means all commit messages have to follow a [style](https://python-semantic-release.readthedocs.io/en/latest/commit-parsing.html).
