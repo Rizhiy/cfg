@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from cfg import CN
-from cfg.transforms import LoadFromEnvVars, LoadFromFile, LoadFromKeyValue
+from rizhiy_cfg import CN
+from rizhiy_cfg.transforms import LoadFromEnvVars, LoadFromFile, LoadFromKeyValue
 
 DATA_DIR = Path(__file__).parent / "data" / "transforms"
 

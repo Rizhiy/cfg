@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from cfg import CN
-from cfg.helpers import get_output_dir
+from rizhiy_cfg import CN
+from rizhiy_cfg.helpers import get_output_dir
 
 DATA_DIR = Path(__file__).parent / "data" / "helpers"
 

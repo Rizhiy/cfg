@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cfg import CL
+from rizhiy_cfg import CL
 
 from ..base_cfg import cfg
 

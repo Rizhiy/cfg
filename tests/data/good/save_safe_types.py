@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from cfg import CN
+from rizhiy_cfg import CN
 from tests.data.base_cfg import cfg
 from tests.data.base_class import BaseClass
 

@@ -3,7 +3,7 @@ requires = ["flit_core >=3.4,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "cfg"
+name = "rizhiy-cfg"
 authors = [{name = "Artem Vasenin", email = "vasart169@gmail.com"}, {name = "Vladimir Mikhaylov"}]
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-cfg-output-dir = "cfg.helpers:_get_output_dir_cli"
+cfg-output-dir = "rizhiy_cfg.helpers:_get_output_dir_cli"
 
 [project.urls]
 Home = "https://github.com/Rizhiy/cfg"
@@ -45,7 +45,7 @@ exclude = [
 ]
 
 [tool.semantic_release]
-version_variable = "ntc/__init__.py:__version__"
+version_variable = "rizhiy_cfg/__init__.py:__version__"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

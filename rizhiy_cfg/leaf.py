@@ -4,8 +4,8 @@ from copy import deepcopy
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from cfg.errors import MissingRequiredError, SchemaError, TypeMismatchError
-from cfg.full_key_value import FullKeyValue
+from rizhiy_cfg.errors import MissingRequiredError, SchemaError, TypeMismatchError
+from rizhiy_cfg.full_key_value import FullKeyValue
 
 from .utils import full_type_name
 

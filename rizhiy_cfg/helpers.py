@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from cfg.node import CN
+from .node import CN
 
 
 def get_output_dir(cfg: CN, *, mkdir=True, base_dir=Path("output")) -> Path:

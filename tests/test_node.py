@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from cfg import CL, CN
-from cfg.errors import MissingRequiredError, NodeReassignmentError, SchemaFrozenError, TypeMismatchError
+from rizhiy_cfg import CL, CN
+from rizhiy_cfg.errors import MissingRequiredError, NodeReassignmentError, SchemaFrozenError, TypeMismatchError
 
 
 class Quux:

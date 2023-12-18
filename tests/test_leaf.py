@@ -4,8 +4,8 @@ import typing
 
 import pytest
 
-from cfg import CL
-from cfg.errors import MissingRequiredError, TypeMismatchError
+from rizhiy_cfg import CL
+from rizhiy_cfg.errors import MissingRequiredError, TypeMismatchError
 
 
 def test_str():

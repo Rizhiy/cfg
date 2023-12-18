@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cfg import CN
-from cfg.errors import SaveError
+from rizhiy_cfg import CN
+from rizhiy_cfg.errors import SaveError
 from tests.data.base_cfg import cfg
 from tests.data.base_class import BaseClass, SavableClass, SubClass
 

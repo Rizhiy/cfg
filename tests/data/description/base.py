@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cfg import CL, CN
+from rizhiy_cfg import CL, CN
 from tests.data.base_cfg import cfg
 
 cfg = cfg.inherit()

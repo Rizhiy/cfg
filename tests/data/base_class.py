@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from cfg.interfaces import CfgSavable
+from rizhiy_cfg.interfaces import CfgSavable
 
 
 class BaseClass:

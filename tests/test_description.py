@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from cfg import CN
-from cfg.errors import ConfigUseError, TypeMismatchError
+from rizhiy_cfg import CN
+from rizhiy_cfg.errors import ConfigUseError, TypeMismatchError
 
 DATA_DIR = Path(__file__).parent / "data" / "description"
 

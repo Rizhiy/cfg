@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cfg.node import CN
+from rizhiy_cfg.node import CN
 
 from ..base_cfg import cfg
 
