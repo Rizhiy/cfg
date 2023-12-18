@@ -88,7 +88,7 @@ class CfgLeaf(FullKeyValue):
         self._value = new_value
 
         if self._parent:
-            self._parent._update_module(self.key, new_value)
+            self._parent._update_module(self.key, new_value)  # noqa SLF001 Our class
 
     @property
     def desc(self):
@@ -109,8 +109,7 @@ class CfgLeaf(FullKeyValue):
         if leaf_spec.subclass != self.subclass:
             if leaf_spec.subclass:
                 raise SchemaError(f"{self} cannot have subclass == False")
-            else:
-                raise SchemaError(f"Value of {self} must be an instance of {leaf_spec.type}")
+            raise SchemaError(f"Value of {self} must be an instance of {leaf_spec.type}")
         if not issubclass(self.type, leaf_spec.type):
             raise SchemaError(f"Required type for {self} must be subclass of {leaf_spec.type}")
         if not leaf_spec.required and self.value is None:

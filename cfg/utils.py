@@ -3,18 +3,21 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
-from types import ModuleType
+from typing import TYPE_CHECKING
 
 import yaml
 
 from .errors import ModuleError
+
+if TYPE_CHECKING:
+    from typing import ModuleType
 
 
 def import_module(module_path: Path) -> ModuleType:
     package = _load_package(module_path.parent)
     module_name = module_path.stem
     if package:
-        module_name = ".".join((package, module_name))
+        module_name = f"{package}.{module_name}"
 
     return _load_module(module_name, module_path)
 
@@ -65,7 +68,7 @@ def add_yaml_str_representer():
 def _load_module(module_name: str, module_path: Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location(module_name, module_path)
     if spec is None:
-        raise Exception(f"Could not find an importable module at {module_name=!r}, {module_path=!r}")
+        raise ImportError(f"Could not find an importable module at {module_name=!r}, {module_path=!r}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -80,7 +83,7 @@ def _load_package(package_path: Path) -> str:
     package_name = package_path.stem
     parent_package_name = _load_package(package_path.parent)
     if parent_package_name:
-        package_name = ".".join((parent_package_name, package_name))
+        package_name = f"{parent_package_name}.{package_name}"
     _load_module(package_name, init_path)
 
     return package_name
@@ -91,8 +94,7 @@ def full_type_name(_type) -> str:
     class_name = getattr(_type, "__name__", None) or str(_type)
     if module is None or module == str.__class__.__module__:
         return class_name  # Avoid reporting __builtin__
-    else:
-        return f"{module}.{class_name}"
+    return f"{module}.{class_name}"
 
 
 def full_class_name(obj) -> str:

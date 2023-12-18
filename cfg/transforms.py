@@ -3,11 +3,12 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import yaml
 
-from .node import CN
+if TYPE_CHECKING:
+    from .node import CN
 
 
 @dataclass
@@ -74,8 +75,7 @@ class LoadFromEnvVars(TransformBase):
             return None
         key = key[len(self.prefix) :]  # key.removeprefix(prefix)  # noqa: E203
         # dots are not quite valid identifiers (in shell syntax).
-        key = key.replace("__", ".")
-        return key
+        return key.replace("__", ".")
 
     def get_updates(self) -> Optional[dict[str, Any]]:
         flat = {self._normalize_key(key): val for key, val in os.environ.items()}

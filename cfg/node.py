@@ -4,9 +4,8 @@ import inspect
 import logging
 import warnings
 from collections import UserDict
-from collections.abc import Callable
 from pathlib import Path, PosixPath
-from typing import Any, Union
+from typing import Any, Callable, Union
 
 import yaml
 
@@ -38,7 +37,6 @@ def _cfg_path_to_name(cfg_path: Path, root_name="configs"):
     >>> _cfg_path_to_name(Path("some/test/abc/bcd.py"), 'test')
     'abc/bcd'
     """
-    cfg_path.parts
     try:
         path_config_idx = cfg_path.parts.index(root_name)
     except ValueError:  # '... not in tuple'
@@ -125,7 +123,7 @@ class CfgNode(UserDict, FullKeyParent):
         try:
             return self[key]
         except KeyError:
-            raise AttributeError(key)
+            raise AttributeError(key) from None
 
     def __setattr__(self, key: str, value: Any) -> None:
         if key in self.RESERVED_KEYS:
@@ -149,11 +147,11 @@ class CfgNode(UserDict, FullKeyParent):
         if not cfg.schema_frozen:
             raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
         if hasattr(cfg, "NAME"):
-            cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path, cfg._root_name)
+            cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path, cfg._root_name)  # noqa: SLF001 Same class
         cfg.transform()
         cfg.validate()
         cfg.run_hooks()
-        cfg._module = merge_cfg_module(module)
+        cfg._module = merge_cfg_module(module)  # noqa: SLF001 Same class
 
         return cfg
 
@@ -176,7 +174,7 @@ class CfgNode(UserDict, FullKeyParent):
 
     def clone(self) -> CfgNode:
         cfg = CfgNode(self)
-        cfg._leaf_spec = self.leaf_spec
+        cfg._leaf_spec = self.leaf_spec  # noqa: SLF001 Same class
         return cfg
 
     def inherit(self) -> CfgNode:
@@ -190,7 +188,9 @@ class CfgNode(UserDict, FullKeyParent):
         Will be applied recursively on all nested nodes first
         """
         if not self._schema_frozen:
-            warnings.warn("Transforming without freezing schema is discouraged, as it frequently leads to bugs")
+            warnings.warn(
+                "Transforming without freezing schema is discouraged, as it frequently leads to bugs", stacklevel=2,
+            )
         for _, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.transform()
@@ -206,11 +206,11 @@ class CfgNode(UserDict, FullKeyParent):
             if isinstance(attr, CfgNode):
                 attr.validate()
         validators = [CfgNode.validate_required] + self._validators
-        for validator in validators:
-            try:
+        try:
+            for validator in validators:
                 validator(self)
-            except AssertionError as exc:
-                raise ValidationError from exc
+        except AssertionError as exc:
+            raise ValidationError from exc
 
     def run_hooks(self) -> None:
         """
@@ -251,7 +251,7 @@ class CfgNode(UserDict, FullKeyParent):
     @property
     def attrs(self) -> list[tuple[str, Union[CfgNode, CfgLeaf]]]:
         attrs_list = []
-        for key in super().keys():
+        for key in super().keys():  # noqa: SIM118 Doesn't work on super()
             value = self.get_raw(key)
             if isinstance(value, (CfgNode, CfgLeaf)):
                 attrs_list.append((key, value))
@@ -286,10 +286,9 @@ class CfgNode(UserDict, FullKeyParent):
         attr = super().__getitem__(key)
         if isinstance(attr, CfgNode):
             return attr.describe()
-        elif isinstance(attr, CfgLeaf):
+        if isinstance(attr, CfgLeaf):
             return attr.desc
-        else:
-            raise AssertionError("This should not happen!")
+        raise TypeError("This should not happen!")
 
     def _set_attrs(self, attrs: list[tuple[str, Union[CfgNode, CfgLeaf]]]) -> None:
         for key, attr in attrs:
@@ -333,7 +332,7 @@ class CfgNode(UserDict, FullKeyParent):
         elif isinstance(cur_attr, CfgLeaf):
             cur_attr.value = value
         else:
-            raise AssertionError("This should not happen!")
+            raise TypeError("This should not happen!")
 
     def _init_with_base(self, base: Union[dict, CfgNode]) -> None:
         if isinstance(base, CfgNode):
@@ -357,7 +356,7 @@ class CfgNode(UserDict, FullKeyParent):
                     value = CfgNode(value)
                 self[key] = value
         else:
-            raise Exception("This should not happen!")
+            raise TypeError("Got bad base for CfgNode!")
 
     def __reduce__(self):
         if not self.schema_frozen:
@@ -414,7 +413,7 @@ class CfgNode(UserDict, FullKeyParent):
 
     def _update_module(self, key: str, value) -> None:
         if self._parent is not None:
-            self._parent._update_module(f"{self.key}.{key}", value)
+            self._parent._update_module(f"{self.key}.{key}", value)  # noqa: SLF001 Same class
         if self._module is None:  # Before config is loaded
             return
         key = f"{self._default_key}.{key}"

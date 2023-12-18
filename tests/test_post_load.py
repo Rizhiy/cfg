@@ -39,7 +39,7 @@ def test_validate_changes_bad():
 def test_hook_changes(capsys):
     CN.load(DATA_DIR / "hook_changes.py")
     out = capsys.readouterr().out
-    assert out == "Hook 1\nHook 2\n"
+    assert out == "Name\nNameInherit\n"
 
 
 def test_hook_changes_bad():
