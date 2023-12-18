@@ -102,6 +102,13 @@ pip install -e ".[dev]"
 black .
 ```
 
+### Linting
+For linting and basic fixes [ruff](https://docs.astral.sh/ruff/) is used:
+```bash
+pip install -e ".[dev]"
+ruff check . --fix
+```
+
 ### Testing
 To test code, use [pytest](https://pytest.org):
 ```bash
