@@ -4,8 +4,8 @@ import typing
 
 import pytest
 
-from ntc import CL
-from ntc.errors import MissingRequired, TypeMismatch
+from cfg import CL
+from cfg.errors import MissingRequired, TypeMismatch
 
 
 def test_str():

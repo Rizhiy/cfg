@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ntc import CL
+from cfg import CL
 
 from ..base_class import BaseClass
 from .required_spec import cfg

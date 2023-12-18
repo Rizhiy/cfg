@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ntc import CL, CN
+from cfg import CL, CN
 from tests.data.base_cfg import cfg
 
 cfg = cfg.inherit()

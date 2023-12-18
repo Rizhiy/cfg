@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from ntc import CfgLeaf, CfgNode
-from ntc.errors import MissingRequired, NodeReassignment, SchemaFrozenError, TypeMismatch
+from cfg import CfgLeaf, CfgNode
+from cfg.errors import MissingRequired, NodeReassignment, SchemaFrozenError, TypeMismatch
 
 
 class Quux:

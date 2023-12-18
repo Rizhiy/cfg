@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ntc import CL, CN
+from cfg import CL, CN
 from tests.data.description.base import cfg
 
 cfg = CN(cfg)

@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, SchemaFrozenError
-from ntc.errors import ValidationError
+from cfg import CN, SchemaFrozenError
+from cfg.errors import ValidationError
 
 DATA_DIR = Path(__file__).parent / "data" / "post_load"
 

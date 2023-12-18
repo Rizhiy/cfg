@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, TypeMismatch
-from ntc.errors import ConfigUseError
+from cfg import CN, TypeMismatch
+from cfg.errors import ConfigUseError
 
 DATA_DIR = Path(__file__).parent / "data" / "description"
 

@@ -4,8 +4,8 @@ from copy import deepcopy
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from ntc.errors import MissingRequired, SchemaError, TypeMismatch
-from ntc.full_key_value import FullKeyValue
+from cfg.errors import MissingRequired, SchemaError, TypeMismatch
+from cfg.full_key_value import FullKeyValue
 
 from .utils import full_type_name
 

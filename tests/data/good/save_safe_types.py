@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ntc import CN
+from cfg import CN
 from tests.data.base_cfg import cfg
 from tests.data.base_class import BaseClass
 

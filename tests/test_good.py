@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, SaveError
+from cfg import CN, SaveError
 from tests.data.base_cfg import cfg
 from tests.data.base_class import BaseClass, SavableClass, SubClass
 

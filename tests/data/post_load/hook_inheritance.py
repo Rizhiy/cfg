@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ntc import CN
+from cfg import CN
 
 from .hook import cfg
 

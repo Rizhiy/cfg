@@ -3,23 +3,28 @@ requires = ["flit_core >=3.4,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "ntc"
-authors = [{name = "Vladimir Mikhaylov", email = "v.mikhaylov@neurotrade.ru"}]
+name = "cfg"
+authors = [{name = "Artem Vasenin", email = "vasart169@gmail.com"}, {name = "Vladimir Mikhaylov"}]
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.9"
 dynamic = ["version", "description"]
 dependencies = [
     "pyyaml",
-    "nt-utils",
 ]
+
+[project.urls]
+Home = "https://github.com/Rizhiy/cfg"
 
 [project.optional-dependencies]
 test = [
-    "nt-dev>=0.34",
     "types-pyyaml",
+    "pytest",
 ]
 dev = [
-    "ntc[test]",
+    "cfg[test]",
+    "ruff",
+    "semantic-release",
 ]
 
 [tool.flit.sdist]
@@ -34,12 +39,9 @@ exclude = [
 [tool.semantic_release]
 version_variable = "ntc/__init__.py:__version__"
 
-[tool.mypy]
-exclude = ["tests/data"]
-
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "--doctest-modules"
 
 [project.scripts]
-ntc-output-dir = "ntc.helpers:_get_output_dir_cli"
+cfg-output-dir = "cfg.helpers:_get_output_dir_cli"

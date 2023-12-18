@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN
-from ntc.helpers import get_output_dir
+from cfg import CN
+from cfg.helpers import get_output_dir
 
 DATA_DIR = Path(__file__).parent / "data" / "helpers"
 
@@ -26,7 +26,7 @@ def test_get_output_dir(cfg_path: str, output_path: Path):
 
 def test_get_output_dir_cli():
     path = DATA_DIR / "configs" / "subdir" / "simple.py"
-    output = subprocess.check_output(["ntc-output-dir", str(path), "--mkdir", "False"])
+    output = subprocess.check_output(["cfg-output-dir", str(path), "--mkdir"])
     assert output.decode("utf-8").strip() == str(Path("output") / "subdir" / "simple")
 
 

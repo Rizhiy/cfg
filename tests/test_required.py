@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, MissingRequired, SchemaError
+from cfg import CN, MissingRequired, SchemaError
 
 from .data.base_class import BaseClass
 

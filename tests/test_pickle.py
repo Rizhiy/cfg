@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pickle
 
-from ntc import CL, CN
+from cfg import CL, CN
 
 
 def test_leaf_pickle():

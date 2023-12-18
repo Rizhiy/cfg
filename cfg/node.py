@@ -10,7 +10,7 @@ from typing import Any, Union
 
 import yaml
 
-from ntc.errors import (
+from cfg.errors import (
     ConfigError,
     ConfigUseError,
     MissingRequired,
@@ -20,9 +20,9 @@ from ntc.errors import (
     SchemaFrozenError,
     ValidationError,
 )
-from ntc.full_key_value import FullKeyParent
-from ntc.interfaces import CfgSavable
-from ntc.utils import add_yaml_str_representer, import_module, merge_cfg_module
+from cfg.full_key_value import FullKeyParent
+from cfg.interfaces import CfgSavable
+from cfg.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 from .leaf import CfgLeaf
 
@@ -421,7 +421,7 @@ class CfgNode(UserDict, FullKeyParent):
 
         for info in inspect.stack()[1:]:
             # Kind of a hack, need to keep track of all our files
-            if "/".join(info.filename.rsplit("/")[-2:]) in ["ntc/node.py", "ntc/leaf.py"]:
+            if "/".join(info.filename.rsplit("/")[-2:]) in ["cfg/node.py", "cfg/leaf.py"]:
                 continue
             reference_comment = f"# {info.filename}:{info.lineno} {info.code_context[0]}"
             break

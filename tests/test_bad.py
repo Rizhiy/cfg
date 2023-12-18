@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ntc import CN, MissingRequired, ModuleError, SchemaError, SchemaFrozenError, TypeMismatch
+from cfg import CN, MissingRequired, ModuleError, SchemaError, SchemaFrozenError, TypeMismatch
 
 DATA_DIR = Path(__file__).parent / "data" / "bad"
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from ntc import CN
-from ntc.transforms import LoadFromEnvVars, LoadFromFile, LoadFromKeyValue
+from cfg import CN
+from cfg.transforms import LoadFromEnvVars, LoadFromFile, LoadFromKeyValue
 
 DATA_DIR = Path(__file__).parent / "data" / "transforms"
 
