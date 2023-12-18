@@ -2,6 +2,25 @@
 
 
 
+## v4.0.1 (2023-12-18)
+
+### Chore
+
+* chore(pyproject.toml): Add maintainers section ([`d1a6344`](https://github.com/Rizhiy/cfg/commit/d1a6344a7c15db2714d630bc9f71ddf148773c30))
+
+### Documentation
+
+* docs(README.md): Add note about ruff ([`8acd18b`](https://github.com/Rizhiy/cfg/commit/8acd18bcf97be00d7c74cf21ec0d0e6cf0d9923b))
+
+* docs(README.md): Add note about commit messages ([`82f1b40`](https://github.com/Rizhiy/cfg/commit/82f1b4085eee68dae53dcecb0149eab16dee4e10))
+
+* docs(README.md): Update badge ([`2a2e7ad`](https://github.com/Rizhiy/cfg/commit/2a2e7ad3c5145d60e1b35bb5bbcbda38c903fb7b))
+
+### Fix
+
+* fix: Clean-up ([`57fdc3e`](https://github.com/Rizhiy/cfg/commit/57fdc3ef278d36d3ba72db484498821dda59a1b2))
+
+
 ## v4.0.0 (2023-12-18)
 
 ### Breaking
@@ -16,39 +35,39 @@ BREAKING CHANGE: Rename package to cfg ([`86d47d5`](https://github.com/Rizhiy/cf
 
 ### Chore
 
-* chore(test_and_version.yml): Update back to 8 ([`19adbd3`](https://github.com/Rizhiy/cfg/commit/19adbd3da4764d6f0db25caec1b17d1c589e62c5))
+* chore(test_and_publish.yml): Add publish step
 
-* chore(test_and_version.yml): Downgrade semantic-release version ([`367a709`](https://github.com/Rizhiy/cfg/commit/367a7095177b7bbc03b6dc3c4869dfa1a338b534))
+chore(test_and_publish.yml): Set up automatic version update
 
-* chore(publish.yml): Add FLIT_USERNAME ([`f168a62`](https://github.com/Rizhiy/cfg/commit/f168a6256e0b93ca7576382bc683e7dfb2e33e7a))
+chore(pyproject.toml): Trying to fix install
 
-* chore(workflows): Try match on commit message ([`2ce3e85`](https://github.com/Rizhiy/cfg/commit/2ce3e85fd2811d44f6966203f726442f9398a142))
+chore(test_and_publish.yml): Fix step name
 
-* chore(workflows): Filter whole workflows by tag ([`d5ab8f3`](https://github.com/Rizhiy/cfg/commit/d5ab8f327043607f2717bae44636129ae8d272c4))
+chore(pyproject.toml): Try pushing release without token
 
-* chore: Debugging skipped step ([`fa8c975`](https://github.com/Rizhiy/cfg/commit/fa8c975cca142c848f6893a804e4f052515e5489))
+chore(test_and_publish.yml): Try simple push
 
-* chore(workflows): Update tag rules ([`8879b3a`](https://github.com/Rizhiy/cfg/commit/8879b3a013438dacf454e94204c4ccfedc488c87))
+chore(test_and_publish.yml): Add write permissions
 
-* chore(workflows): Update conditions and variables ([`ec0ed79`](https://github.com/Rizhiy/cfg/commit/ec0ed79b3e74e311704872157c02c67fe6112ae1))
+chore(publish.yml): Move publish into separate workflow and update rules
 
-* chore(test_and_version.yml): Use PAT ([`b57116a`](https://github.com/Rizhiy/cfg/commit/b57116ac2b93b9c4794bf2b2407a96b8c1847f4a))
+chore(test_and_version.yml): Use PAT
 
-* chore(publish.yml): Move publish into separate workflow and update rules ([`db2bd43`](https://github.com/Rizhiy/cfg/commit/db2bd4346bc11b1bf2522375fb883730cb13e0b2))
+chore(workflows): Update conditions and variables
 
-* chore(test_and_publish.yml): Add write permissions ([`b36edc9`](https://github.com/Rizhiy/cfg/commit/b36edc944952b3645a87fd15fc1964d068b17585))
+chore(workflows): Update tag rules
 
-* chore(test_and_publish.yml): Try simple push ([`4aab95a`](https://github.com/Rizhiy/cfg/commit/4aab95ab5b29848b1ab5ebb8db6562e81a0460dd))
+chore: Debugging skipped step
 
-* chore(pyproject.toml): Try pushing release without token ([`5417c1d`](https://github.com/Rizhiy/cfg/commit/5417c1db6c885ab188914ffb321f0369afd0718c))
+chore(workflows): Filter whole workflows by tag
 
-* chore(test_and_publish.yml): Fix step name ([`4d2c0b5`](https://github.com/Rizhiy/cfg/commit/4d2c0b56060f75d6217954d58a5446c836990ecf))
+chore(workflows): Try match on commit message
 
-* chore(pyproject.toml): Trying to fix install ([`5d3ea57`](https://github.com/Rizhiy/cfg/commit/5d3ea5704ba7772cb9b0e9695bc038081c68b8bd))
+chore(publish.yml): Add FLIT_USERNAME
 
-* chore(test_and_publish.yml): Set up automatic version update ([`c24ad6c`](https://github.com/Rizhiy/cfg/commit/c24ad6c450997b39f4b51d970309e58896a082e1))
+chore(test_and_version.yml): Downgrade semantic-release version
 
-* chore(test_and_publish.yml): Add publish step ([`8d6c3fc`](https://github.com/Rizhiy/cfg/commit/8d6c3fc8c12e33b339969bb9655d79052ed3567c))
+chore(test_and_version.yml): Add semantic release ([`2f455fe`](https://github.com/Rizhiy/cfg/commit/2f455fee49b5e6188cf2eaef64b8828071b97bf1))
 
 * chore(test.yml): Add ruff to github actions ([`1d53cac`](https://github.com/Rizhiy/cfg/commit/1d53cac24d689c318dac520f6ec8d937610881dc))
 
