@@ -25,10 +25,9 @@ test = [
     "pytest",
 ]
 dev = [
-    "cfg[test]",
+    "rizhiy-cfg[test]",
     "black",
     "ruff",
-    "semantic-release",
 ]
 
 [tool.black]
@@ -45,7 +44,7 @@ exclude = [
 ]
 
 [tool.semantic_release]
-version_variable = "rizhiy_cfg/__init__.py:__version__"
+version_variable = ["rizhiy_cfg/__init__.py:__version__"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
