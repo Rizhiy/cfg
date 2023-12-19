@@ -92,32 +92,12 @@ assert cfg.DICT.FOO == "BAR"
 ```
 
 ## Development
-
-### Formatting
-This repository follows strict formatting style which will be checked by the CI.
-
-To properly format the code, use the [black](https://black.readthedocs.io) format:
-```bash
-pip install -e ".[dev]"
-black .
-```
-
-### Linting
-For linting and basic fixes [ruff](https://docs.astral.sh/ruff/) is used:
-```bash
-pip install -e ".[dev]"
-ruff check . --fix
-```
-
-### Testing
-To test code, use [pytest](https://pytest.org):
-```bash
-pip install -e ".[test]"
-pytest .
-```
-
-### Committing
-This repository follows semantic-release, which means all commit messages have to follow a [style](https://python-semantic-release.readthedocs.io/en/latest/commit-parsing.html).
+- Install dev dependencies: `pip install -e ".[dev]"`
+- For linting and basic fixes [ruff](https://docs.astral.sh/ruff/) is used: `ruff check . --fix`
+- This repository follows strict formatting style which will be checked by the CI.
+To properly format the code, use the [black](https://black.readthedocs.io) format: `black .`
+- To test code, use [pytest](https://pytest.org): `pytest .`
+- This repository follows semantic-release, which means all commit messages have to follow a [style](https://python-semantic-release.readthedocs.io/en/latest/commit-parsing.html).
 You can use tools like [commitizen](https://github.com/commitizen-tools/commitizen) to write your commits.
 
 
