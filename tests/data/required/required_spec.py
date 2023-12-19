@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from rizhiy_cfg import CL, CN
+from pycs import CL, CN
 
 from ..base_cfg import cfg
 from ..base_class import BaseClass

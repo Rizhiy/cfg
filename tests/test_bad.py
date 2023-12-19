@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from rizhiy_cfg import CN
-from rizhiy_cfg.errors import MissingRequiredError, ModuleError, SchemaError, SchemaFrozenError, TypeMismatchError
+from pycs import CN
+from pycs.errors import MissingRequiredError, ModuleError, SchemaError, SchemaFrozenError, TypeMismatchError
 
 DATA_DIR = Path(__file__).parent / "data" / "bad"
 

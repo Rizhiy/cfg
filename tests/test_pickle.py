@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pickle
 
-from rizhiy_cfg import CL, CN
+from pycs import CL, CN
 
 
 def test_leaf_pickle():

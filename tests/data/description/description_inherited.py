@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from rizhiy_cfg import CL, CN
+from pycs import CL, CN
 from tests.data.description.base import cfg
 
 cfg = CN(cfg)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from rizhiy_cfg import CN
+from pycs import CN
 from tests.data.post_load.hook import cfg
 
 

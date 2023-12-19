@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from rizhiy_cfg import CN
+from pycs import CN
 from tests.data.base_class import BaseClass
 
 from ..good.good import cfg

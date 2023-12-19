@@ -9,7 +9,7 @@ from typing import Any, Callable, Union
 
 import yaml
 
-from rizhiy_cfg.errors import (
+from pycs.errors import (
     ConfigError,
     ConfigUseError,
     MissingRequiredError,
@@ -19,9 +19,9 @@ from rizhiy_cfg.errors import (
     SchemaFrozenError,
     ValidationError,
 )
-from rizhiy_cfg.full_key_value import FullKeyParent
-from rizhiy_cfg.interfaces import CfgSavable
-from rizhiy_cfg.utils import add_yaml_str_representer, import_module, merge_cfg_module
+from pycs.full_key_value import FullKeyParent
+from pycs.interfaces import CfgSavable
+from pycs.utils import add_yaml_str_representer, import_module, merge_cfg_module
 
 from .leaf import CfgLeaf
 

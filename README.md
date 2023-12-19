@@ -9,7 +9,7 @@ Library to define configurations using python files.
 ## Installation
 Recommended installation with pip:
 ```bash
-pip install rizhiy-cfg
+pip install pycs
 ```
 
 ### Usage
@@ -17,7 +17,7 @@ pip install rizhiy-cfg
 
 ```python
 # project/config.py
-from rizhiy_cfg import CL, CN
+from pycs import CL, CN
 
 class BaseClass:
     pass
@@ -53,7 +53,7 @@ cfg.add_hook(hook)
 2) Set actual values for each leaf in the config, **the import has to be absolute**:
 ```python
 # my_cfg.py
-from rizhiy_cfg import CN
+from pycs import CN
 
 from project.config import cfg # Import has to be absolute
 
@@ -83,7 +83,7 @@ There a few restrictions on imports in configs:
 3) Load actual config and use it in the code.
 ```python
 # main.py
-from rizhiy_cfg import CN
+from pycs import CN
 
 cfg = CN.load("my_cfg.py")
 # Access values as attributes

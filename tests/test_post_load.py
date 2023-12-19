@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from rizhiy_cfg import CN
-from rizhiy_cfg.errors import SchemaFrozenError, ValidationError
+from pycs import CN
+from pycs.errors import SchemaFrozenError, ValidationError
 
 DATA_DIR = Path(__file__).parent / "data" / "post_load"
 

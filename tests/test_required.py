@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from rizhiy_cfg import CN
-from rizhiy_cfg.errors import MissingRequiredError, SchemaError
+from pycs import CN
+from pycs.errors import MissingRequiredError, SchemaError
 
 from .data.base_class import BaseClass
 
