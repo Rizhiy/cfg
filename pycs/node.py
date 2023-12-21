@@ -465,6 +465,9 @@ class CfgNode(UserDict, FullKeyParent):
         cfg.run_hooks()
         return cfg
 
+    def load_or_static(self, path: Path = None) -> CfgNode:
+        return self.load(path) if path else self.static_init()
+
 
 def _check_circular_path(new_node: CfgNode, key: str, parent_ids: list[int] = None):
     parent_ids = parent_ids or []
