@@ -31,10 +31,6 @@ dev = [
     "ruff",
 ]
 
-[tool.black]
-line-length = 120
-skip-magic-trailing-comma = true
-
 [tool.flit.sdist]
 include = [
     "README.md",
@@ -51,6 +47,10 @@ version_variables = ["pycs/__init__.py:__version__"]
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "--doctest-modules"
+
+[tool.black]
+line-length = 120
+skip-magic-trailing-comma = true
 
 [tool.ruff]
 target-version = "py39"
@@ -69,6 +69,9 @@ ignore = ["UP035", "RET503", "S113", "TD002", "TD003", "N817", "FIX002", "TRY003
     "UP007", "A003", "PTH123", "E203", "FURB113",
 ]
 [tool.ruff.per-file-ignores]
+"**/__init__.py" = [
+    "F401", # Allow unused imports in module files
+]
 "tests/**/*.py" = [
     "S101", # Asserts in tests are fine
     "T201", # Prints are useful for debugging
@@ -80,7 +83,4 @@ ignore = ["UP035", "RET503", "S113", "TD002", "TD003", "N817", "FIX002", "TRY003
 ]
 "tests/data/**/*.py" = [
     "TID252", # Have to use relative imports in configs
-]
-"**/__init__.py" = [
-    "F401", # Allow unused imports in module files
 ]
