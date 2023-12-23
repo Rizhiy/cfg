@@ -22,14 +22,6 @@ Home = "https://github.com/Rizhiy/pycs"
 test = ["pytest", "types-pyyaml"]
 dev = ["black", "pycs[test]", "ruff"]
 
-[tool.black]
-line-length = 120
-skip-magic-trailing-comma = true
-
-[tool.yamlfix]
-line_length = 120
-section_whitelines = 1
-
 [tool.flit.sdist]
 include = ["README.md"]
 exclude = [".github", ".gitignore", "tests/*"]
@@ -40,6 +32,18 @@ version_variables = ["pycs/__init__.py:__version__"]
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "--doctest-modules"
+
+[tool.black]
+line-length = 120
+skip-magic-trailing-comma = true
+
+[tool.yamlfix]
+line_length = 120
+section_whitelines = 1
+
+[tool.pyright]
+strictParameterNoneValue = false
+typeCheckingMode = "basic"
 
 [tool.ruff]
 target-version = "py39"

@@ -70,8 +70,8 @@ class CfgNode(UserDict, FullKeyParent):
     def __init__(self, first: Any = None, *, schema_frozen=False, new_allowed=False, desc: str = None):
         super().__init__()
         # Have to repeat it here for correct interaction with __getattr__
-        self._parent: CfgNode = None
-        self._key: str = None
+        self._parent: CfgNode | None = None
+        self._key: str | None = None
 
         if isinstance(first, (dict, CfgNode)):
             base, leaf_spec = first, None
@@ -90,7 +90,7 @@ class CfgNode(UserDict, FullKeyParent):
         self._transforms = []
         self._hooks = []
 
-        self._module: list[str] = None
+        self._module: list[str] | None = None
         self._safe_save = True
 
         if self._leaf_spec is not None:
@@ -190,7 +190,8 @@ class CfgNode(UserDict, FullKeyParent):
         """
         if not self._schema_frozen:
             warnings.warn(
-                "Transforming without freezing schema is discouraged, as it frequently leads to bugs", stacklevel=2,
+                "Transforming without freezing schema is discouraged, as it frequently leads to bugs",
+                stacklevel=2,
             )
         for _, attr in self.attrs:
             if isinstance(attr, CfgNode):
@@ -275,10 +276,10 @@ class CfgNode(UserDict, FullKeyParent):
         return self._schema_frozen
 
     @property
-    def leaf_spec(self) -> CfgLeaf:
+    def leaf_spec(self) -> CfgLeaf | None:
         return self._leaf_spec
 
-    def describe(self, key: str = None) -> str:
+    def describe(self, key: str = None) -> str | None:
         if key is None:
             return self._desc
         if key not in self:
@@ -387,8 +388,8 @@ class CfgNode(UserDict, FullKeyParent):
 
     def _value_to_set_from_value(self, value: Any, key: str) -> CfgLeaf:
         if self.leaf_spec:
+            leaf = self.leaf_spec.clone()
             try:
-                leaf = self.leaf_spec.clone()
                 leaf.value = value
             except ConfigError:
                 # Set key and parent to get proper error message
@@ -413,10 +414,10 @@ class CfgNode(UserDict, FullKeyParent):
         iterator = chain(iter_mapping, new_kwargs_dict.items())
 
         for key, value in iterator:
-            if key in self and isinstance(self[key], Mapping):
-                self[key].update(value)
+            if key in self and isinstance(self[key], Mapping):  # type: ignore
+                self[key].update(value)  # type: ignore
             else:
-                self[key] = value
+                self[key] = value  # type: ignore
 
     def _update_module(self, key: str, value) -> None:
         if self._parent is not None:
@@ -425,11 +426,12 @@ class CfgNode(UserDict, FullKeyParent):
             return
         key = f"{self._default_key}.{key}"
 
+        reference_comment = "# <Source not found>"
         for info in inspect.stack()[1:]:
             # Kind of a hack, need to keep track of all our files
             if "/".join(info.filename.rsplit("/")[-2:]) in ["cfg/node.py", "cfg/leaf.py"]:
                 continue
-            reference_comment = f"# {info.filename}:{info.lineno} {info.code_context[0]}"
+            reference_comment = f"# {info.filename}:{info.lineno} {info.code_context[0]}"  # type: ignore
             break
 
         lines = [reference_comment]
