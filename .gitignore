@@ -10,3 +10,4 @@ dist
 build
 *.pkl
 .coverage
+__pycache__
