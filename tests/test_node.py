@@ -271,3 +271,31 @@ def test_assign_node_and_check_schema():
 
     cfg.FOO = cfg2
     assert cfg.FOO.schema_frozen
+
+
+class TestCfgNodeUpdate:
+    @pytest.fixture()
+    def cfg(self) -> CN:
+        cfg = CN()
+        cfg.FOO = "BAR"
+        return cfg
+
+    def test_update_dict(self, cfg: CN):
+        cfg.update({"FOO": "dict", "new": "bar"})
+        assert cfg.FOO == "dict"
+        assert cfg.new == "bar"
+
+    def test_update_iterable(self, cfg: CN):
+        cfg.update([("FOO", "iter"), ("new", "bar")])
+        assert cfg.FOO == "iter"
+        assert cfg.new == "bar"
+
+    def test_update_kwargs(self, cfg: CN):
+        cfg.update(FOO="kwargs", new="bar")
+        assert cfg.FOO == "kwargs"
+        assert cfg.new == "bar"
+
+    def test_update_both(self, cfg: CN):
+        cfg.update({"FOO": "both"}, new="bar")
+        assert cfg.FOO == "both"
+        assert cfg.new == "bar"

@@ -4,8 +4,9 @@ import inspect
 import logging
 import warnings
 from collections import UserDict
+from itertools import chain
 from pathlib import Path, PosixPath
-from typing import Any, Callable, Union
+from typing import Any, Callable, Iterable, Mapping, MutableMapping, Union
 
 import yaml
 
@@ -189,7 +190,7 @@ class CfgNode(UserDict, FullKeyParent):
         """
         if not self._schema_frozen:
             warnings.warn(
-                "Transforming without freezing schema is discouraged, as it frequently leads to bugs", stacklevel=2,
+                "Transforming without freezing schema is discouraged, as it frequently leads to bugs", stacklevel=2
             )
         for _, attr in self.attrs:
             if isinstance(attr, CfgNode):
@@ -399,14 +400,20 @@ class CfgNode(UserDict, FullKeyParent):
     def clear(self) -> None:
         if self._schema_frozen and not self._new_allowed:
             raise AttributeError(
-                f"Can only clear CfgNode when _new_allowed == True if schema is frozen: {self.full_key}",
+                f"Can only clear CfgNode when _new_allowed == True if schema is frozen: {self.full_key}"
             )
         for key in list(self.keys()):
             del self[key]
 
-    def update(self, new_dict: dict) -> None:
-        for key, value in new_dict.items():
-            if key in self and isinstance(self[key], (UserDict, dict)):
+    def update(self, mapping: MutableMapping[str, Any] | Iterable[tuple[str, Any]] = None, **new_kwargs_dict) -> None:
+        if not (mapping or new_kwargs_dict):
+            return
+        mapping = mapping or {}
+        iter_mapping = mapping.items() if isinstance(mapping, Mapping) else mapping
+        iterator = chain(iter_mapping, new_kwargs_dict.items())
+
+        for key, value in iterator:
+            if key in self and isinstance(self[key], Mapping):
                 self[key].update(value)
             else:
                 self[key] = value
