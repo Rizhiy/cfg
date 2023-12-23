@@ -78,12 +78,12 @@ class CfgLeaf(FullKeyValue):
             if self._subclass and (not isinstance(check_val, type) or not issubclass(check_val, self._type)):
                 raise TypeMismatchError(
                     f"Subclass of type <{expected_type}> expected,"
-                    f" but found {check_val!r} of type {type(check_val)} for {self}!"
+                    f" but found {check_val!r} of type {type(check_val)} for {self}!",
                 )
             if not self._subclass and not isinstance(check_val, self._type):
                 raise TypeMismatchError(
                     f"Instance of type <{expected_type}> expected,"
-                    f" but found {check_val!r} of type {type(check_val)} for {self}!"
+                    f" but found {check_val!r} of type {type(check_val)} for {self}!",
                 )
         self._value = new_value
 
@@ -100,7 +100,11 @@ class CfgLeaf(FullKeyValue):
 
     def clone(self) -> CfgLeaf:
         return CfgLeaf(
-            deepcopy(self._value), self._type, required=self._required, subclass=self._subclass, desc=self._desc
+            deepcopy(self._value),
+            self._type,
+            required=self._required,
+            subclass=self._subclass,
+            desc=self._desc,
         )
 
     def check(self, leaf_spec: CfgLeaf) -> None:

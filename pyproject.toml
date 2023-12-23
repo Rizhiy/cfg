@@ -8,7 +8,7 @@ maintainers = [{ name = "Artem Vasenin", email = "vasart169@gmail.com" }]
 authors = [{ name = "Anton Vasilev" }, { name = "Artem Vasenin" }, { name = "Vladimir Mikhaylov" }]
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dynamic = ["description", "version"]
 dependencies = ["pyyaml"]
 
@@ -42,7 +42,7 @@ minversion = "6.0"
 addopts = "--doctest-modules"
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py39"
 line-length = 120
 [tool.ruff.lint]
 preview = true
