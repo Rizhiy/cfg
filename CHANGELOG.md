@@ -2,6 +2,21 @@
 
 
 
+## v4.2.0 (2023-12-23)
+
+### Feature
+
+* feat(node.py): Properly implement .update() and add tests ([`9b57103`](https://github.com/Rizhiy/pycs/commit/9b57103dcfa85394e6f397facba4b8cf8632f144))
+
+### Fix
+
+* fix(pyproject.toml): Decrease minimum python version back to 3.9 ([`22fe49c`](https://github.com/Rizhiy/pycs/commit/22fe49c54bf0ff7a484788e5f6c71f845bcab865))
+
+### Style
+
+* style: add style configurations and format various files ([`d137094`](https://github.com/Rizhiy/pycs/commit/d137094c1ce724bdb255fe2105d609a4538a6129))
+
+
 ## v4.1.0 (2023-12-21)
 
 ### Chore

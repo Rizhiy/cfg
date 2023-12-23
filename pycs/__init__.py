@@ -5,4 +5,4 @@ from .helpers import get_output_dir
 from .leaf import CL
 from .node import CN
 
-__version__ = "4.1.0"
+__version__ = "4.2.0"
