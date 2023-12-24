@@ -1,19 +1,24 @@
 # Python Configuration System
+
 ![tests](https://github.com/Rizhiy/pycs/actions/workflows/test_and_version.yml/badge.svg)
 ![publish](https://github.com/Rizhiy/pycs/actions/workflows/publish.yml/badge.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io)
 
 ## Description
+
 Library to define configurations using python files.
 
 ## Installation
+
 Recommended installation with pip:
+
 ```bash
 pip install pycs
 ```
 
 ### Usage
-1) Define config schema:
+
+1. Define config schema:
 
 ```python
 # project/config.py
@@ -50,7 +55,8 @@ cfg.add_hook(hook)
 # Validators and hooks should not (and mostly cannot) modify the config
 ```
 
-2) Set actual values for each leaf in the config, **the import has to be absolute**:
+1. Set actual values for each leaf in the config, **the import has to be absolute**:
+
 ```python
 # my_cfg.py
 from pycs import CN
@@ -64,7 +70,9 @@ cfg = CN(cfg)
 cfg.NAME = "Hello World!"
 cfg.DICT.INT = 2
 ```
+
 You can also create another file to inherit from first and add more changes:
+
 ```python
 # my_cfg2.py
 from ntc import CN
@@ -76,11 +84,13 @@ cfg.DICT.FOO = "BAR"
 ```
 
 There a few restrictions on imports in configs:
-* When you are importing config schema from project that import has to be **absolute**
-* When you inherit config values from another file, that import has to be **relative**
-* Other than config inheritance, all other imports have to be **absolute**
 
-3) Load actual config and use it in the code.
+- When you are importing config schema from project that import has to be **absolute**
+- When you inherit config values from another file, that import has to be **relative**
+- Other than config inheritance, all other imports have to be **absolute**
+
+1. Load actual config and use it in the code.
+
 ```python
 # main.py
 from pycs import CN
@@ -92,14 +102,15 @@ assert cfg.DICT.FOO == "BAR"
 ```
 
 ## Development
+
 - Install dev dependencies: `pip install -e ".[dev]"`
 - For linting and basic fixes [ruff](https://docs.astral.sh/ruff/) is used: `ruff check . --fix`
 - This repository follows strict formatting style which will be checked by the CI.
-To properly format the code, use the [black](https://black.readthedocs.io) format: `black .`
+  To properly format the code, use the [black](https://black.readthedocs.io) format: `black .`
 - To test code, use [pytest](https://pytest.org): `pytest .`
 - This repository follows semantic-release, which means all commit messages have to follow a [style](https://python-semantic-release.readthedocs.io/en/latest/commit-parsing.html).
-You can use tools like [commitizen](https://github.com/commitizen-tools/commitizen) to write your commits.
-
+  You can use tools like [commitizen](https://github.com/commitizen-tools/commitizen) to write your commits.
 
 ## Acknowledgements
+
 This library was inspired by [yacs](https://github.com/rbgirshick/yacs).
