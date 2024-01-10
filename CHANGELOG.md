@@ -2,6 +2,21 @@
 
 
 
+## v4.3.0 (2024-01-10)
+
+### Documentation
+
+* docs(README.md): Lint markdown ([`382b95f`](https://github.com/Rizhiy/pycs/commit/382b95fe0b9aade99b679ae79cc6ff85d0b8b6a5))
+
+### Feature
+
+* feat(transforms.py): Add transform for AWSAppConfig ([`5aee69f`](https://github.com/Rizhiy/pycs/commit/5aee69fa90924b919a687c573dbc4b3f51cbdd85))
+
+### Refactor
+
+* refactor(node.py): improve type annotations ([`b7dfa4e`](https://github.com/Rizhiy/pycs/commit/b7dfa4e307cd16898196eec8ff28891bb4ba8a8c))
+
+
 ## v4.2.0 (2023-12-23)
 
 ### Feature
