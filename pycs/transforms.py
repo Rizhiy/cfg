@@ -81,3 +81,32 @@ class LoadFromEnvVars(TransformBase):
         flat = {self._normalize_key(key): val for key, val in os.environ.items()}
         flat_loaded = {key: yaml.safe_load(value) for key, value in flat.items() if key is not None}
         return _flat_to_structured(flat_loaded)
+
+
+@dataclass
+class LoadFromAWSAppConfig(TransformBase):
+    key: str
+
+    def get_updates(self, cfg: CN) -> dict[str, Any] | None:
+        try:
+            from appconfig_helper import AppConfigHelper
+        except ModuleNotFoundError as e:
+            raise ImportError("Please install with aws extra: pip install pycs[aws]") from e
+        if self.key not in cfg:
+            raise ValueError(f"Can't find key '{self.key}' in cfg")
+        app_config = cfg[self.key]
+        for key in ["APP", "ENV", "PROFILE"]:
+            if key not in app_config:
+                raise ValueError(
+                    f"Specified key ({self.key}) must contain ['APP', 'ENV' and 'PROFILE'] subkeys, missing {key}",
+                )
+        if not app_config.APP:
+            return None
+        appconfig = AppConfigHelper(
+            app_config.APP,
+            app_config.ENV,
+            app_config.PROFILE,
+            fetch_on_read=True,
+            max_config_age=600,
+        )
+        return appconfig.config
