@@ -190,8 +190,7 @@ class CfgNode(UserDict, FullKeyParent):
         """
         if not self._schema_frozen:
             warnings.warn(
-                "Transforming without freezing schema is discouraged, as it frequently leads to bugs",
-                stacklevel=2,
+                "Transforming without freezing schema is discouraged, as it frequently leads to bugs", stacklevel=2
             )
         for _, attr in self.attrs:
             if isinstance(attr, CfgNode):
@@ -401,7 +400,7 @@ class CfgNode(UserDict, FullKeyParent):
     def clear(self) -> None:
         if self._schema_frozen and not self._new_allowed:
             raise AttributeError(
-                f"Can only clear CfgNode when _new_allowed == True if schema is frozen: {self.full_key}",
+                f"Can only clear CfgNode when _new_allowed == True if schema is frozen: {self.full_key}"
             )
         for key in list(self.keys()):
             del self[key]
