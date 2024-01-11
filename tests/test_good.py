@@ -144,7 +144,7 @@ def test_save_clone(tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("name", "value"), {"int": 2, "str": "bar", "float": math.e, "path": Path("another"), "type": SubClass}.items()
+    ("name", "value"), {"int": 2, "str": "bar", "float": math.e, "path": Path("another"), "type": SubClass}.items(),
 )
 def test_save_safe_types(tmp_path, name, value):
     cfg = CN.load(DATA_DIR / "save_safe_types.py")
