@@ -2,6 +2,25 @@
 
 
 
+## v4.4.0 (2024-01-11)
+
+### Chore
+
+* chore(test_good.py): Ignore false positive rule ([`6740f4b`](https://github.com/Rizhiy/pycs/commit/6740f4b6a9208f2eaf32a9725cdfa45c657e1187))
+
+### Feature
+
+* feat(transforms.py): Add transform to load from AWS Secrets Manager ([`ce5580f`](https://github.com/Rizhiy/pycs/commit/ce5580fc0b1c184001e53b2cffa710b0f376e740))
+
+### Style
+
+* style: Format with ruff ([`32a2e2e`](https://github.com/Rizhiy/pycs/commit/32a2e2ee47a8ebef9e1325ebe2b3aba3629aebea))
+
+### Test
+
+* test(pyproject.toml): add &#39;aws&#39; extra to dev extra ([`736fd2f`](https://github.com/Rizhiy/pycs/commit/736fd2f9ec6b60d2949e61e954ddb054b7b17044))
+
+
 ## v4.3.0 (2024-01-10)
 
 ### Documentation
