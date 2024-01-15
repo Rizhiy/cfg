@@ -20,7 +20,7 @@ Home = "https://github.com/Rizhiy/pycs"
 
 [project.optional-dependencies]
 aws = ["sample-helper-aws-appconfig"]
-test = ["pytest", "types-pyyaml"]
+test = ["pytest", "pytest-cov", "types-pyyaml"]
 dev = ["black", "pycs[test,aws]", "ruff"]
 
 [tool.flit.sdist]
