@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import subprocess
+import subprocess  # noqa: S404
 from pathlib import Path
 
 import pytest
