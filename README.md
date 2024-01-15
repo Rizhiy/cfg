@@ -1,6 +1,7 @@
 # Python Configuration System
 
 ![tests](https://github.com/Rizhiy/pycs/actions/workflows/test_and_version.yml/badge.svg)
+[![codecov](https://codecov.io/gh/Rizhiy/pycs/graph/badge.svg?token=7CAJG2EBLG)](https://codecov.io/gh/Rizhiy/pycs)
 ![publish](https://github.com/Rizhiy/pycs/actions/workflows/publish.yml/badge.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io)
 
