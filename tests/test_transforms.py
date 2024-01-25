@@ -38,11 +38,12 @@ def test_load_from_key_value():
 def test_load_from_env_vars(monkeypatch):
     from .data.base_cfg import cfg as cfg_base
 
-    monkeypatch.setitem(os.environ, "NTCTESTS__DICT__FOO2", "foo2 value from env")
-    monkeypatch.setitem(os.environ, "NTCTESTS__STR", "str value from env")
-    monkeypatch.setitem(os.environ, "NTCTESTS__BOOL", "true")
+    monkeypatch.setitem(os.environ, "PYCS_TESTS__DICT__FOO2", "foo2 value from env")
+    monkeypatch.setitem(os.environ, "PYCS_TESTS__STR", "str value from env")
+    monkeypatch.setitem(os.environ, "PYCS_TESTS__BOOL", "true")
+    monkeypatch.setitem(os.environ, "PYCS_TESTS__DICT__X", "")
     cfg = cfg_base.inherit()
-    cfg.add_transform(LoadFromEnvVars("NTCTESTS__"))
+    cfg.add_transform(LoadFromEnvVars("PYCS_TESTS__"))
     cfg.freeze_schema()
     cfg.transform()
     assert cfg.DICT.FOO == "Default foo value"
@@ -50,3 +51,4 @@ def test_load_from_env_vars(monkeypatch):
     assert cfg.STR == "str value from env"
     assert cfg_base.BOOL is False
     assert cfg.BOOL is True
+    assert cfg.DICT.X == ""

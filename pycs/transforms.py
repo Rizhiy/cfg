@@ -84,7 +84,7 @@ class LoadFromEnvVars(TransformBase):
 
     def get_updates(self, _) -> dict[str, Any] | None:
         flat = {self._normalize_key(key): val for key, val in os.environ.items()}
-        flat_loaded = {key: yaml.safe_load(value) for key, value in flat.items() if key is not None}
+        flat_loaded = {key: yaml.safe_load(value) if value else "" for key, value in flat.items() if key is not None}
         return _flat_to_structured(flat_loaded)
 
 
