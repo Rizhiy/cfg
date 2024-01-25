@@ -2,6 +2,29 @@
 
 
 
+## v4.4.1 (2024-01-25)
+
+### Chore
+
+* chore(node.py): Improve one error message ([`27ee2ef`](https://github.com/Rizhiy/pycs/commit/27ee2ef6021f428235b636390b4fc175e920dfb1))
+
+* chore(test_helpers.py): Ignore S404 ([`9244a4c`](https://github.com/Rizhiy/pycs/commit/9244a4c9313b39b1ff150dc78e85d80baf9d6648))
+
+### Ci
+
+* ci(test_and_version.yml): add codecov ([`788a290`](https://github.com/Rizhiy/pycs/commit/788a29091fb697d306aa8ed92cb738c8c96b61b3))
+
+### Documentation
+
+* docs(README.md): Add python version and pypi package version badges ([`171c2a4`](https://github.com/Rizhiy/pycs/commit/171c2a4f21ff9cc626d58bbb854188c316c7302a))
+
+* docs(README.md): add codecov badge ([`b14a352`](https://github.com/Rizhiy/pycs/commit/b14a35214e02273365da9adb596c145e52f3acf0))
+
+### Fix
+
+* fix(transforms.py): Fix loading of empty string in LoadFromEnvVars ([`2d3b144`](https://github.com/Rizhiy/pycs/commit/2d3b144bb4e26e38a9735dd79fb89a1eb964feda))
+
+
 ## v4.4.0 (2024-01-11)
 
 ### Chore
