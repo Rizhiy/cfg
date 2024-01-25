@@ -190,7 +190,8 @@ class CfgNode(UserDict, FullKeyParent):
         """
         if not self._schema_frozen:
             warnings.warn(
-                "Transforming without freezing schema is discouraged, as it frequently leads to bugs", stacklevel=2,
+                "Transforming without freezing schema is discouraged, as it frequently leads to bugs",
+                stacklevel=2,
             )
         for _, attr in self.attrs:
             if isinstance(attr, CfgNode):
@@ -297,7 +298,7 @@ class CfgNode(UserDict, FullKeyParent):
 
     def _set_new(self, key: str, value: Any) -> None:
         if self._schema_frozen and not self._new_allowed:
-            raise SchemaFrozenError(f"Trying to add leaf to node {self.full_key} with frozen schema.")
+            raise SchemaFrozenError(f"Trying to add leaf '{key}' to node '{self.full_key}' with frozen schema.")
 
         value_to_set: Union[CfgNode, CfgLeaf]
         if isinstance(value, CfgNode):
