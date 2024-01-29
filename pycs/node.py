@@ -140,6 +140,11 @@ class CfgNode(UserDict, FullKeyParent):
         attrs = self.to_dict()
         return yaml.dump(attrs)
 
+    def propagate_changes(self) -> None:
+        self.transform()
+        self.validate()
+        self.run_hooks()
+
     @staticmethod
     def load(cfg_path: Union[Path, str]) -> CfgNode:
         cfg_path = Path(cfg_path)
@@ -149,9 +154,7 @@ class CfgNode(UserDict, FullKeyParent):
             raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
         if hasattr(cfg, "NAME"):
             cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path, cfg._root_name)  # noqa: SLF001 Same class
-        cfg.transform()
-        cfg.validate()
-        cfg.run_hooks()
+        cfg.propagate_changes()
         cfg._module = merge_cfg_module(module)  # noqa: SLF001 Same class
 
         return cfg
@@ -469,9 +472,7 @@ class CfgNode(UserDict, FullKeyParent):
         """Default initialisation when config is used as is, instead of using load()"""
         cfg = self.clone()
         cfg.freeze_schema()
-        cfg.transform()
-        cfg.validate()
-        cfg.run_hooks()
+        cfg.propagate_changes()
         return cfg
 
     def load_or_static(self, path: Path = None) -> CfgNode:
