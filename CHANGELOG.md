@@ -2,6 +2,13 @@
 
 
 
+## v4.5.0 (2024-01-29)
+
+### Feature
+
+* feat(node.py): Add helper function propagate_changes ([`d125652`](https://github.com/Rizhiy/pycs/commit/d12565220f3b3372fb8867d5cbcc98e05429978b))
+
+
 ## v4.4.1 (2024-01-25)
 
 ### Chore
