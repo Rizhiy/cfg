@@ -100,6 +100,18 @@ class CfgNode(UserDict, FullKeyParent):
             self._init_with_base(base)
 
     @property
+    def schema_frozen(self) -> bool:
+        return self._schema_frozen
+
+    @property
+    def new_allowed(self) -> bool:
+        return self._new_allowed
+
+    @property
+    def leaf_spec(self) -> CfgLeaf | None:
+        return self._leaf_spec
+
+    @property
     def _default_key(self):
         return "cfg"
 
@@ -273,14 +285,6 @@ class CfgNode(UserDict, FullKeyParent):
         for _, attr in self.attrs:
             if isinstance(attr, CfgNode):
                 attr.unfreeze_schema()
-
-    @property
-    def schema_frozen(self) -> bool:
-        return self._schema_frozen
-
-    @property
-    def leaf_spec(self) -> CfgLeaf | None:
-        return self._leaf_spec
 
     def describe(self, key: str = None) -> str | None:
         if key is None:
