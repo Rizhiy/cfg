@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from pycs import CL, CN
-from tests.data.base_cfg import cfg
+from tests.data.base_cfg import schema
 
-cfg = cfg.inherit()
+schema = schema.inherit()
 
-cfg.DESCRIBED = CL("described", desc="Described leaf")
-cfg.DESCRIBED_NESTING = CN(CL(str, desc="Described nesting"))
+schema.DESCRIBED = CL("described", desc="Described leaf")
+schema.DESCRIBED_NESTING = CN(CL(str, desc="Described nesting"))

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from pycs import CN
-from pycs.errors import MissingRequiredError, ModuleError, SchemaError, SchemaFrozenError, TypeMismatchError
+from pycs.errors import MissingRequiredError, SchemaError, SchemaFrozenError, TypeMismatchError
 
 DATA_DIR = Path(__file__).parent / "data" / "bad"
 
@@ -147,19 +147,9 @@ def test_schema_freeze():
 def test_bad_init():
     with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_init.py")
-    assert str(excinfo.value) == "Changes to config must be started with `cfg = CN(cfg)`"
+    error_msg = "Found cfg with unfrozen schema, please initialise config from schema: cfg = CN(schema)"
+    assert str(excinfo.value) == error_msg
 
     with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_init_2.py")
-    assert str(excinfo.value) == "Changes to config must be started with `cfg = CN(cfg)`"
-
-
-def test_bad_cfg_import():
-    with pytest.raises(ModuleError) as excinfo:
-        CN.load(DATA_DIR / "bad_cfg_import.py")
-    assert str(excinfo.value) == "Can't find config definition, please import config schema using absolute path"
-
-
-def test_bad_import():
-    with pytest.raises(ModuleError):
-        CN.load(DATA_DIR / "bad_import.py")
+    assert str(excinfo.value) == error_msg

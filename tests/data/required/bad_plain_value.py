@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pycs import CN
-from tests.data.required.required_plain_value import cfg
+from tests.data.required.required_plain_value import schema
 
-cfg = CN(cfg)
+cfg = CN(schema)
 cfg.REQUIRED = None

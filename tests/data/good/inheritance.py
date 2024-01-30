@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..base_cfg import cfg
+from ..base_cfg import schema
 
-cfg = cfg.inherit()
-cfg.DICT.BAR = "BAR"
+schema = schema.inherit()
+schema.DICT.BAR = "BAR"

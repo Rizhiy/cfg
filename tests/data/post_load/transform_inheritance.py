@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pycs import CN
 
-from .transform import cfg
+from .transform import schema
 
 
 def transform(cfg: CN) -> None:
@@ -10,5 +10,5 @@ def transform(cfg: CN) -> None:
         cfg.DICT.X = "Z"
 
 
-cfg = cfg.inherit()
-cfg.add_transform(transform)
+schema = schema.inherit()
+schema.add_transform(transform)

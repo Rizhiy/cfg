@@ -4,22 +4,22 @@ from pycs import CL, CN
 
 from .base_class import BaseClass
 
-cfg = CN(desc="Root config node")
+schema = CN(desc="Root config node")
 
-cfg.NAME = CL(None, str)
-cfg.DICT = CN()
-cfg.DICT.INT = 1
-cfg.DICT.FOO = "Default foo value"
-cfg.DICT.FOO2 = "Default foo2 value"
-cfg.DICT.X = "X"
-cfg.LIST = [1, 2, 3, 4]
-cfg.STR = "Default str value"
-cfg.BOOL = False
-cfg.CLASS = BaseClass()
-cfg.CLASSES = CN(BaseClass)
-cfg.SUBCLASS = BaseClass
-cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))
-cfg.NEW = CN(new_allowed=True)
+schema.NAME = CL(None, str)
+schema.DICT = CN()
+schema.DICT.INT = 1
+schema.DICT.FOO = "Default foo value"
+schema.DICT.FOO2 = "Default foo2 value"
+schema.DICT.X = "X"
+schema.LIST = [1, 2, 3, 4]
+schema.STR = "Default str value"
+schema.BOOL = False
+schema.CLASS = BaseClass()
+schema.CLASSES = CN(BaseClass)
+schema.SUBCLASS = BaseClass
+schema.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))
+schema.NEW = CN(new_allowed=True)
 
 
 def transform(cfg: CN):
@@ -30,5 +30,5 @@ def validate(cfg: CN):
     assert cfg.NAME != "Bad"
 
 
-cfg.add_transform(transform)
-cfg.add_validator(validate)
+schema.add_transform(transform)
+schema.add_validator(validate)

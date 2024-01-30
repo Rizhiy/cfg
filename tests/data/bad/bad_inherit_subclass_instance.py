@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pycs import CL
 
-from ..base_cfg import cfg
+from ..base_cfg import schema
 from ..base_class import BaseClass
 
-cfg = cfg.clone()
+schema = schema.clone()
 
-cfg.SUBCLASSES.ANOTHER = CL(BaseClass(), BaseClass, subclass=True)
+schema.SUBCLASSES.ANOTHER = CL(BaseClass(), BaseClass, subclass=True)

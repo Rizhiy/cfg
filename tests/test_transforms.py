@@ -21,7 +21,7 @@ def test_expand_user():
 
 
 def test_load_from_key_value():
-    from .data.base_cfg import cfg as cfg_base
+    from .data.base_cfg import schema as cfg_base
 
     cfg = cfg_base.inherit()
     flat_data = {"DICT.FOO": "Foo value from flat data", "STR": "Str value from flat data", "BOOL": True}
@@ -36,7 +36,7 @@ def test_load_from_key_value():
 
 
 def test_load_from_env_vars(monkeypatch):
-    from .data.base_cfg import cfg as cfg_base
+    from .data.base_cfg import schema as cfg_base
 
     monkeypatch.setitem(os.environ, "PYCS_TESTS__DICT__FOO2", "foo2 value from env")
     monkeypatch.setitem(os.environ, "PYCS_TESTS__STR", "str value from env")

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pycs import CL
 
-from ..base_cfg import cfg
+from ..base_cfg import schema
 
-cfg = cfg.inherit()
-cfg.REQUIRED = CL(None, str, required=True)
+schema = schema.inherit()
+schema.REQUIRED = CL(None, str, required=True)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..base_cfg import cfg
+from ..base_cfg import schema
 
-cfg = cfg.inherit()
-cfg.REQUIRED = 42
+schema = schema.inherit()
+schema.REQUIRED = 42

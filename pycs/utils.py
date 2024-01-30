@@ -5,9 +5,8 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import isort
 import yaml
-
-from .errors import ModuleError
 
 if TYPE_CHECKING:
     from typing import ModuleType
@@ -34,28 +33,33 @@ def merge_cfg_module(module: ModuleType, imported_modules: set[str] = None) -> l
 
     with module_path.open() as module_file_fobj:
         module_file = list(module_file_fobj)
-        if "cfg = CN(cfg)\n" not in module_file:
-            raise ModuleError("Can't find config definition, please import config schema using absolute path")
         lines.append(f"# START --- {module_path} ---\n")
-        for line_idx, line in enumerate(module_file):
+        for line in module_file:
             if line.startswith("from "):
                 _, import_path, __, *imports = line.strip().split(" ")
                 imported_module = importlib.import_module(import_path, package=module.__package__)
                 if imported_module.__spec__.name in imported_modules:
                     continue
-                if import_path.startswith("."):
-                    if imports == ["cfg"]:
+                valid_cfg_names = {"cfg", "cfg,"}
+                for pattern in valid_cfg_names:
+                    if pattern in imports:
                         lines.extend(merge_cfg_module(imported_module, imported_modules=imported_modules))
-                    else:
-                        raise ModuleError(f"Only cfg can be imported relatively:\n{module_path}+{line_idx}:{line}")
-                else:
+                        if "as" in imports:
+                            as_idxs = [idx for idx, elem in enumerate(imports) if elem == "as"]
+                            for as_index in as_idxs:
+                                if imports[as_index + 1] in pattern:
+                                    imports = imports[: as_index - 1] + imports[as_index + 2 :]
+                        imports.remove(pattern)
+
+                        line = f"from {import_path} import " + ", ".join(imports) if imports else None
+                if line:
                     lines.append(line)
             else:
                 lines.append(line)
         lines.append(f"# END --- {module_path} ---\n")
 
     imported_modules.add(module_name)
-    return lines
+    return isort.code("".join(lines)).splitlines(keepends=True)
 
 
 def add_yaml_str_representer():

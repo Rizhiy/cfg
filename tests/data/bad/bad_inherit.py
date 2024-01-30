@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pycs import CN
 
-from ..base_cfg import cfg
+from ..base_cfg import schema
 
-cfg = cfg.inherit()
+schema = schema.inherit()
 
-cfg.CLASSES.ANOTHER = CN()
+schema.CLASSES.ANOTHER = CN()

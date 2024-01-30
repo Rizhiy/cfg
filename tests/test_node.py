@@ -232,8 +232,8 @@ def test_circular_dependency_key():
 def test_static_init():
     value = 1
 
-    cfg = CN()
-    cfg.FOO = "bar"
+    schema = CN()
+    schema.FOO = "bar"
 
     def change_foo(cfg):
         cfg.FOO = "baz"
@@ -242,10 +242,10 @@ def test_static_init():
         nonlocal value
         value = 2
 
-    cfg.add_transform(change_foo)
-    cfg.add_hook(change_value)
+    schema.add_transform(change_foo)
+    schema.add_hook(change_value)
 
-    cfg = cfg.static_init()
+    cfg = schema.static_init()
     assert cfg.schema_frozen
     assert cfg.FOO == "baz"
     assert value == 2

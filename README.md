@@ -30,14 +30,14 @@ from pycs import CL, CN
 class BaseClass:
     pass
 
-cfg = CN()  # Basic config node
-cfg.DICT = CN()  # Nested config node
-cfg.DICT.FOO = "FOO"  # Config leaf with actual value
-cfg.DICT.INT = 1
-cfg.NAME = CL(None, str, required=True)  # Specification of config leaf to be defined with type
-cfg.CLASSES = CN(BaseClass)  # Config node with type specification of its config leafs
-cfg.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))  # Config node with subclass specification of its config leafs
-cfg.VAL = CL(1, desc="Interesting description") # Config leaf with description
+schema = CN()  # Basic config node
+schema.DICT = CN()  # Nested config node
+schema.DICT.FOO = "FOO"  # Config leaf with actual value
+schema.DICT.INT = 1
+schema.NAME = CL(None, str, required=True)  # Specification of config leaf to be defined with type
+schema.CLASSES = CN(BaseClass)  # Config node with type specification of its config leafs
+schema.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))  # Config node with subclass specification of its config leafs
+schema.VAL = CL(1, desc="Interesting description") # Config leaf with description
 
 def transform(cfg: CN) -> None:
     cfg.DICT.FOO = "BAR"
@@ -50,24 +50,33 @@ def hook(cfg: CN) -> None:
 
 # Add transform, validation & hooks function
 # Transforms are run after config is loaded and can change values in config
-cfg.add_transform(transform)
+schema.add_transform(transform)
 # Validators are run after transforms and freeze, with them you can verify additional restrictions
-cfg.add_validator(validate)
+schema.add_validator(validate)
 # Hooks are run after validators and can perform additional actions outside of config
-cfg.add_hook(hook)
+schema.add_hook(hook)
 # Validators and hooks should not (and mostly cannot) modify the config
 ```
 
-1. Set actual values for each leaf in the config, **the import has to be absolute**:
+1. If you want to use configuration with default values or make changes in the program you can use `.static_init()`:
+
+```python
+from project.config import schema
+
+cfg = schema.static_init()
+print(cfg.DICT.FOO) # FOO
+```
+
+1. If you want to store changes more permanently, please create a config file:
 
 ```python
 # my_cfg.py
 from pycs import CN
 
-from project.config import cfg # Import has to be absolute
+from project.config import schema
 
-# Pass schema as an argument to the CN() to init the schema
-cfg = CN(cfg)
+# Pass schema as an argument to the CN() to init the config
+cfg = CN(schema)
 
 # Schema changes are not allowed here, only leafs can be altered.
 cfg.NAME = "Hello World!"
@@ -80,7 +89,7 @@ You can also create another file to inherit from first and add more changes:
 # my_cfg2.py
 from ntc import CN
 
-from .my_cfg import cfg # This import has to be relative and should only import cfg variable
+from .my_cfg import cfg
 
 cfg = CN(cfg)
 cfg.DICT.FOO = "BAR"
@@ -88,9 +97,8 @@ cfg.DICT.FOO = "BAR"
 
 There a few restrictions on imports in configs:
 
-- When you are importing config schema from project that import has to be **absolute**
-- When you inherit config values from another file, that import has to be **relative**
-- Other than config inheritance, all other imports have to be **absolute**
+- If you are inheriting changes from another config, please import variable as `cfg`
+- No other import should be named `cfg`
 
 1. Load actual config and use it in the code.
 

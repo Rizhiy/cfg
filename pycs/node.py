@@ -163,7 +163,7 @@ class CfgNode(UserDict, FullKeyParent):
         module = import_module(cfg_path)
         cfg: CfgNode = module.cfg
         if not cfg.schema_frozen:
-            raise SchemaError("Changes to config must be started with `cfg = CN(cfg)`")
+            raise SchemaError("Found cfg with unfrozen schema, please initialise config from schema: cfg = CN(schema)")
         if hasattr(cfg, "NAME"):
             cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path, cfg._root_name)  # noqa: SLF001 Same class
         cfg.propagate_changes()
@@ -442,7 +442,7 @@ class CfgNode(UserDict, FullKeyParent):
             break
 
         lines = [reference_comment]
-        valid_types = [int, float, str]
+        valid_types = [bool, int, float, str]
         if isinstance(value, type):
             module = inspect.getmodule(value)
             lines.append(f"from {module.__name__} import {value.__name__}\n")
