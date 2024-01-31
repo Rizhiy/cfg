@@ -4,5 +4,5 @@ from pycs import CN
 
 from ..good.good import cfg
 
-cfg = CN(cfg)
+cfg = cfg.clone()
 cfg.DICT.Y = CN()

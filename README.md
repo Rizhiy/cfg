@@ -35,11 +35,12 @@ schema.DICT = CN()  # Nested config node
 schema.DICT.FOO = "FOO"  # Config leaf with actual value
 schema.DICT.INT = 1
 schema.NAME = CL(None, str, required=True)  # Specification of config leaf to be defined with type
-schema.CLASSES = CN(BaseClass)  # Config node with type specification of its config leafs
-schema.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))  # Config node with subclass specification of its config leafs
+schema.CLASSES = CN(BaseClass)  # Config node with type specification of its config leaves
+schema.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))  # Config node with subclass specification of its config leaves
 schema.VAL = CL(1, desc="Interesting description") # Config leaf with description
 
 def transform(cfg: CN) -> None:
+    cfg.NAME = cfg.NAME or "__static__"
     cfg.DICT.FOO = "BAR"
 
 def validate(cfg: CN) -> None:
@@ -63,8 +64,8 @@ schema.add_hook(hook)
 ```python
 from project.config import schema
 
-cfg = schema.static_init()
-print(cfg.DICT.FOO) # FOO
+cfg = schema.static_init() # 'Loaded'
+print(cfg.DICT.FOO) # 'BAR'
 ```
 
 1. If you want to store changes more permanently, please create a config file:
@@ -75,10 +76,10 @@ from pycs import CN
 
 from project.config import schema
 
-# Pass schema as an argument to the CN() to init the config
-cfg = CN(schema)
+# Use init_cfg() to separate changes from base variable and freeze schema
+cfg = schema.init_cfg()
 
-# Schema changes are not allowed here, only leafs can be altered.
+# Schema changes are not allowed here, only leaves can be altered.
 cfg.NAME = "Hello World!"
 cfg.DICT.INT = 2
 ```
@@ -91,7 +92,8 @@ from ntc import CN
 
 from .my_cfg import cfg
 
-cfg = CN(cfg)
+# Separate changes from parent, important when inheriting in multiple files
+cfg = cfg.clone()
 cfg.DICT.FOO = "BAR"
 ```
 

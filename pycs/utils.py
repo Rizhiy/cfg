@@ -50,6 +50,7 @@ def merge_cfg_module(module: ModuleType, imported_modules: set[str] = None) -> l
                                 if imports[as_index + 1] in pattern:
                                     imports = imports[: as_index - 1] + imports[as_index + 2 :]
                         imports.remove(pattern)
+                        # TODO: Add check for cfg.clone()
 
                         line = f"from {import_path} import " + ", ".join(imports) if imports else None
                 if line:

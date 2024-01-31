@@ -4,6 +4,7 @@ import inspect
 import logging
 import warnings
 from collections import UserDict
+from copy import copy
 from itertools import chain
 from pathlib import Path, PosixPath
 from typing import Any, Callable, Iterable, Mapping, MutableMapping, Union
@@ -73,7 +74,7 @@ class CfgNode(UserDict, FullKeyParent):
         self._parent: CfgNode | None = None
         self._key: str | None = None
 
-        if isinstance(first, (dict, CfgNode)):
+        if isinstance(first, dict):
             base, leaf_spec = first, None
         else:
             base, leaf_spec = None, first
@@ -162,13 +163,16 @@ class CfgNode(UserDict, FullKeyParent):
         cfg_path = Path(cfg_path)
         module = import_module(cfg_path)
         cfg: CfgNode = module.cfg
-        if not cfg.schema_frozen:
-            raise SchemaError("Found cfg with unfrozen schema, please initialise config from schema: cfg = CN(schema)")
-        if hasattr(cfg, "NAME"):
-            cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path, cfg._root_name)  # noqa: SLF001 Same class
-        cfg.propagate_changes()
         cfg._module = merge_cfg_module(module)  # noqa: SLF001 Same class
 
+        if not cfg.schema_frozen:
+            raise SchemaError(
+                "Found cfg with unfrozen schema, please initialise config from schema: cfg = schema.init_cfg()",
+            )
+        if hasattr(cfg, "NAME"):
+            cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path, cfg._root_name)  # noqa: SLF001 Same class
+
+        cfg.propagate_changes()
         return cfg
 
     @staticmethod
@@ -189,8 +193,18 @@ class CfgNode(UserDict, FullKeyParent):
             f.writelines(self._module)
 
     def clone(self) -> CfgNode:
-        cfg = CfgNode(self)
-        cfg._leaf_spec = self.leaf_spec  # noqa: SLF001 Same class
+        cfg = CfgNode()
+        attrs_to_ignore = {"_parent", "_key", "parent", "key", "_schema_frozen"}
+
+        for name in [attr for attr in self._BUILT_IN_ATTRS if attr not in attrs_to_ignore]:
+            setattr(cfg, name, copy(getattr(self, name)))
+
+        for key, value in self.attrs:
+            if isinstance(value, (CfgNode, CfgLeaf)):
+                value = value.clone()
+            setattr(cfg, key, value)
+        if self.schema_frozen:
+            cfg.freeze_schema()
         return cfg
 
     def inherit(self) -> CfgNode:
@@ -343,29 +357,11 @@ class CfgNode(UserDict, FullKeyParent):
         else:
             raise TypeError("This should not happen!")
 
-    def _init_with_base(self, base: Union[dict, CfgNode]) -> None:
-        if isinstance(base, CfgNode):
-            for name in ["desc", "root_name", "new_allowed", "leaf_spec", "module", "safe_save"]:
-                name = f"_{name}"
-                setattr(self, name, getattr(base, name))
-
-            for name in ["transforms", "validators", "hooks"]:
-                name = f"_{name}"
-                setattr(self, name, getattr(base, name) + getattr(self, name))
-
-            for key, value in base.attrs:
-                if isinstance(value, (CfgNode, CfgLeaf)):
-                    value = value.clone()
-                setattr(self, key, value)
-
-            self.freeze_schema()
-        elif isinstance(base, dict):
-            for key, value in base.items():
-                if isinstance(value, dict):
-                    value = CfgNode(value)
-                self[key] = value
-        else:
-            raise TypeError("Got bad base for CfgNode!")
+    def _init_with_base(self, base: dict) -> None:
+        for key, value in base.items():
+            if isinstance(value, dict):
+                value = CfgNode(value)
+            self[key] = value
 
     def __reduce__(self):
         if not self.schema_frozen:
@@ -472,10 +468,15 @@ class CfgNode(UserDict, FullKeyParent):
         child.key = key
         child.parent = self
 
-    def static_init(self) -> CfgNode:
-        """Default initialisation when config is used as is, instead of using load()"""
+    def init_cfg(self) -> CfgNode:
+        """Initialise config from schema"""
         cfg = self.clone()
         cfg.freeze_schema()
+        return cfg
+
+    def static_init(self) -> CfgNode:
+        """Default initialisation when config is used as is, instead of using load()"""
+        cfg = self.init_cfg()
         cfg.propagate_changes()
         return cfg
 

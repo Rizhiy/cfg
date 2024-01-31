@@ -3,11 +3,10 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from pycs import CN
 from tests.data.base_cfg import schema
 from tests.data.base_class import BaseClass
 
-cfg = CN(schema)
+cfg = schema.init_cfg()
 cfg.NEW.bool = True
 cfg.NEW.int = 1
 cfg.NEW.str = "foo"

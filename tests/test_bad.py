@@ -147,7 +147,7 @@ def test_schema_freeze():
 def test_bad_init():
     with pytest.raises(SchemaError) as excinfo:
         CN.load(DATA_DIR / "bad_init.py")
-    error_msg = "Found cfg with unfrozen schema, please initialise config from schema: cfg = CN(schema)"
+    error_msg = "Found cfg with unfrozen schema, please initialise config from schema: cfg = schema.init_cfg()"
     assert str(excinfo.value) == error_msg
 
     with pytest.raises(SchemaError) as excinfo:

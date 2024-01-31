@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from pycs import CN
 from tests.data.good.inheritance import schema
 
-cfg = CN(schema)
+cfg = schema.init_cfg()
 cfg.DICT.BAR = "BAZ"

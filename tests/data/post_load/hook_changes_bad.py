@@ -8,5 +8,5 @@ def hook(cfg: CN) -> None:
     print(cfg.NAME + "Bad")
 
 
-cfg = CN(schema)
+cfg = schema.init_cfg()
 cfg.add_hook(hook)
