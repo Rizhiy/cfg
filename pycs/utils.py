@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -21,6 +22,14 @@ def import_module(module_path: Path) -> ModuleType:
     return _load_module(module_name, module_path)
 
 
+def _check_clone_present(lines: list[str]) -> None:
+    if not any(("cfg = cfg.clone()" in line) for line in lines):
+        warnings.warn(
+            "Extending config file without clone() is discouraged, as it frequently leads to bugs",
+            stacklevel=4,
+        )
+
+
 def merge_cfg_module(module: ModuleType, imported_modules: set[str] = None) -> list[str]:
     lines = []
     if imported_modules is None:
@@ -33,31 +42,32 @@ def merge_cfg_module(module: ModuleType, imported_modules: set[str] = None) -> l
 
     with module_path.open() as module_file_fobj:
         module_file = list(module_file_fobj)
-        lines.append(f"# START --- {module_path} ---\n")
-        for line in module_file:
-            if line.startswith("from "):
-                _, import_path, __, *imports = line.strip().split(" ")
-                imported_module = importlib.import_module(import_path, package=module.__package__)
-                if imported_module.__spec__.name in imported_modules:
-                    continue
-                valid_cfg_names = {"cfg", "cfg,"}
-                for pattern in valid_cfg_names:
-                    if pattern in imports:
-                        lines.extend(merge_cfg_module(imported_module, imported_modules=imported_modules))
-                        if "as" in imports:
-                            as_idxs = [idx for idx, elem in enumerate(imports) if elem == "as"]
-                            for as_index in as_idxs:
-                                if imports[as_index + 1] in pattern:
-                                    imports = imports[: as_index - 1] + imports[as_index + 2 :]
-                        imports.remove(pattern)
-                        # TODO: Add check for cfg.clone()
+    lines.append(f"# START --- {module_path} ---\n")
+    for line in module_file:
+        if line.startswith("from "):
+            _, import_path, __, *imports = line.strip().split(" ")
+            imported_module = importlib.import_module(import_path, package=module.__package__)
+            if imported_module.__spec__.name in imported_modules:
+                continue
+            valid_cfg_names = {"cfg", "cfg,"}
+            for pattern in valid_cfg_names:
+                if pattern in imports:
+                    lines.extend(merge_cfg_module(imported_module, imported_modules=imported_modules))
+                    if "as" in imports:
+                        as_idxs = [idx for idx, elem in enumerate(imports) if elem == "as"]
+                        for as_index in as_idxs:
+                            if imports[as_index + 1] in pattern:
+                                imports = imports[: as_index - 1] + imports[as_index + 2 :]
+                    imports.remove(pattern)
+                    _check_clone_present(module_file)
 
-                        line = f"from {import_path} import " + ", ".join(imports) if imports else None
-                if line:
-                    lines.append(line)
-            else:
-                lines.append(line)
-        lines.append(f"# END --- {module_path} ---\n")
+                    line = f"from {import_path} import " + ", ".join(imports) if imports else None
+                    if line:
+                        line += "\n"
+        if line:
+            lines.append(line)
+
+    lines.append(f"# END --- {module_path} ---\n")
 
     imported_modules.add(module_name)
     return isort.code("".join(lines)).splitlines(keepends=True)

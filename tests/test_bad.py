@@ -150,6 +150,6 @@ def test_bad_init():
     error_msg = "Found cfg with unfrozen schema, please initialise config from schema: cfg = schema.init_cfg()"
     assert str(excinfo.value) == error_msg
 
-    with pytest.raises(SchemaError) as excinfo:
+    with pytest.raises(SchemaError) as excinfo, pytest.warns(match="Extending config file"):
         CN.load(DATA_DIR / "bad_init_2.py")
     assert str(excinfo.value) == error_msg
