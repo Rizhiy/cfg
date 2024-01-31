@@ -2,6 +2,29 @@
 
 
 
+## v5.0.0 (2024-01-31)
+
+### Breaking
+
+* refactor: change how cfg variable in config files are initialised to make it easier to parse and less restrictive
+
+BREAKING CHANGE: `cfg = CN(cfg)` is no longer allowed, use `cfg = schema.init_cfg()` or `cfg = cfg.clone()` ([`a171ed7`](https://github.com/Rizhiy/pycs/commit/a171ed77052a630f61506de212932ebe548bd5e4))
+
+* refactor: change to use &#39;schema&#39; as variable name for cfg schema
+
+BREAKING CHANGE: Now only initialised config can be imported as cfg ([`488109e`](https://github.com/Rizhiy/pycs/commit/488109e6f197c024ba2c5106c257765139340ffd))
+
+### Feature
+
+* feat(utils.py): Add warning when extending config file without clone and add tests ([`6ea200d`](https://github.com/Rizhiy/pycs/commit/6ea200d88cb5b54635021bf0c0d22463f53068cc))
+
+* feat(node.py): Add new_allowed as a property ([`f5d7a0c`](https://github.com/Rizhiy/pycs/commit/f5d7a0c75bbeea21aba14640080ee1f99d555342))
+
+### Fix
+
+* fix(pyproject.toml): Add missing isort dependency ([`d7ed00f`](https://github.com/Rizhiy/pycs/commit/d7ed00f7fa2b24f48a4d7c8c120daf29603bac52))
+
+
 ## v4.5.0 (2024-01-29)
 
 ### Feature
