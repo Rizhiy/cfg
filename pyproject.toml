@@ -10,7 +10,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.9"
 dynamic = ["description", "version"]
-dependencies = ["pyyaml"]
+dependencies = ["isort", "pyyaml"]
 
 [project.scripts]
 cfg-output-dir = "pycs.helpers:_get_output_dir_cli"
