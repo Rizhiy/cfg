@@ -2,6 +2,17 @@
 
 
 
+## v5.0.1 (2024-02-06)
+
+### Documentation
+
+* docs(README.md): Fix PyPI version badge ([`e55b88f`](https://github.com/Rizhiy/pycs/commit/e55b88fc6d77a5e5dee9c0d24980f848384b2d09))
+
+### Fix
+
+* fix(node.py): fix type for load_or_static ([`33866cc`](https://github.com/Rizhiy/pycs/commit/33866cc49b74a62002123ab54e6d1a4a57a5ff49))
+
+
 ## v5.0.0 (2024-01-31)
 
 ### Breaking
