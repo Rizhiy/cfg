@@ -480,7 +480,7 @@ class CfgNode(UserDict, FullKeyParent):
         cfg.propagate_changes()
         return cfg
 
-    def load_or_static(self, path: Path = None) -> CfgNode:
+    def load_or_static(self, path: Union[Path, str] = None) -> CfgNode:
         return self.load(path) if path else self.static_init()
 
 
