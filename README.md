@@ -51,6 +51,8 @@ def hook(cfg: CN) -> None:
 
 # Add transform, validation & hooks function
 # Transforms are run after config is loaded and can change values in config
+# Can also be run at runtime using .transform()
+# If you plan to transform multiple times we strongly recommend to make them idempotent
 schema.add_transform(transform)
 # Validators are run after transforms and freeze, with them you can verify additional restrictions
 schema.add_validator(validate)
