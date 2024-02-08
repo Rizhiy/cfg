@@ -5,7 +5,7 @@
 ![publish](https://github.com/Rizhiy/pycs/actions/workflows/publish.yml/badge.svg)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FRizhiy%2Fpycs%2Fmaster%2Fpyproject.toml)
 [![PyPI - Version](https://img.shields.io/pypi/v/pycs)](https://pypi.org/project/pycs/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://black.readthedocs.io)
+[![Code Style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 ## Description
 
