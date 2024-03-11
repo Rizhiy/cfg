@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 import logging
 import warnings
 from collections import UserDict
@@ -171,6 +172,28 @@ class CfgNode(UserDict, FullKeyParent):
             )
         if hasattr(cfg, "NAME"):
             cfg.NAME = cfg.NAME or _cfg_path_to_name(cfg_path, cfg._root_name)  # noqa: SLF001 Same class
+
+        cfg.propagate_changes()
+        return cfg
+
+    def load_updates_from_file(self, updates_path: Union[Path, str]) -> CfgNode:
+        updates_path = Path(updates_path)
+        suffix = updates_path.suffix
+        with updates_path.open() as f:
+            if suffix == ".py":
+                module = import_module(updates_path)
+                updates: MutableMapping = module.cfg
+            elif suffix == ".json":
+                updates = json.load(f)
+            elif suffix == ".yaml":
+                updates = yaml.safe_load(f)
+            else:
+                raise ValueError(f"Can't load changes from filetype with suffix '{suffix}'")
+        cfg = self.init_cfg()
+        cfg.update(updates)
+
+        if hasattr(cfg, "NAME"):
+            cfg.NAME = cfg.NAME or _cfg_path_to_name(updates_path, cfg._root_name)  # noqa: SLF001 Same class
 
         cfg.propagate_changes()
         return cfg

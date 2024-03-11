@@ -1,0 +1,9 @@
+{
+    "BOOL": true,
+    "INT": 1,
+    "FLOAT": 1.1,
+    "STR": "json",
+    "NESTED": {
+        "FOO": "zoo"
+    }
+}

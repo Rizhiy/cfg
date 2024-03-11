@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from pycs import CL, CN
 from pycs.errors import MissingRequiredError, NodeReassignmentError, SchemaFrozenError, TypeMismatchError
+
+DATA_DIR = Path(__file__).parent / "data" / "node"
 
 
 class Quux:
@@ -299,3 +303,30 @@ class TestCfgNodeUpdate:
         cfg.update({"FOO": "both"}, new="bar")
         assert cfg.FOO == "both"
         assert cfg.new == "bar"
+
+
+@pytest.mark.parametrize("filename", ["json_cfg.json", "yaml_cfg.yaml", "python_cfg.py"])
+def test_load_updates_from_file(filename):
+    schema = CN()
+    schema.NAME = ""
+    schema.BOOL = False
+    schema.INT = 0
+    schema.FLOAT = 0.0
+    schema.STR = ""
+    schema.NESTED = CN()
+    schema.NESTED.FOO = "bar"
+    schema.DEFAULT = "default"
+
+    cfg_path = DATA_DIR / filename
+    cfg = schema.load_updates_from_file(cfg_path)
+
+    assert cfg.NAME == cfg_path.stem  # noqa: SIM300
+    assert cfg.BOOL
+    assert cfg.INT == 1
+    assert cfg.FLOAT == 1.1
+    assert cfg.STR == cfg_path.suffix[1:]  # noqa: SIM300
+    assert cfg.NESTED.FOO == "zoo"
+    assert cfg.DEFAULT == "default"
+
+    # Test that original was not modified
+    assert not schema.BOOL

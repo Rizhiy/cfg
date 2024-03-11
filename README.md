@@ -116,6 +116,33 @@ assert cfg.NAME == "Hello World!"
 assert cfg.DICT.FOO == "BAR"
 ```
 
+1. You can also load from YAML or JSON:
+
+```yaml
+# my_changes.yaml
+DICT:
+  FOO: BAR
+```
+
+```json
+# my_changes.json
+{
+  "DICT": {
+    "INT": 2
+  }
+}
+```
+
+```python
+# main.py
+from project.config import schema
+
+cfg = schema.load_updates_from_file("my_changes.yaml")
+assert cfg.DICT.FOO == "BAR"
+cfg = schema.load_updates_from_file("my_changes.json")
+assert cfg.DICT.INT == 2
+```
+
 ## Development
 
 - Install dev dependencies: `pip install -e ".[dev]"`
