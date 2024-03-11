@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-# ruff: noqa
-
 import pickle
 
 from pycs import CL, CN
+
+# ruff: noqa
 
 
 def test_leaf_pickle():
