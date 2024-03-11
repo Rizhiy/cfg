@@ -2,6 +2,19 @@
 
 
 
+## v5.1.0 (2024-03-11)
+
+### Documentation
+
+* docs(README.md): Change black badge to ruff ([`6632a77`](https://github.com/Rizhiy/pycs/commit/6632a779f921b283bef7b14947a1809eb90c316f))
+
+* docs(README.md): small update ([`7e74e55`](https://github.com/Rizhiy/pycs/commit/7e74e552f29642cce376de4a0cebcad265dc0b49))
+
+### Feature
+
+* feat(node): add ability to load changes from yaml and json ([`22e1c20`](https://github.com/Rizhiy/pycs/commit/22e1c20eb96d2e692f7f84e6ac916ef09498beee))
+
+
 ## v5.0.1 (2024-02-06)
 
 ### Documentation
