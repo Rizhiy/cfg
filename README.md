@@ -19,129 +19,144 @@ Recommended installation with pip:
 pip install pycs
 ```
 
-### Usage
+## Usage
 
 1. Define config schema:
 
-```python
-# project/config.py
-from pycs import CL, CN
+   _project/config.py_
 
-class BaseClass:
-    pass
+   ```python
+   from pycs import CL, CN
 
-schema = CN()  # Basic config node
-schema.DICT = CN()  # Nested config node
-schema.DICT.FOO = "FOO"  # Config leaf with actual value
-schema.DICT.INT = 1
-schema.NAME = CL(None, str, required=True)  # Specification of config leaf to be defined with type
-schema.CLASSES = CN(BaseClass)  # Config node with type specification of its config leaves
-schema.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))  # Config node with subclass specification of its config leaves
-schema.VAL = CL(1, desc="Interesting description") # Config leaf with description
+   class BaseClass:
+       pass
 
-def transform(cfg: CN) -> None:
-    cfg.NAME = cfg.NAME or "__static__"
-    cfg.DICT.FOO = "BAR"
+   schema = CN()  # Basic config node
+   schema.DICT = CN()  # Nested config node
+   schema.DICT.FOO = "FOO"  # Config leaf with actual value
+   schema.DICT.INT = 1
+   schema.NAME = CL(None, str, required=True)  # Specification of config leaf to be defined with type
+   schema.CLASSES = CN(BaseClass)  # Config node with type specification of its config leaves
+   schema.SUBCLASSES = CN(CL(None, BaseClass, subclass=True))  # Config node with subclass specification of its config leaves
+   schema.VAL = CL(1, desc="Interesting description") # Config leaf with description
 
-def validate(cfg: CN) -> None:
-    assert len(cfg.NAME) > 0
+   def transform(cfg: CN) -> None:
+       cfg.NAME = cfg.NAME or "__static__"
+       cfg.DICT.FOO = "BAR"
 
-def hook(cfg: CN) -> None:
-    print("Loaded")
+   def validate(cfg: CN) -> None:
+       assert len(cfg.NAME) > 0
 
-# Add transform, validation & hooks function
-# Transforms are run after config is loaded and can change values in config
-# Can also be run at runtime using .transform()
-# If you plan to transform multiple times we strongly recommend to make them idempotent
-schema.add_transform(transform)
-# Validators are run after transforms and freeze, with them you can verify additional restrictions
-schema.add_validator(validate)
-# Hooks are run after validators and can perform additional actions outside of config
-schema.add_hook(hook)
-# Validators and hooks should not (and mostly cannot) modify the config
-```
+   def hook(cfg: CN) -> None:
+       print("Loaded")
+
+   # Add transform, validation & hooks function
+   # Transforms are run after config is loaded and can change values in config
+   # Can also be run at runtime using .transform()
+   # If you plan to transform multiple times we strongly recommend to make them idempotent
+   schema.add_transform(transform)
+   # Validators are run after transforms and freeze, with them you can verify additional restrictions
+   schema.add_validator(validate)
+   # Hooks are run after validators and can perform additional actions outside of config
+   schema.add_hook(hook)
+   # Validators and hooks should not (and mostly cannot) modify the config
+   ```
 
 1. If you want to use configuration with default values or make changes in the program you can use `.static_init()`:
 
-```python
-from project.config import schema
+   ```python
+   from project.config import schema
 
-cfg = schema.static_init() # 'Loaded'
-print(cfg.DICT.FOO) # 'BAR'
-```
+   cfg = schema.static_init() # 'Loaded'
+   print(cfg.DICT.FOO) # 'BAR'
+   ```
 
 1. If you want to store changes more permanently, please create a config file:
 
-```python
-# my_cfg.py
-from pycs import CN
+   _my_cfg.py_
 
-from project.config import schema
+   ```python
+   from pycs import CN
 
-# Use init_cfg() to separate changes from base variable and freeze schema
-cfg = schema.init_cfg()
+   from project.config import schema
 
-# Schema changes are not allowed here, only leaves can be altered.
-cfg.NAME = "Hello World!"
-cfg.DICT.INT = 2
-```
+   # Use init_cfg() to separate changes from base variable and freeze schema
+   cfg = schema.init_cfg()
 
-You can also create another file to inherit from first and add more changes:
+   # Schema changes are not allowed here, only leaves can be altered.
+   cfg.NAME = "Hello World!"
+   cfg.DICT.INT = 2
+   ```
 
-```python
-# my_cfg2.py
-from ntc import CN
+   You can also create another file to inherit from first and add more changes:
 
-from .my_cfg import cfg
+   _my_cfg2.py_
 
-# Separate changes from parent, important when inheriting in multiple files
-cfg = cfg.clone()
-cfg.DICT.FOO = "BAR"
-```
+   ```python
+   from ntc import CN
 
-There a few restrictions on imports in configs:
+   from .my_cfg import cfg
 
-- If you are inheriting changes from another config, please import variable as `cfg`
-- No other import should be named `cfg`
+   # Separate changes from parent, important when inheriting in multiple files
+   cfg = cfg.clone()
+   cfg.DICT.FOO = "BAR"
+   ```
+
+   There are a few restrictions on imports in configs:
+
+   - If you are inheriting changes from another config, please import variable as `cfg`
+   - No other import should be named `cfg`
 
 1. Load actual config and use it in the code.
 
-```python
-# main.py
-from pycs import CN
+   ```python
+   from pycs import CN
 
-cfg = CN.load("my_cfg.py")
-# Access values as attributes
-assert cfg.NAME == "Hello World!"
-assert cfg.DICT.FOO == "BAR"
-```
+   cfg = CN.load("my_cfg.py")
+   # Access values as attributes
+   assert cfg.NAME == "Hello World!"
+   assert cfg.DICT.FOO == "BAR"
+   ```
 
-1. You can also load from YAML or JSON:
+### Other features
 
-```yaml
-# my_changes.yaml
-DICT:
-  FOO: BAR
-```
+- Load config changes/updates from YAML or JSON
 
-```json
-# my_changes.json
-{
-  "DICT": {
-    "INT": 2
+  _my_changes.yaml_
+
+  ```yaml
+  DICT:
+    FOO: BAR
+  ```
+
+  _my_changes.json_
+
+  ```json
+  {
+    "DICT": {
+      "INT": 2
+    }
   }
-}
-```
+  ```
 
-```python
-# main.py
-from project.config import schema
+  ```python
+  from project.config import schema
 
-cfg = schema.load_updates_from_file("my_changes.yaml")
-assert cfg.DICT.FOO == "BAR"
-cfg = schema.load_updates_from_file("my_changes.json")
-assert cfg.DICT.INT == 2
-```
+  cfg = schema.load_updates_from_file("my_changes.yaml")
+  assert cfg.DICT.FOO == "BAR"
+  cfg = schema.load_updates_from_file("my_changes.json")
+  assert cfg.DICT.INT == 2
+  ```
+
+- Save loaded config to a file for tracking:
+
+  ```python
+  cfg.save("saved.py")
+  ```
+
+  Please note: currently this is only possible for configs loaded with `CN.load()`,
+  and only when only basic modifications were applied.
+  See [`CfgSaveable`](pycs/interface.py) for how to permit saving changes with more complex types.
 
 ## Development
 
