@@ -317,7 +317,7 @@ class TestCfgNodeUpdate:
         assert cfg.new == "bar"
 
 
-@pytest.mark.parametrize("filename", ["json_cfg.json", "yaml_cfg.yaml", "python_cfg.py"])
+@pytest.mark.parametrize("filename", ["json_data.json", "yaml_data.yaml", "python_data.py"])
 def test_load_from_data_file(basic_cfg, filename):
     cfg_path = DATA_DIR / filename
     cfg = basic_cfg.load_from_data_file(cfg_path)
@@ -348,7 +348,7 @@ def test_save_init_cfg(tmp_path):
 def test_load_from_data_file_and_save(tmp_path):
     save_path = tmp_path / "saved.py"
 
-    cfg = test_schema.load_from_data_file(DATA_DIR / "yaml_cfg.yaml")
+    cfg = test_schema.load_from_data_file(DATA_DIR / "yaml_data.yaml")
     cfg.save(save_path)
 
     loaded = CN.load(save_path)
@@ -394,3 +394,9 @@ def test_cache(basic_cfg: CN):
 
     assert hash(cfg1) == hash(cfg2)
     assert hash(cfg1) != hash(cfg3)
+
+
+@pytest.mark.parametrize("filename", ["json_data.json", "yaml_data.yaml", "python_data.py", "cfg.py", None])
+def test_load_or_static(basic_cfg, filename):
+    cfg = basic_cfg.load_or_static(DATA_DIR / filename if filename else filename)
+    assert isinstance(cfg, CN)
