@@ -168,6 +168,13 @@ pip install pycs
 - To test code, use [pytest](https://pytest.org): `pytest .`
 - This repository follows semantic-release, which means all commit messages have to follow a [style](https://python-semantic-release.readthedocs.io/en/latest/commit-parsing.html).
   You can use tools like [commitizen](https://github.com/commitizen-tools/commitizen) to write your commits.
+- You can also use [pre-commit](https://pre-commit.com/) to help verify that all changes are valid.
+  Multiple hooks are used, so use the following commands to install:
+
+  ```bash
+  pre-commit install
+  pre-commit install --hook-type commit-msg
+  ```
 
 ## Acknowledgements
 
