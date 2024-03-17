@@ -318,9 +318,9 @@ class TestCfgNodeUpdate:
 
 
 @pytest.mark.parametrize("filename", ["json_cfg.json", "yaml_cfg.yaml", "python_cfg.py"])
-def test_load_updates_from_file(basic_cfg, filename):
+def test_load_from_data_file(basic_cfg, filename):
     cfg_path = DATA_DIR / filename
-    cfg = basic_cfg.load_updates_from_file(cfg_path)
+    cfg = basic_cfg.load_from_data_file(cfg_path)
 
     assert cfg.NAME == cfg_path.stem  # noqa: SIM300
     assert cfg.BOOL
@@ -345,10 +345,10 @@ def test_save_init_cfg(tmp_path):
     assert loaded == cfg
 
 
-def test_load_updates_from_file_and_save(tmp_path):
+def test_load_from_data_file_and_save(tmp_path):
     save_path = tmp_path / "saved.py"
 
-    cfg = test_schema.load_updates_from_file(DATA_DIR / "yaml_cfg.yaml")
+    cfg = test_schema.load_from_data_file(DATA_DIR / "yaml_cfg.yaml")
     cfg.save(save_path)
 
     loaded = CN.load(save_path)

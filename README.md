@@ -142,9 +142,9 @@ pip install pycs
   ```python
   from project.config import schema
 
-  cfg = schema.load_updates_from_file("my_changes.yaml")
+  cfg = schema.load_from_data_file("my_changes.yaml")
   assert cfg.DICT.FOO == "BAR"
-  cfg = schema.load_updates_from_file("my_changes.json")
+  cfg = schema.load_from_data_file("my_changes.json")
   assert cfg.DICT.INT == 2
   ```
 
@@ -154,8 +154,15 @@ pip install pycs
   cfg.save("saved.py")
   ```
 
-  Please note: currently this is only possible for configs loaded with `CN.load()`,
-  and only when only basic modifications were applied.
+  Please note: There are limitations on which configs can be saved.
+  Generally, config schema should be defined at the module-level and then config should be created with one of:
+
+  - `CN.load()`
+  - `schema.static_init()`
+  - `schema.load_from_data_file()`
+  - `schema.load_or_static()`
+
+  In addition, only basic changes should be applied to config after loading.
   See [`CfgSaveable`](pycs/interface.py) for how to permit saving changes with more complex types.
 
 ## Development
