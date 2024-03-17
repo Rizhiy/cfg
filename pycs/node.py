@@ -3,12 +3,13 @@ from __future__ import annotations
 import inspect
 import json
 import logging
+import re
 import warnings
 from collections import UserDict
 from copy import copy
 from itertools import chain
 from pathlib import Path, PosixPath
-from typing import Any, Callable, Iterable, Mapping, MutableMapping, Union
+from typing import Any, Callable, Iterable, Mapping, MutableMapping
 
 import yaml
 
@@ -24,7 +25,7 @@ from pycs.errors import (
 )
 from pycs.full_key_value import FullKeyParent
 from pycs.interfaces import CfgSavable
-from pycs.utils import add_yaml_str_representer, import_module, merge_cfg_module
+from pycs.utils import add_yaml_str_representer, convert_path_to_dotted, import_module, merge_cfg_module
 
 from .leaf import CfgLeaf
 
@@ -65,6 +66,7 @@ class CfgNode(UserDict, FullKeyParent):
         "_transforms",
         "_hooks",
         "_module",
+        "_static_module",
         "_safe_save",
     )
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
@@ -93,6 +95,7 @@ class CfgNode(UserDict, FullKeyParent):
         self._hooks = []
 
         self._module: list[str] | None = None
+        self._static_module = self._get_module_and_var()  # Used for static_init
         self._safe_save = True
 
         if self._leaf_spec is not None:
@@ -160,7 +163,7 @@ class CfgNode(UserDict, FullKeyParent):
         self.run_hooks()
 
     @staticmethod
-    def load(cfg_path: Union[Path, str]) -> CfgNode:
+    def load(cfg_path: Path | str) -> CfgNode:
         cfg_path = Path(cfg_path)
         module = import_module(cfg_path)
         cfg: CfgNode = module.cfg
@@ -176,7 +179,7 @@ class CfgNode(UserDict, FullKeyParent):
         cfg.propagate_changes()
         return cfg
 
-    def load_updates_from_file(self, updates_path: Union[Path, str]) -> CfgNode:
+    def load_updates_from_file(self, updates_path: Path | str) -> CfgNode:
         updates_path = Path(updates_path)
         suffix = updates_path.suffix
         with updates_path.open() as f:
@@ -190,6 +193,7 @@ class CfgNode(UserDict, FullKeyParent):
             else:
                 raise ValueError(f"Can't load changes from filetype with suffix '{suffix}'")
         cfg = self.init_cfg()
+        cfg._module = self._static_module  # noqa: SLF001, same class
         cfg.update(updates)
 
         if hasattr(cfg, "NAME"):
@@ -206,7 +210,7 @@ class CfgNode(UserDict, FullKeyParent):
             if isinstance(attr, CfgLeaf) and attr.required and attr.value is None:
                 raise MissingRequiredError(f"Key {attr} is required, but was not provided.")
 
-    def save(self, path: Union[Path, str]) -> None:
+    def save(self, path: Path | str) -> None:
         path = Path(path)
         if not self._safe_save:
             raise SaveError("Config was updated in such a way that it can no longer be saved!")
@@ -303,7 +307,7 @@ class CfgNode(UserDict, FullKeyParent):
         return attrs
 
     @property
-    def attrs(self) -> list[tuple[str, Union[CfgNode, CfgLeaf]]]:
+    def attrs(self) -> list[tuple[str, CfgNode | CfgLeaf]]:
         attrs_list = []
         for key in super().keys():  # noqa: SIM118 Doesn't work on super()
             value = self.get_raw(key)
@@ -336,7 +340,7 @@ class CfgNode(UserDict, FullKeyParent):
             return attr.desc
         raise TypeError("This should not happen!")
 
-    def _set_attrs(self, attrs: list[tuple[str, Union[CfgNode, CfgLeaf]]]) -> None:
+    def _set_attrs(self, attrs: list[tuple[str, CfgNode | CfgLeaf]]) -> None:
         for key, attr in attrs:
             setattr(self, key, attr.clone())
 
@@ -344,7 +348,7 @@ class CfgNode(UserDict, FullKeyParent):
         if self._schema_frozen and not self._new_allowed:
             raise SchemaFrozenError(f"Trying to add leaf '{key}' to node '{self.full_key}' with frozen schema.")
 
-        value_to_set: Union[CfgNode, CfgLeaf]
+        value_to_set: CfgNode | CfgLeaf
         if isinstance(value, CfgNode):
             value_key = self._child_full_key(key)
             _check_circular_path(value, value_key, [id(self)])
@@ -487,7 +491,7 @@ class CfgNode(UserDict, FullKeyParent):
     def set_root_name(self, name: str) -> None:
         self._root_name = name
 
-    def _set_key_for_child(self, child: Union[CfgNode, CfgLeaf], key: str) -> None:
+    def _set_key_for_child(self, child: CfgNode | CfgLeaf, key: str) -> None:
         child.key = key
         child.parent = self
 
@@ -500,11 +504,27 @@ class CfgNode(UserDict, FullKeyParent):
     def static_init(self) -> CfgNode:
         """Default initialisation when config is used as is, instead of using load()"""
         cfg = self.init_cfg()
+        cfg._module = self._static_module  # noqa: SLF001, same class
         cfg.propagate_changes()
         return cfg
 
-    def load_or_static(self, path: Union[Path, str] = None) -> CfgNode:
+    def load_or_static(self, path: Path | str | None = None) -> CfgNode:
         return self.load(path) if path else self.static_init()
+
+    def _get_module_and_var(self) -> list[str] | None:
+        definition = inspect.stack()[2]
+        if definition.function != "<module>":  # Only care about configs defined at top level
+            return
+        context = definition.code_context
+        if not (context and re.match(r"^[^. =\[]* *=.*", context[0])):
+            return
+        context = context[0]
+        var_name = context.split("=")[0].strip()
+
+        module_path = convert_path_to_dotted(definition.filename)
+
+        lines = [f"from {module_path} import {var_name}", "", "", f"cfg = {var_name}.init_cfg()"]
+        return [line + "\n" for line in lines]
 
 
 def _check_circular_path(new_node: CfgNode, key: str, parent_ids: list[int] = None):

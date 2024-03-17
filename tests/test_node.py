@@ -6,6 +6,7 @@ import pytest
 
 from pycs import CL, CN
 from pycs.errors import MissingRequiredError, NodeReassignmentError, SchemaFrozenError, TypeMismatchError
+from tests.data.node.schema import schema
 
 DATA_DIR = Path(__file__).parent / "data" / "node"
 
@@ -330,3 +331,25 @@ def test_load_updates_from_file(filename):
 
     # Test that original was not modified
     assert not schema.BOOL
+
+
+def test_save_init_cfg(tmp_path):
+    cfg = schema.static_init()
+    save_path = tmp_path / "saved.py"
+    cfg.save(save_path)
+
+    loaded = CN.load(save_path)
+    loaded.NAME = ""
+
+    assert loaded == cfg
+
+
+def test_load_updates_from_file_and_save(tmp_path):
+    save_path = tmp_path / "saved.py"
+
+    cfg = schema.load_updates_from_file(DATA_DIR / "yaml_cfg.yaml")
+    cfg.save(save_path)
+
+    loaded = CN.load(save_path)
+
+    assert loaded == cfg

@@ -5,7 +5,7 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -29,7 +29,7 @@ class TransformBase(ABC):
 
 @dataclass
 class LoadFromFile(TransformBase):
-    filepath: Union[str, Path]
+    filepath: str | Path
     require: bool = True
 
     def __post_init__(self) -> None:
