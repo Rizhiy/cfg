@@ -2,6 +2,16 @@
 
 
 
+## v6.0.0 (2024-03-17)
+
+### Breaking
+
+* refactor: rename load_updates_from_file to load_from_data_file
+
+BREAKING CHANGE: load_updates_from_file not available anymore, use
+load_from_data_file now ([`4bd518e`](https://github.com/Rizhiy/pycs/commit/4bd518e5b21438330a5ee4155c93452cbbfc9cb8))
+
+
 ## v5.3.0 (2024-03-17)
 
 ### Ci
