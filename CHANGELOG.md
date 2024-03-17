@@ -2,6 +2,25 @@
 
 
 
+## v5.2.0 (2024-03-17)
+
+### Chore
+
+* chore: add pre-commit ([`0fad87a`](https://github.com/Rizhiy/pycs/commit/0fad87af4d971a3cc042c5d6219d33f29eb2f8e3))
+
+### Ci
+
+* ci: add black and isort ([`1228682`](https://github.com/Rizhiy/pycs/commit/1228682e5362737eaf2e42e66c7605e26ce41dbe))
+
+### Documentation
+
+* docs(README): fix usage list and add info about extra functionality ([`32efd5d`](https://github.com/Rizhiy/pycs/commit/32efd5d4d7b1672e08a2bdffdd5579de094015da))
+
+### Feature
+
+* feat: allow saving of staticly init configs ([`7d16f65`](https://github.com/Rizhiy/pycs/commit/7d16f6576a1f15f18afa9011a7291c62a7012d71))
+
+
 ## v5.1.0 (2024-03-11)
 
 ### Documentation

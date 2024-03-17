@@ -6,4 +6,4 @@ from .helpers import get_output_dir
 from .leaf import CL
 from .node import CN
 
-__version__ = "5.1.0"
+__version__ = "5.2.0"
