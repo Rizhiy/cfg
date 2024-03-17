@@ -2,6 +2,17 @@
 
 
 
+## v5.3.0 (2024-03-17)
+
+### Ci
+
+* ci: add conventional-commits to pre-commit ([`7b2a866`](https://github.com/Rizhiy/pycs/commit/7b2a86684cbc9e8c1177667963e7189947a15e43))
+
+### Feature
+
+* feat(node): add ability to freeze and hash configs ([`98fb9b1`](https://github.com/Rizhiy/pycs/commit/98fb9b13b0bf7702d7fc84c81aeba86d7e072ccc))
+
+
 ## v5.2.0 (2024-03-17)
 
 ### Chore
