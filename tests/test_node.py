@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from pycs import CL, CN
-from pycs.errors import MissingRequiredError, NodeReassignmentError, SchemaFrozenError, TypeMismatchError
-from tests.data.node.schema import schema
+from pycs.errors import FrozenError, MissingRequiredError, NodeReassignmentError, SchemaFrozenError, TypeMismatchError
+from tests.data.node.schema import schema as test_schema
 
 DATA_DIR = Path(__file__).parent / "data" / "node"
 
@@ -27,7 +27,16 @@ class FooSubclass(Foo):
 @pytest.fixture()
 def basic_cfg():
     cfg = CN()
+    cfg.NAME = ""
     cfg.FOO = 32
+    cfg.NAME = ""
+    cfg.BOOL = False
+    cfg.INT = 0
+    cfg.FLOAT = 0.0
+    cfg.STR = ""
+    cfg.NESTED = CN()
+    cfg.NESTED.FOO = "bar"
+    cfg.DEFAULT = "default"
     return cfg
 
 
@@ -102,8 +111,9 @@ def test_nested_non_empty_reassign_fail():
         cfg.FOO = CN()
 
 
-def test_str(basic_cfg):
-    cfg = basic_cfg
+def test_str():
+    cfg = CN()
+    cfg.FOO = 32
     cfg.BAR = CN()
     cfg.BAR.BAZ = "baz"
     cfg.QUUX = Quux()
@@ -129,8 +139,9 @@ def test_required_error():
         cfg.validate()
 
 
-def test_clone(basic_cfg):
-    cfg1 = basic_cfg
+def test_clone():
+    cfg1 = CN()
+    cfg1.FOO = 32
     cfg1.BAR = CN()
     cfg1.BAR.BAZ = "baz1"
 
@@ -307,19 +318,9 @@ class TestCfgNodeUpdate:
 
 
 @pytest.mark.parametrize("filename", ["json_cfg.json", "yaml_cfg.yaml", "python_cfg.py"])
-def test_load_updates_from_file(filename):
-    schema = CN()
-    schema.NAME = ""
-    schema.BOOL = False
-    schema.INT = 0
-    schema.FLOAT = 0.0
-    schema.STR = ""
-    schema.NESTED = CN()
-    schema.NESTED.FOO = "bar"
-    schema.DEFAULT = "default"
-
+def test_load_updates_from_file(basic_cfg, filename):
     cfg_path = DATA_DIR / filename
-    cfg = schema.load_updates_from_file(cfg_path)
+    cfg = basic_cfg.load_updates_from_file(cfg_path)
 
     assert cfg.NAME == cfg_path.stem  # noqa: SIM300
     assert cfg.BOOL
@@ -330,11 +331,11 @@ def test_load_updates_from_file(filename):
     assert cfg.DEFAULT == "default"
 
     # Test that original was not modified
-    assert not schema.BOOL
+    assert not basic_cfg.BOOL
 
 
 def test_save_init_cfg(tmp_path):
-    cfg = schema.static_init()
+    cfg = test_schema.static_init()
     save_path = tmp_path / "saved.py"
     cfg.save(save_path)
 
@@ -347,9 +348,49 @@ def test_save_init_cfg(tmp_path):
 def test_load_updates_from_file_and_save(tmp_path):
     save_path = tmp_path / "saved.py"
 
-    cfg = schema.load_updates_from_file(DATA_DIR / "yaml_cfg.yaml")
+    cfg = test_schema.load_updates_from_file(DATA_DIR / "yaml_cfg.yaml")
     cfg.save(save_path)
 
     loaded = CN.load(save_path)
 
     assert loaded == cfg
+
+
+def test_freeze(basic_cfg: CN):
+    cfg = basic_cfg.static_init()
+    cfg.freeze()
+    assert cfg.frozen
+    assert cfg.NESTED.frozen
+
+    with pytest.raises(FrozenError):
+        cfg.FOO = 42
+
+
+def test_cache(basic_cfg: CN):
+    class Hashable:
+        def __init__(self, val: int):
+            self._val = val
+
+        def __hash__(self) -> int:
+            return self._val
+
+    basic_cfg.NESTED.HASHABLE = CL(None, Hashable)
+
+    cfg1 = basic_cfg.static_init()
+    cfg1.NESTED.HASHABLE = Hashable(1)
+
+    cfg2 = cfg1.clone()
+    cfg2.NESTED.HASHABLE = Hashable(1)
+
+    cfg3 = cfg1.clone()
+    cfg3.NESTED.HASHABLE = Hashable(2)
+
+    with pytest.raises(TypeError, match="unhashable"):
+        hash(cfg1)
+
+    cfg1.freeze()
+    cfg2.freeze()
+    cfg3.freeze()
+
+    assert hash(cfg1) == hash(cfg2)
+    assert hash(cfg1) != hash(cfg3)

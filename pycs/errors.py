@@ -21,6 +21,10 @@ class ModuleError(ConfigError):
     """Incorrectly specified config, can't import"""
 
 
+class FrozenError(ConfigError):
+    """Config is frozen, can't modify"""
+
+
 class SchemaError(ConfigError):
     """Incorrectly specified schema"""
 

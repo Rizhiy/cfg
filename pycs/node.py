@@ -16,6 +16,7 @@ import yaml
 from pycs.errors import (
     ConfigError,
     ConfigUseError,
+    FrozenError,
     MissingRequiredError,
     NodeReassignmentError,
     SaveError,
@@ -59,6 +60,7 @@ class CfgNode(UserDict, FullKeyParent):
         # CfgNode
         "_desc",
         "_root_name",
+        "_frozen",
         "_schema_frozen",
         "_new_allowed",
         "_leaf_spec",
@@ -68,6 +70,7 @@ class CfgNode(UserDict, FullKeyParent):
         "_module",
         "_static_module",
         "_safe_save",
+        "_hash_cache",
     )
     RESERVED_KEYS = (*_BUILT_IN_ATTRS, "data")
 
@@ -87,6 +90,7 @@ class CfgNode(UserDict, FullKeyParent):
         self._desc = desc
         self._root_name = "configs"
 
+        self._frozen = False
         self._schema_frozen = schema_frozen
         self._new_allowed = new_allowed
         self._leaf_spec = leaf_spec
@@ -98,11 +102,17 @@ class CfgNode(UserDict, FullKeyParent):
         self._static_module = self._get_module_and_var()  # Used for static_init
         self._safe_save = True
 
+        self._hash_cache = None
+
         if self._leaf_spec is not None:
             self._new_allowed = True
 
         if base is not None:
             self._init_with_base(base)
+
+    @property
+    def frozen(self) -> bool:
+        return self._frozen
 
     @property
     def schema_frozen(self) -> bool:
@@ -121,6 +131,8 @@ class CfgNode(UserDict, FullKeyParent):
         return "cfg"
 
     def __setitem__(self, key: str, value: Any) -> None:
+        if self.frozen:
+            raise FrozenError(f"Trying to change value of {key} in frozen config")
         if key in self:
             self._set_existing(key, value)
         else:
@@ -151,6 +163,19 @@ class CfgNode(UserDict, FullKeyParent):
 
     def __eq__(self, other: CfgNode) -> bool:
         return self.to_dict() == other.to_dict()
+
+    def __hash__(self) -> int:
+        if not self.frozen:
+            raise TypeError("Unfrozen CfgNode is unhashable, please freeze first: cfg.freeze()")
+        if not self._hash_cache:
+            # Only care about actual keys and values
+            keys = tuple(sorted(self.keys()))
+            values = (self[key] for key in keys)
+
+            hash_ = hash((*keys, *values))
+            self._hash_cache = hash_
+
+        return self._hash_cache
 
     def __str__(self) -> str:
         add_yaml_str_representer()
@@ -221,7 +246,7 @@ class CfgNode(UserDict, FullKeyParent):
 
     def clone(self) -> CfgNode:
         cfg = CfgNode()
-        attrs_to_ignore = {"_parent", "_key", "parent", "key", "_schema_frozen"}
+        attrs_to_ignore = {"_parent", "_key", "parent", "key", "_schema_frozen", "_frozen"}
 
         for name in [attr for attr in self._BUILT_IN_ATTRS if attr not in attrs_to_ignore]:
             setattr(cfg, name, copy(getattr(self, name)))
@@ -232,6 +257,8 @@ class CfgNode(UserDict, FullKeyParent):
             setattr(cfg, key, value)
         if self.schema_frozen:
             cfg.freeze_schema()
+        if self.frozen:
+            cfg.freeze()
         return cfg
 
     def inherit(self) -> CfgNode:
@@ -315,6 +342,12 @@ class CfgNode(UserDict, FullKeyParent):
                 attrs_list.append((key, value))
         return attrs_list
 
+    def freeze(self) -> None:
+        for value in self.values():
+            if isinstance(value, CfgNode):
+                value.freeze()
+        self._frozen = True
+
     def freeze_schema(self) -> None:
         self._schema_frozen = True
         for _, attr in self.attrs:
@@ -392,7 +425,7 @@ class CfgNode(UserDict, FullKeyParent):
 
     def __reduce__(self):
         if not self.schema_frozen:
-            raise ConfigUseError(f"Can't pickle unfrozen CfgNode: {self.full_key}")
+            raise ConfigUseError(f"Can't pickle CfgNode with unfrozen schema: {self.full_key}")
         state = {}
         for attr_name in self._BUILT_IN_ATTRS:
             state[attr_name] = getattr(self, attr_name)
