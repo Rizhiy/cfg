@@ -5,10 +5,6 @@ class ConfigError(Exception):
     pass
 
 
-class ConfigUseError(ConfigError, ValueError):
-    pass
-
-
 class TypeMismatchError(ConfigError):
     """Wrong type is used"""
 

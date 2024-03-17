@@ -123,8 +123,7 @@ def convert_path_to_dotted(script_path: str | Path) -> str:
             parent = pa_path
             break
     else:
-        newline = "\n"
-        raise ImportError(f"{script_path} nowhere in sys.path: {newline.join([''] + sys.path)}")
+        raise ImportError(f"{script_path} nowhere in sys.path: {sys.path}")
 
     relative_path = script_path.relative_to(parent)
     return str(relative_path).removesuffix(".py").replace(os.sep, ".")

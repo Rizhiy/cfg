@@ -15,7 +15,6 @@ import yaml
 
 from pycs.errors import (
     ConfigError,
-    ConfigUseError,
     FrozenError,
     MissingRequiredError,
     NodeReassignmentError,
@@ -364,7 +363,7 @@ class CfgNode(UserDict, FullKeyParent):
         if key is None:
             return self._desc
         if key not in self:
-            raise ConfigUseError(f"{key!r} key does not exist")
+            raise KeyError(f"{key!r} key does not exist")
 
         attr = super().__getitem__(key)
         if isinstance(attr, CfgNode):
@@ -372,10 +371,6 @@ class CfgNode(UserDict, FullKeyParent):
         if isinstance(attr, CfgLeaf):
             return attr.desc
         raise TypeError("This should not happen!")
-
-    def _set_attrs(self, attrs: list[tuple[str, CfgNode | CfgLeaf]]) -> None:
-        for key, attr in attrs:
-            setattr(self, key, attr.clone())
 
     def _set_new(self, key: str, value: Any) -> None:
         if self._schema_frozen and not self._new_allowed:
@@ -412,10 +407,8 @@ class CfgNode(UserDict, FullKeyParent):
             if self.schema_frozen:
                 value.freeze_schema()
             super().__setitem__(key, value)
-        elif isinstance(cur_attr, CfgLeaf):
-            cur_attr.value = value
         else:
-            raise TypeError("This should not happen!")
+            cur_attr.value = value
 
     def _init_with_base(self, base: dict) -> None:
         for key, value in base.items():
@@ -424,8 +417,6 @@ class CfgNode(UserDict, FullKeyParent):
             self[key] = value
 
     def __reduce__(self):
-        if not self.schema_frozen:
-            raise ConfigUseError(f"Can't pickle CfgNode with unfrozen schema: {self.full_key}")
         state = {}
         for attr_name in self._BUILT_IN_ATTRS:
             state[attr_name] = getattr(self, attr_name)

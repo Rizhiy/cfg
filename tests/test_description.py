@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from pycs import CN
-from pycs.errors import ConfigUseError, TypeMismatchError
+from pycs.errors import TypeMismatchError
 
 DATA_DIR = Path(__file__).parent / "data" / "description"
 
@@ -17,7 +17,7 @@ def test_description():
     assert cfg.DESCRIBED == "described"
     assert cfg.describe("DESCRIBED") == "Described leaf"
 
-    with pytest.raises(ConfigUseError):
+    with pytest.raises(KeyError):
         cfg.describe("NONEXISTENT")
 
 
