@@ -3,8 +3,16 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import pytest
+
 from pycs import CN
-from pycs.transforms import LoadFromEnvVars, LoadFromFile, LoadFromKeyValue
+from pycs.transforms import (
+    LoadFromAWSAppConfig,
+    LoadFromAWSSecretsManager,
+    LoadFromEnvVars,
+    LoadFromFile,
+    LoadFromKeyValue,
+)
 
 DATA_DIR = Path(__file__).parent / "data" / "transforms"
 
@@ -52,3 +60,32 @@ def test_load_from_env_vars(monkeypatch):
     assert cfg_base.BOOL is False
     assert cfg.BOOL is True
     assert cfg.DICT.X == ""
+
+
+@pytest.mark.parametrize("type_", ["yaml", "json"])
+def test_load_from_aws_appconfig(type_: str):
+    from .data.base_cfg import schema as cfg_base
+
+    cfg = cfg_base.inherit()
+    cfg.APP_CONFIG = CN()
+    cfg.APP_CONFIG.APP = "pycs-test"
+    cfg.APP_CONFIG.PROFILE = type_
+    cfg.APP_CONFIG.ENV = "default"
+    cfg.add_transform(LoadFromAWSAppConfig("APP_CONFIG"))
+    cfg.freeze_schema()
+    cfg.transform()
+    assert cfg.NAME == "AppConfig"
+    assert type_ == cfg.STR
+
+
+def test_load_from_aws_secrets_manager():
+    from .data.base_cfg import schema as cfg_base
+
+    cfg = cfg_base.inherit()
+    cfg.SECRETS_MANAGER = CN()
+    cfg.SECRETS_MANAGER.NAME = "pycs-test"
+    cfg.add_transform(LoadFromAWSSecretsManager("SECRETS_MANAGER"))
+    cfg.freeze_schema()
+    cfg.transform()
+    assert cfg.NAME == "SecretsManager"
+    assert cfg.STR == "secret"

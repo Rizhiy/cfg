@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING, Any
 import yaml
 
 if TYPE_CHECKING:
+    import boto3
+
     from .node import CN
 
 
@@ -37,7 +39,7 @@ class LoadFromFile(TransformBase):
 
     def get_updates(self, _) -> dict[str, Any] | None:
         try:
-            with self.filepath.open() as fobj:
+            with self.filepath.open() as fobj:  # type: ignore not aware of __post_init__
                 return yaml.safe_load(fobj)
         except FileNotFoundError:
             if self.require:
@@ -92,33 +94,51 @@ class LoadFromEnvVars(TransformBase):
 class LoadFromAWSAppConfig(TransformBase):
     key: str
     required = False
+    session: boto3.Session | None = None
 
     def get_updates(self, cfg: CN) -> dict[str, Any] | None:
         try:
-            from appconfig_helper import AppConfigHelper
+            import boto3
         except ModuleNotFoundError as e:
             raise ImportError("Please install with aws extra: pip install pycs[aws]") from e
         if self.key not in cfg:
             raise ValueError(f"Can't find AppConfig key '{self.key}' in cfg")
         ac_cfg = cfg[self.key]
+
         required_keys = ["APP", "ENV", "PROFILE"]
         for key in required_keys:
             if key not in ac_cfg:
                 raise ValueError(f"Specified key ({self.key}) must contain {required_keys} subkeys, missing {key}")
+
         if not ac_cfg.APP:
             if self.required:
                 raise ValueError("Got empty APP for AppConfig")
             return None
-        appconfig = AppConfigHelper(ac_cfg.APP, ac_cfg.ENV, ac_cfg.PROFILE, fetch_on_read=True, max_config_age=600)
-        if not isinstance(appconfig.config, dict):
-            raise TypeError("Got invalid config from AppConfig")
-        return appconfig.config
+
+        client = (self.session or boto3).client("appconfigdata")
+        # Maybe actually create a proper client for this
+        config_token = client.start_configuration_session(
+            ApplicationIdentifier=ac_cfg.APP,
+            ConfigurationProfileIdentifier=ac_cfg.PROFILE,
+            EnvironmentIdentifier=ac_cfg.ENV,
+            RequiredMinimumPollIntervalInSeconds=15,
+        )["InitialConfigurationToken"]
+        response = client.get_latest_configuration(ConfigurationToken=config_token)
+
+        content_type = response["ContentType"]
+        content: bytes = response["Configuration"].read()
+        if content_type == "application/x-yaml":
+            return yaml.safe_load(content)
+        if content_type == "application/json":
+            return json.loads(content.decode("utf-8"))
+        raise ValueError(f"Got config in invalid type: {content_type}")
 
 
 @dataclass
 class LoadFromAWSSecretsManager(TransformBase):
     key: str
     required = False
+    session: boto3.Session | None = None
 
     def get_updates(self, cfg: CN) -> dict[str, Any] | None:
         try:
@@ -128,19 +148,14 @@ class LoadFromAWSSecretsManager(TransformBase):
         if self.key not in cfg:
             raise ValueError(f"Can't find SecretsManager key '{self.key}' in cfg")
         sm_cfg = cfg[self.key]
-        required_keys = ["NAME", "MAP"]
-        for key in required_keys:
-            if key not in sm_cfg:
-                raise ValueError(f"Specified key ({self.key}) must contain {required_keys} subkeys, missing {key}")
+
+        if "NAME" not in sm_cfg:
+            raise ValueError(f"Specified key ({self.key}) must contain Name subkey")
+
         if not sm_cfg.NAME:
             if self.required:
                 raise ValueError("Got empty NAME for SecretsManager")
             return None
 
-        secrets_manager = boto3.client("secretsmanager")
-        secrets = json.loads(secrets_manager.get_secret_value(SecretId=sm_cfg.NAME)["SecretString"])
-
-        changes = {}
-        for sm_key, target_key in sm_cfg.MAP.items():
-            changes[target_key] = secrets[sm_key]
-        return _flat_to_structured(changes)
+        secrets_manager = (self.session or boto3).client("secretsmanager")
+        return json.loads(secrets_manager.get_secret_value(SecretId=sm_cfg.NAME)["SecretString"])

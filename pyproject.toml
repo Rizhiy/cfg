@@ -19,9 +19,9 @@ cfg-output-dir = "pycs.helpers:_get_output_dir_cli"
 Home = "https://github.com/Rizhiy/pycs"
 
 [project.optional-dependencies]
-aws = ["sample-helper-aws-appconfig"]
-test = ["pytest", "pytest-cov", "types-pyyaml"]
-dev = ["black", "pre-commit", "pycs[test,aws]", "ruff"]
+aws = ["boto3"]
+test = ["pycs[aws]", "pytest", "pytest-cov", "types-pyyaml"]
+dev = ["black", "pre-commit", "pycs[test]", "ruff"]
 
 [tool.flit.sdist]
 include = ["README.md"]
