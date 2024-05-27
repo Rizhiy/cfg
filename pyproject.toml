@@ -21,7 +21,7 @@ Home = "https://github.com/Rizhiy/pycs"
 [project.optional-dependencies]
 aws = ["boto3"]
 test = ["pycs[aws]", "pytest", "pytest-cov", "types-pyyaml"]
-dev = ["black", "pre-commit", "pycs[test]", "ruff"]
+dev = ["black", "isort", "pre-commit", "pycs[test]", "ruff"]
 
 [tool.flit.sdist]
 include = ["README.md"]

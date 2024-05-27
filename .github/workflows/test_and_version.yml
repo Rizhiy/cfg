@@ -72,6 +72,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install python-semantic-release
+          pip install -U requests
       - name: Update version and push
         run: |-
           semantic-release version

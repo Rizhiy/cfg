@@ -9,7 +9,7 @@ from collections import UserDict
 from copy import copy
 from itertools import chain
 from pathlib import Path, PosixPath
-from typing import Any, Callable, Iterable, Mapping, MutableMapping
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping
 
 import yaml
 
@@ -28,6 +28,9 @@ from pycs.interfaces import CfgSavable
 from pycs.utils import add_yaml_str_representer, convert_path_to_dotted, import_module, merge_cfg_module
 
 from .leaf import CfgLeaf
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -491,7 +494,7 @@ class CfgNode(UserDict, FullKeyParent):
         lines = [reference_comment]
         valid_types = [bool, int, float, str]
         if isinstance(value, type):
-            module = inspect.getmodule(value)
+            module: ModuleType = inspect.getmodule(value)  # type: ignore
             lines.append(f"from {module.__name__} import {value.__name__}\n")
             lines.append(f"{key} = {value.__name__}\n")
         elif type(value) in valid_types:
